@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { FaceSearch } from "@/components/search/face-search";
+import { Modal } from "@/components/ui/modal";
 
 interface Event {
   id: string;
@@ -39,7 +40,17 @@ export default function PublicEventPage({
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
-  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "error" | "warning";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
   const supabase = createClient();
 
   useEffect(() => {
@@ -285,72 +296,103 @@ export default function PublicEventPage({
 
         {/* Selected Photos Bar */}
         {selectedPhotos.size > 0 && (
-          <div className="sticky top-4 z-10 mb-6 rounded-lg bg-zinc-900 p-4 shadow-lg dark:bg-zinc-50">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="text-white dark:text-zinc-900">
-                <span className="font-semibold">{selectedPhotos.size}</span>{" "}
-                Fotos ausgewählt
+          <div className="sticky top-4 z-10 mb-6 rounded-lg bg-zinc-900 p-6 shadow-lg dark:bg-zinc-50">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="text-white dark:text-zinc-900">
+                  <span className="font-semibold">{selectedPhotos.size}</span>{" "}
+                  Fotos ausgewählt
+                </div>
+                <span className="text-2xl font-bold text-white dark:text-zinc-900">
+                  {calculateTotal().toFixed(2)} €
+                </span>
               </div>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:space-x-4">
-                {/* Email input for guests */}
-                {!isAuthenticated && showEmailInput && (
+              
+              {/* Email input for guests - always visible */}
+              {!isAuthenticated && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-white dark:text-zinc-900">
+                    Deine E-Mail-Adresse für den Download-Link:
+                  </label>
                   <input
                     type="email"
                     value={guestEmail}
                     onChange={(e) => setGuestEmail(e.target.value)}
-                    placeholder="Deine E-Mail-Adresse"
-                    className="rounded-md border border-zinc-300 px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                    placeholder="beispiel@email.de"
+                    className="rounded-md border border-zinc-300 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                    required
                   />
-                )}
-                <span className="text-lg font-bold text-white dark:text-zinc-900">
-                  {calculateTotal().toFixed(2)} €
-                </span>
-                <button
-                  onClick={async () => {
-                    // For guests: first show email input, then proceed
-                    if (!isAuthenticated && !showEmailInput) {
-                      setShowEmailInput(true);
-                      return;
-                    }
+                </div>
+              )}
 
-                    // Validate guest email
-                    if (!isAuthenticated && !guestEmail) {
-                      alert("Bitte gib deine E-Mail-Adresse ein");
-                      return;
-                    }
+              <button
+                onClick={async () => {
+                  // Validate guest email
+                  if (!isAuthenticated && !guestEmail) {
+                    setModalState({
+                      isOpen: true,
+                      title: "E-Mail erforderlich",
+                      message: "Bitte gib deine E-Mail-Adresse ein, um die Fotos nach dem Kauf zu erhalten.",
+                      type: "warning",
+                    });
+                    return;
+                  }
 
-                    try {
-                      const response = await fetch("/api/stripe/checkout", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          photoIds: Array.from(selectedPhotos),
-                          eventId: event.id,
-                          guestEmail: !isAuthenticated ? guestEmail : undefined,
-                        }),
+                  // Validate email format
+                  if (!isAuthenticated && guestEmail) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(guestEmail)) {
+                      setModalState({
+                        isOpen: true,
+                        title: "Ungültige E-Mail",
+                        message: "Bitte gib eine gültige E-Mail-Adresse ein.",
+                        type: "error",
                       });
-
-                      const data = await response.json();
-
-                      if (data.error) {
-                        alert(data.error);
-                        return;
-                      }
-
-                      // Redirect to Stripe Checkout
-                      if (data.url) {
-                        window.location.href = data.url;
-                      }
-                    } catch (error) {
-                      console.error("Checkout error:", error);
-                      alert("Fehler beim Checkout");
+                      return;
                     }
-                  }}
-                  className="rounded-md bg-white px-6 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
-                >
-                  {!isAuthenticated && !showEmailInput ? "Weiter" : "Zur Kasse"}
-                </button>
-              </div>
+                  }
+
+                  try {
+                    const response = await fetch("/api/stripe/checkout", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        photoIds: Array.from(selectedPhotos),
+                        eventId: event.id,
+                        guestEmail: !isAuthenticated ? guestEmail : undefined,
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                      setModalState({
+                        isOpen: true,
+                        title: "Fehler",
+                        message: data.error,
+                        type: "error",
+                      });
+                      return;
+                    }
+
+                    // Redirect to Stripe Checkout
+                    if (data.url) {
+                      window.location.href = data.url;
+                    }
+                  } catch (error) {
+                    console.error("Checkout error:", error);
+                    setModalState({
+                      isOpen: true,
+                      title: "Fehler",
+                      message: "Ein Fehler ist beim Checkout aufgetreten. Bitte versuche es erneut.",
+                      type: "error",
+                    });
+                  }
+                }}
+                className="w-full rounded-md bg-white px-6 py-3 text-base font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
+              >
+                Zur Kasse
+              </button>
             </div>
           </div>
         )}
@@ -434,6 +476,15 @@ export default function PublicEventPage({
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState({ ...modalState, isOpen: false })}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+      />
     </div>
   );
 }
