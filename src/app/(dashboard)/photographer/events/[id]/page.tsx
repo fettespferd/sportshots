@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, use } from "react";
 import { Modal } from "@/components/ui/modal";
+import { EventQRCode } from "@/components/event/event-qr-code";
 
 export default function EventDetailsPage({
   params,
@@ -358,6 +359,14 @@ export default function EventDetailsPage({
             </div>
           </dl>
         </div>
+
+        {/* QR Code & Marketing */}
+        {event.is_published && (
+          <EventQRCode
+            eventUrl={`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/event/${event.slug}`}
+            eventTitle={event.title}
+          />
+        )}
 
         {/* Photos Grid */}
         <div className="rounded-lg bg-white p-6 shadow dark:bg-zinc-800">
