@@ -44,7 +44,7 @@ export async function sendPhotographerApprovedEmail(
   to: string,
   photographerName: string
 ) {
-  const html = render(PhotographerApprovedEmail({ photographerName }));
+  const html = await render(PhotographerApprovedEmail({ photographerName }));
 
   return sendEmail({
     to,
@@ -61,7 +61,7 @@ export async function sendNewPhotosEmail(
   eventSlug: string,
   photoCount: number
 ) {
-  const html = render(
+  const html = await render(
     NewPhotosEmail({
       userName,
       eventName,
@@ -86,7 +86,7 @@ export async function sendPurchaseConfirmationEmail(
   totalAmount: number,
   downloadLinks: string[]
 ) {
-  const html = render(
+  const html = await render(
     PurchaseConfirmationEmail({
       customerName,
       eventName,
@@ -111,7 +111,7 @@ export async function sendPayoutNotificationEmail(
   eventTitle: string,
   photosSold: number
 ) {
-  const html = render(
+  const html = await render(
     PayoutNotificationEmail({
       photographerName,
       amount,
