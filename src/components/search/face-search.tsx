@@ -236,18 +236,18 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
               
               {/* Face Oval Guide - Portrait orientation like a head */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="relative" style={{ width: '50%', height: '90%' }}>
+                <div className="relative" style={{ width: '45%', height: '75%' }}>
                   {/* Overlay with cutout */}
                   <svg className="absolute inset-0 h-full w-full">
                     <defs>
                       <mask id="face-mask">
                         <rect width="100%" height="100%" fill="white" />
-                        {/* Portrait oval - schmaler und höher wie ein Kopf */}
+                        {/* Portrait oval - schmaler und höher wie ein Kopf, passt komplett rein */}
                         <ellipse
                           cx="50%"
-                          cy="45%"
-                          rx="42%"
-                          ry="52%"
+                          cy="50%"
+                          rx="45%"
+                          ry="48%"
                           fill="black"
                         />
                       </mask>
@@ -261,9 +261,9 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
                     {/* Portrait oval - schmaler und höher */}
                     <ellipse
                       cx="50%"
-                      cy="45%"
-                      rx="42%"
-                      ry="52%"
+                      cy="50%"
+                      rx="45%"
+                      ry="48%"
                       fill="none"
                       stroke="white"
                       strokeWidth="3"
@@ -273,7 +273,7 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
                   </svg>
                   
                   {/* Helper Text */}
-                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
                     <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-zinc-900 shadow-lg">
                       👤 Positioniere dein Gesicht im Oval
                     </div>
