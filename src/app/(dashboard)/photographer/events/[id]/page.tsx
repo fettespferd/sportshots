@@ -19,6 +19,8 @@ export default function EventDetailsPage({
   const [event, setEvent] = useState<any>(null);
   const [photos, setPhotos] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -115,6 +117,69 @@ export default function EventDetailsPage({
         message: "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
         type: "error",
       });
+    }
+  };
+
+  const handleCoverImageUpload = async (file: File) => {
+    setUploadingCover(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error("Nicht angemeldet");
+      }
+
+      console.log("Uploading cover image:", file.name);
+      const fileName = `covers/${user.id}/${Date.now()}-${file.name}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("photos")
+        .upload(fileName, file, {
+          contentType: file.type,
+          cacheControl: "3600",
+        });
+
+      if (uploadError) {
+        console.error("Cover upload error:", uploadError);
+        throw new Error(`Upload fehlgeschlagen: ${uploadError.message}`);
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("photos").getPublicUrl(fileName);
+
+      // Update event with new cover image
+      const { error: updateError } = await supabase
+        .from("events")
+        .update({ cover_image_url: publicUrl })
+        .eq("id", id);
+
+      if (updateError) {
+        throw new Error(`Aktualisierung fehlgeschlagen: ${updateError.message}`);
+      }
+
+      // Update local state
+      setEvent({ ...event, cover_image_url: publicUrl });
+      setCoverImage(null);
+
+      setModalState({
+        isOpen: true,
+        title: "Erfolg",
+        message: "Cover-Bild wurde erfolgreich aktualisiert!",
+        type: "success",
+      });
+    } catch (error: any) {
+      console.error("Cover upload error:", error);
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: error.message || "Fehler beim Hochladen des Cover-Bildes",
+        type: "error",
+      });
+    } finally {
+      setUploadingCover(false);
     }
   };
 
@@ -292,6 +357,106 @@ export default function EventDetailsPage({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Cover Image */}
+        <div className="mb-8 rounded-lg bg-white p-6 shadow dark:bg-zinc-800">
+          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Event-Titelbild
+          </h2>
+          
+          {event.cover_image_url ? (
+            <div className="space-y-4">
+              <div className="relative inline-block">
+                <img
+                  src={event.cover_image_url}
+                  alt={event.title}
+                  className="h-48 w-auto rounded-lg object-cover shadow-md"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="cover-update"
+                  className={`inline-flex cursor-pointer items-center gap-2 rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20 ${
+                    uploadingCover ? "cursor-not-allowed opacity-50" : ""
+                  }`}
+                >
+                  {uploadingCover ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                      Wird hochgeladen...
+                    </>
+                  ) : (
+                    <>
+                      🖼️ Bild ändern
+                    </>
+                  )}
+                  <input
+                    id="cover-update"
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingCover}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleCoverImageUpload(file);
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
+                Noch kein Titelbild hochgeladen. Füge ein ansprechendes Bild hinzu!
+              </p>
+              <label
+                htmlFor="cover-upload"
+                className={`flex cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-zinc-300 px-6 py-8 transition-colors hover:border-zinc-400 dark:border-zinc-600 dark:hover:border-zinc-500 ${
+                  uploadingCover ? "cursor-not-allowed opacity-50" : ""
+                }`}
+              >
+                {uploadingCover ? (
+                  <div className="text-center">
+                    <div className="mx-auto mb-2 h-12 w-12 animate-spin rounded-full border-4 border-zinc-300 border-t-zinc-900 dark:border-zinc-600 dark:border-t-zinc-50" />
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      Wird hochgeladen...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-zinc-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 16m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                      Bild hochladen
+                    </p>
+                  </div>
+                )}
+                <input
+                  id="cover-upload"
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingCover}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleCoverImageUpload(file);
+                  }}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
         </div>
 
         {/* Event Details */}
