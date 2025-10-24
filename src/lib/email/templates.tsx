@@ -146,9 +146,9 @@ export function PurchaseConfirmationEmail({
           <Text style={text}>
             <strong>Download-Links:</strong>
           </Text>
-          {downloadLinks.slice(0, 5).map((link, index) => (
+          {downloadLinks.slice(0, 5).map((downloadUrl, index) => (
             <Text key={index} style={downloadLink}>
-              <Link href={link} style={link}>
+              <Link href={downloadUrl} style={link}>
                 Foto {index + 1} herunterladen
               </Link>
             </Text>
