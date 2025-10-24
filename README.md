@@ -7,35 +7,48 @@ Eine Multi-Rollen-Plattform, auf der Fotografen Sportevents erstellen, Fotos hoc
 ### Für Athleten
 - **Event-Suche**: Finde Events nach Datum, Ort oder Name
 - **Startnummer-Filterung**: Filtere Fotos nach deiner Startnummer
-- **Foto-Kauf**: Kaufe einzelne Fotos oder Pakete
-- **Bestellverwaltung**: Überblick über alle gekauften Fotos
+- **Gesichtserkennung**: Lade ein Selfie hoch und finde automatisch deine Fotos
+- **Wasserzeichen-Vorschau**: Sieh dir Fotos mit Wasserzeichen an, bevor du kaufst
+- **Foto-Kauf**: Kaufe einzelne Fotos via Stripe Checkout
+- **Bestellverwaltung**: Überblick über alle gekauften Fotos mit Download-Links
 
 ### Für Fotografen
 - **Event-Management**: Erstelle und verwalte deine Events
-- **Foto-Upload**: Lade Fotos hoch mit optionaler Startnummer-Zuordnung
+- **Foto-Upload**: Lade Fotos hoch mit automatischer Wasserzeichen-Generierung
+- **Automatische OCR**: Startnummern werden automatisch erkannt
 - **Verkaufsstatistiken**: Dashboard mit Umsatz und Verkaufszahlen
+- **Analytics Dashboard**: Detaillierte Charts und Verkaufs-Insights
+- **Stripe Connect**: Verknüpfe dein Bankkonto für automatische Auszahlungen
+- **E-Mail-Benachrichtigungen**: Erhalte Benachrichtigungen bei Verkäufen
 - **Flexible Preisgestaltung**: Einzelpreise und Paketangebote
 
 ### Für Admins
 - **Fotografen-Freischaltung**: Review und Genehmigung von Fotografen-Anfragen
-- **Umsatz-Übersicht**: Plattform-Einnahmen und Auszahlungen
+- **Plattform-Analytics**: Umfassende Übersicht über alle Aktivitäten
+- **Umsatz-Übersicht**: Plattform-Einnahmen und Fotografen-Auszahlungen
 - **Fotografen-Verwaltung**: Aktivieren/Sperren von Accounts
+- **E-Mail-Benachrichtigungen**: Automatische E-Mails bei Freischaltungen
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 16 (App Router) + React 19
 - **Styling**: Tailwind CSS 4
 - **Backend**: Supabase (Auth, Database, Storage)
-- **Payments**: Stripe Connect *(in Vorbereitung)*
-- **Storage**: Supabase Storage *(AWS S3 geplant)*
+- **Payments**: Stripe Connect (vollständig integriert)
+- **AI/ML**: AWS Rekognition (OCR & Gesichtserkennung)
+- **Bildverarbeitung**: Sharp (Wasserzeichen-Generierung)
+- **E-Mail**: Resend (E-Mail-Benachrichtigungen)
+- **Analytics**: Recharts (Verkaufs-Charts)
+- **i18n**: next-intl (Deutsch & Englisch)
 - **TypeScript**: Vollständig typsicher
 
 ## 📋 Voraussetzungen
 
 - Node.js 20+ und npm
 - Supabase Account (kostenlos)
-- *(Optional)* Stripe Account für Zahlungen
-- *(Optional)* AWS Account für S3 Storage
+- Stripe Account (für Zahlungen & Fotografen-Auszahlungen)
+- AWS Account (für OCR & Gesichtserkennung)
+- Resend Account (für E-Mail-Benachrichtigungen)
 
 ## 🚀 Installation & Setup
 
@@ -67,16 +80,19 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 PLATFORM_FEE_PERCENTAGE=15
 
-# Stripe (Optional - für später)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
+# Stripe (Required)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
-# AWS S3 (Optional - für später)
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
+# AWS Rekognition (Required)
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
 AWS_REGION=eu-central-1
-AWS_S3_BUCKET=
+
+# Resend (Required for email)
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=onboarding@resend.dev
 ```
 
 ### 4. Datenbank-Migrationen ausführen
@@ -157,7 +173,7 @@ src/
 - `purchases` - Käufe/Transaktionen
 - `purchase_photos` - Verknüpfung Käufe ↔ Fotos
 
-## 🚧 Roadmap / Nächste Schritte
+## 🚧 Roadmap / Status
 
 ### Phase 1: ✅ Foundation
 - [x] Datenbank-Schema & Migrations
@@ -179,18 +195,28 @@ src/
 - [x] Fotografen-Freischaltung
 - [x] Umsatz-Übersicht
 
-### Phase 5: ⏳ Stripe Integration
-- [ ] Stripe Connect Onboarding für Fotografen
-- [ ] Checkout-Flow
-- [ ] Webhook-Handler
-- [ ] Plattform-Provision (15%)
+### Phase 5: ✅ Stripe Integration
+- [x] Stripe Connect Onboarding für Fotografen
+- [x] Checkout-Flow
+- [x] Webhook-Handler
+- [x] Plattform-Provision (15%)
 
-### Phase 6: ⏳ Erweiterte Features
-- [ ] AWS Rekognition für Gesichtserkennung
-- [ ] OCR für automatische Startnummer-Erkennung
-- [ ] Wasserzeichen-Generierung
-- [ ] E-Mail-Benachrichtigungen
+### Phase 6: ✅ AWS Rekognition
+- [x] OCR für automatische Startnummer-Erkennung
+- [x] Gesichtserkennung mit Selfie-Upload
+
+### Phase 7: ✅ Erweiterte Features
+- [x] Wasserzeichen-Generierung (Sharp)
+- [x] E-Mail-Benachrichtigungen (Resend)
+- [x] Analytics Dashboard (Recharts)
+- [x] Mehrsprachigkeit (next-intl: Deutsch & Englisch)
+
+### Phase 8: 🔜 Zukünftige Features
 - [ ] Event-Branding & Custom Domains
+- [ ] Mobile App (React Native)
+- [ ] Social Sharing
+- [ ] Event-Kalender-Integration
+- [ ] Automatische Foto-Tagging mit AI
 
 ## 🤝 Entwicklung
 

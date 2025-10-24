@@ -1,0 +1,131 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "search": "Suchen",
+    "upload": "Hochladen",
+    "download": "Herunterladen"
+  },
+  "nav": {
+    "home": "Start",
+    "search": "Suche",
+    "myEvents": "Meine Events",
+    "sales": "Verkäufe",
+    "orders": "Bestellungen",
+    "analytics": "Analytics",
+    "photographers": "Fotografen",
+    "revenue": "Einnahmen",
+    "signin": "Anmelden",
+    "signup": "Registrieren",
+    "signout": "Abmelden",
+    "becomePhotographer": "Fotograf werden"
+  },
+  "hero": {
+    "title": "Deine Sportfotos. Einfach gefunden.",
+    "subtitle": "Finde deine Erinnerungen mit Gesichtserkennung oder Startnummer – von tausenden Events weltweit.",
+    "searchEvents": "Events durchsuchen",
+    "forPhotographers": "Für Fotografen"
+  },
+  "events": {
+    "title": "Events",
+    "new": "Neues Event",
+    "edit": "Event bearbeiten",
+    "delete": "Event löschen",
+    "publish": "Veröffentlichen",
+    "unpublish": "Verbergen",
+    "noEvents": "Noch keine Events",
+    "createFirst": "Erstelle dein erstes Event",
+    "eventDetails": "Event-Details",
+    "photos": "Fotos",
+    "photosCount": "{count} Fotos"
+  },
+  "upload": {
+    "title": "Fotos hochladen",
+    "selectFiles": "Klicke zum Auswählen oder ziehe Dateien hierher",
+    "fileTypes": "PNG, JPG, JPEG bis zu 10MB pro Datei",
+    "bibNumber": "Startnummer (optional)",
+    "uploading": "Wird hochgeladen...",
+    "success": "{count} Fotos erfolgreich hochgeladen",
+    "error": "Upload fehlgeschlagen"
+  },
+  "search": {
+    "title": "Events suchen",
+    "byFace": "Nach Gesicht suchen",
+    "byBibNumber": "Nach Startnummer suchen",
+    "uploadSelfie": "Selfie hochladen",
+    "enterBibNumber": "Startnummer eingeben",
+    "searching": "Suche läuft...",
+    "noResults": "Keine Ergebnisse gefunden",
+    "foundPhotos": "{count} Fotos gefunden"
+  },
+  "checkout": {
+    "title": "Zur Kasse",
+    "selected": "{count} ausgewählt",
+    "total": "Gesamt",
+    "proceedToCheckout": "Zur Kasse",
+    "success": "Kauf erfolgreich!",
+    "thankYou": "Vielen Dank für deinen Kauf"
+  },
+  "photographer": {
+    "dashboard": "Fotografen-Dashboard",
+    "events": "Meine Events",
+    "sales": "Verkäufe",
+    "analytics": "Analytics",
+    "stripeConnect": "Stripe verbinden",
+    "stripeConnected": "Stripe verbunden",
+    "totalRevenue": "Gesamtumsatz",
+    "photosSold": "Verkaufte Fotos",
+    "conversionRate": "Konversionsrate",
+    "avgPrice": "Ø Preis/Foto"
+  },
+  "admin": {
+    "dashboard": "Admin-Dashboard",
+    "photographers": "Fotografen",
+    "revenue": "Einnahmen",
+    "analytics": "Analytics",
+    "pending": "Ausstehend",
+    "approved": "Genehmigt",
+    "rejected": "Abgelehnt",
+    "approve": "Genehmigen",
+    "reject": "Ablehnen",
+    "suspend": "Sperren",
+    "activate": "Aktivieren",
+    "platformRevenue": "Plattform-Umsatz",
+    "totalPhotographers": "Fotografen",
+    "totalEvents": "Events",
+    "totalPhotos": "Fotos",
+    "totalSales": "Verkäufe"
+  },
+  "auth": {
+    "signin": "Anmelden",
+    "signup": "Registrieren",
+    "signout": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "fullName": "Vollständiger Name",
+    "forgotPassword": "Passwort vergessen?",
+    "resetPassword": "Passwort zurücksetzen",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "noAccount": "Noch kein Konto?",
+    "haveAccount": "Bereits ein Konto?",
+    "signingIn": "Anmeldung läuft...",
+    "signingUp": "Registrierung läuft..."
+  },
+  "errors": {
+    "required": "Dieses Feld ist erforderlich",
+    "invalidEmail": "Ungültige E-Mail-Adresse",
+    "passwordTooShort": "Passwort muss mindestens 6 Zeichen lang sein",
+    "passwordsDontMatch": "Passwörter stimmen nicht überein",
+    "unauthorized": "Nicht autorisiert",
+    "notFound": "Nicht gefunden",
+    "serverError": "Serverfehler"
+  }
+}
+
+

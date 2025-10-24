@@ -100,6 +100,12 @@ export function Header() {
                   >
                     Verkäufe
                   </Link>
+                  <Link
+                    href="/photographer/analytics"
+                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
+                  >
+                    Analytics
+                  </Link>
                 </>
               )}
 
@@ -116,6 +122,12 @@ export function Header() {
                     className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                   >
                     Umsatz
+                  </Link>
+                  <Link
+                    href="/admin/analytics"
+                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
+                  >
+                    Analytics
                   </Link>
                 </>
               )}
