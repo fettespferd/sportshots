@@ -54,11 +54,16 @@ export async function POST(request: NextRequest) {
       .upload(watermarkFileName, watermarkedBuffer, {
         contentType: "image/jpeg",
         cacheControl: "3600",
+        upsert: false,
       });
 
     if (watermarkError) {
-      console.error("Watermark upload error:", watermarkError);
-      throw new Error("Failed to upload watermark");
+      console.error("Watermark upload error:", {
+        error: watermarkError,
+        fileName: watermarkFileName,
+        message: watermarkError.message,
+      });
+      throw new Error(`Failed to upload watermark: ${watermarkError.message || JSON.stringify(watermarkError)}`);
     }
 
     // Upload thumbnail
@@ -71,10 +76,16 @@ export async function POST(request: NextRequest) {
       .upload(thumbnailFileName, thumbnailBuffer, {
         contentType: "image/jpeg",
         cacheControl: "3600",
+        upsert: false,
       });
 
     if (thumbnailError) {
-      console.error("Thumbnail upload error:", thumbnailError);
+      console.error("Thumbnail upload error:", {
+        error: thumbnailError,
+        fileName: thumbnailFileName,
+        message: thumbnailError.message,
+      });
+      // Don't throw, just log - we can continue without thumbnail
     }
 
     // Get public URLs
