@@ -184,14 +184,14 @@ export default function PublicEventPage({
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       {/* Event Header */}
-      <div className="bg-white dark:bg-zinc-800">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-2">
+      <div className="bg-white shadow-sm dark:bg-zinc-800">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 md:gap-8">
             <div>
-              <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50">
+              <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-3xl md:text-4xl">
                 {event.title}
               </h1>
-              <div className="mt-4 space-y-2 text-zinc-600 dark:text-zinc-400">
+              <div className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400 sm:mt-4">
                 <div className="flex items-center">
                   <svg
                     className="mr-2 h-5 w-5"
@@ -237,12 +237,12 @@ export default function PublicEventPage({
               )}
             </div>
 
-            <div className="rounded-lg bg-zinc-50 p-6 dark:bg-zinc-700">
-              <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            <div className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-700 sm:p-6">
+              <h2 className="mb-3 text-base font-semibold text-zinc-900 dark:text-zinc-50 sm:mb-4 sm:text-lg">
                 Preise
               </h2>
               <div className="space-y-2">
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm sm:text-base">
                   <span className="text-zinc-600 dark:text-zinc-400">
                     Einzelnes Foto
                   </span>
@@ -251,7 +251,7 @@ export default function PublicEventPage({
                   </span>
                 </div>
                 {event.package_price && event.package_photo_count && (
-                  <div className="flex justify-between border-t border-zinc-200 pt-2 dark:border-zinc-600">
+                  <div className="flex justify-between border-t border-zinc-200 pt-2 text-sm dark:border-zinc-600 sm:text-base">
                     <span className="text-zinc-600 dark:text-zinc-400">
                       {event.package_photo_count} Fotos Paket
                     </span>
@@ -267,7 +267,7 @@ export default function PublicEventPage({
       </div>
 
       {/* Photo Gallery */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className={`mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 ${selectedPhotos.size > 0 ? 'pb-32 sm:pb-8' : ''}`}>
         {/* Search Bar */}
         <div className="mb-6 space-y-4">
           {/* Startnummer-Suche */}
@@ -346,14 +346,15 @@ export default function PublicEventPage({
 
         {/* Selected Photos Bar */}
         {selectedPhotos.size > 0 && (
-          <div className="sticky top-4 z-10 mb-6 rounded-lg bg-zinc-900 p-6 shadow-lg dark:bg-zinc-50">
-            <div className="flex flex-col gap-4">
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-900 p-4 shadow-2xl dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:p-6 sm:shadow-lg">
+            <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:gap-4">
               <div className="flex items-center justify-between">
-                <div className="text-white dark:text-zinc-900">
+                <div className="text-sm text-white dark:text-zinc-900 sm:text-base">
                   <span className="font-semibold">{selectedPhotos.size}</span>{" "}
-                  Fotos ausgewählt
+                  <span className="hidden xs:inline">Fotos ausgewählt</span>
+                  <span className="xs:hidden">Fotos</span>
                 </div>
-                <span className="text-2xl font-bold text-white dark:text-zinc-900">
+                <span className="text-xl font-bold text-white dark:text-zinc-900 sm:text-2xl">
                   {calculateTotal().toFixed(2)} €
                 </span>
               </div>
@@ -376,6 +377,7 @@ export default function PublicEventPage({
               )}
 
               <button
+                className="w-full rounded-md bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800 sm:px-6 sm:py-3 sm:text-base"
                 onClick={async () => {
                   // Validate guest email
                   if (!isAuthenticated && !guestEmail) {
@@ -439,7 +441,6 @@ export default function PublicEventPage({
                     });
                   }
                 }}
-                className="w-full rounded-md bg-white px-6 py-3 text-base font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
               >
                 Zur Kasse
               </button>
@@ -473,7 +474,7 @@ export default function PublicEventPage({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
             {filteredPhotos.map((photo) => (
               <div
                 key={photo.id}

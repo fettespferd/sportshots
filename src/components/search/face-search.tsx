@@ -193,10 +193,10 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
 
   return (
     <>
-      <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
-        <div className="mb-3 flex items-center">
+      <div className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700 sm:p-4">
+        <div className="mb-2 flex items-center sm:mb-3">
           <svg
-            className="mr-2 h-5 w-5 text-blue-600 dark:text-blue-400"
+            className="mr-1.5 h-4 w-4 text-blue-600 dark:text-blue-400 sm:mr-2 sm:h-5 sm:w-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -208,12 +208,12 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
               d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <h3 className="font-medium text-zinc-900 dark:text-zinc-50">
+          <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-50 sm:text-base">
             Selfie-Suche
           </h3>
         </div>
 
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mb-3 text-xs text-zinc-600 dark:text-zinc-400 sm:mb-4 sm:text-sm">
           Mache ein Selfie oder lade ein Foto hoch - wir finden automatisch Fotos von dir!
         </p>
 
@@ -317,16 +317,16 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <button
                 onClick={openCamera}
                 disabled={loading}
-                className={`flex items-center justify-center gap-2 rounded-md border-2 border-zinc-300 px-4 py-3 text-sm font-medium transition-colors hover:border-zinc-400 dark:border-zinc-600 dark:hover:border-zinc-500 ${
+                className={`flex items-center justify-center gap-1.5 rounded-md border-2 border-zinc-300 px-3 py-2.5 text-xs font-medium transition-colors hover:border-zinc-400 dark:border-zinc-600 dark:hover:border-zinc-500 sm:gap-2 sm:px-4 sm:py-3 sm:text-sm ${
                   loading ? "cursor-not-allowed opacity-50" : ""
                 }`}
               >
                 <svg
-                  className="h-5 w-5"
+                  className="h-4 w-4 sm:h-5 sm:w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -349,12 +349,12 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
 
               <label
                 htmlFor="selfie-upload"
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-zinc-300 px-4 py-3 text-sm font-medium transition-colors hover:border-zinc-400 dark:border-zinc-600 dark:hover:border-zinc-500 ${
+                className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-md border-2 border-dashed border-zinc-300 px-3 py-2.5 text-xs font-medium transition-colors hover:border-zinc-400 dark:border-zinc-600 dark:hover:border-zinc-500 sm:gap-2 sm:px-4 sm:py-3 sm:text-sm ${
                   loading ? "cursor-not-allowed opacity-50" : ""
                 }`}
               >
                 <svg
-                  className="h-5 w-5"
+                  className="h-4 w-4 sm:h-5 sm:w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
