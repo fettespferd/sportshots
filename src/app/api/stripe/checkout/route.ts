@@ -9,11 +9,17 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { photoIds, eventId, guestEmail } = await request.json();
+
+    // Allow both authenticated users and guests (with email)
+    if (!user && !guestEmail) {
+      return NextResponse.json(
+        { error: "Please provide your email address" },
+        { status: 400 }
+      );
     }
 
-    const { photoIds, eventId } = await request.json();
+    const customerEmail = user?.email || guestEmail;
 
     if (!photoIds || photoIds.length === 0) {
       return NextResponse.json(
@@ -80,20 +86,22 @@ export async function POST(request: NextRequest) {
           destination: photographerStripeId,
         },
         metadata: {
-          user_id: user.id,
+          user_id: user?.id || "guest",
           event_id: eventId,
           photographer_id: event.photographer_id,
           photo_ids: JSON.stringify(photoIds),
+          customer_email: customerEmail,
         },
       },
-      customer_email: user.email,
+      customer_email: customerEmail,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/event/${event.slug}`,
       metadata: {
-        user_id: user.id,
+        user_id: user?.id || "guest",
         event_id: eventId,
         photographer_id: event.photographer_id,
         photo_ids: JSON.stringify(photoIds),
+        customer_email: customerEmail,
       },
     });
 

@@ -37,10 +37,19 @@ export default function PublicEventPage({
   const [bibNumberFilter, setBibNumberFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [showEmailInput, setShowEmailInput] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
     const loadEvent = async () => {
+      // Check if user is authenticated
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+
       // Get event
       const { data: eventData, error: eventError } = await supabase
         .from("events")
@@ -277,17 +286,39 @@ export default function PublicEventPage({
         {/* Selected Photos Bar */}
         {selectedPhotos.size > 0 && (
           <div className="sticky top-4 z-10 mb-6 rounded-lg bg-zinc-900 p-4 shadow-lg dark:bg-zinc-50">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="text-white dark:text-zinc-900">
                 <span className="font-semibold">{selectedPhotos.size}</span>{" "}
                 Fotos ausgewählt
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:space-x-4">
+                {/* Email input for guests */}
+                {!isAuthenticated && showEmailInput && (
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    placeholder="Deine E-Mail-Adresse"
+                    className="rounded-md border border-zinc-300 px-4 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                  />
+                )}
                 <span className="text-lg font-bold text-white dark:text-zinc-900">
                   {calculateTotal().toFixed(2)} €
                 </span>
                 <button
                   onClick={async () => {
+                    // For guests: first show email input, then proceed
+                    if (!isAuthenticated && !showEmailInput) {
+                      setShowEmailInput(true);
+                      return;
+                    }
+
+                    // Validate guest email
+                    if (!isAuthenticated && !guestEmail) {
+                      alert("Bitte gib deine E-Mail-Adresse ein");
+                      return;
+                    }
+
                     try {
                       const response = await fetch("/api/stripe/checkout", {
                         method: "POST",
@@ -295,6 +326,7 @@ export default function PublicEventPage({
                         body: JSON.stringify({
                           photoIds: Array.from(selectedPhotos),
                           eventId: event.id,
+                          guestEmail: !isAuthenticated ? guestEmail : undefined,
                         }),
                       });
 
@@ -316,7 +348,7 @@ export default function PublicEventPage({
                   }}
                   className="rounded-md bg-white px-6 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
                 >
-                  Zur Kasse
+                  {!isAuthenticated && !showEmailInput ? "Weiter" : "Zur Kasse"}
                 </button>
               </div>
             </div>
