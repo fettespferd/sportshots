@@ -37,6 +37,16 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
     };
   }, [stream]);
 
+  // Ensure video element gets the stream
+  useEffect(() => {
+    if (cameraOpen && stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch((err) => {
+        console.error("Error playing video:", err);
+      });
+    }
+  }, [cameraOpen, stream]);
+
   const performFaceSearch = async (file: File) => {
     setLoading(true);
 
@@ -101,23 +111,38 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
 
   const openCamera = async () => {
     try {
+      console.log("Opening camera...");
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
+        video: { 
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false,
       });
+
+      console.log("Camera stream received:", mediaStream);
+      console.log("Video tracks:", mediaStream.getVideoTracks());
 
       setStream(mediaStream);
       setCameraOpen(true);
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-    } catch (error) {
+      // Wait a bit for state to update, then set video source
+      setTimeout(() => {
+        if (videoRef.current) {
+          console.log("Setting video srcObject");
+          videoRef.current.srcObject = mediaStream;
+          videoRef.current.play().catch((err) => {
+            console.error("Error playing video:", err);
+          });
+        }
+      }, 100);
+    } catch (error: any) {
       console.error("Camera error:", error);
       setModalState({
         isOpen: true,
         title: "Kamera-Fehler",
-        message: "Kamera konnte nicht geöffnet werden. Bitte erlaube den Zugriff auf die Kamera.",
+        message: `Kamera konnte nicht geöffnet werden: ${error.message || "Bitte erlaube den Zugriff auf die Kamera."}`,
         type: "error",
       });
     }
@@ -194,29 +219,37 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
 
         {/* Camera View */}
         {cameraOpen && (
-          <div className="mb-4 overflow-hidden rounded-lg border-2 border-blue-500 bg-black">
-            <div className="relative aspect-video w-full overflow-hidden bg-zinc-900">
+          <div className="mb-4 overflow-hidden rounded-lg border-4 border-blue-500 bg-zinc-900">
+            <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className="absolute inset-0 h-full w-full object-cover"
+                className="h-full w-full object-cover"
+                style={{ 
+                  display: 'block',
+                  backgroundColor: '#000',
+                  minHeight: '300px'
+                }}
               />
+              <div className="absolute bottom-2 right-2 rounded bg-red-600 px-2 py-1 text-xs text-white">
+                🔴 LIVE
+              </div>
             </div>
             <canvas ref={canvasRef} className="hidden" />
-            <div className="flex gap-2 bg-zinc-900 p-3">
+            <div className="flex gap-2 bg-zinc-800 p-3">
               <button
                 onClick={takePicture}
-                className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="flex-1 rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700"
               >
                 📸 Foto machen
               </button>
               <button
                 onClick={closeCamera}
-                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 dark:border-zinc-600 dark:hover:bg-zinc-700"
+                className="rounded-md border border-zinc-400 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
               >
-                Abbrechen
+                ✕ Abbrechen
               </button>
             </div>
           </div>
