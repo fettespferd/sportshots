@@ -194,16 +194,18 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
 
         {/* Camera View */}
         {cameraOpen && (
-          <div className="mb-4 overflow-hidden rounded-lg bg-black">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full"
-            />
+          <div className="mb-4 overflow-hidden rounded-lg border-2 border-blue-500 bg-black">
+            <div className="relative aspect-video w-full overflow-hidden bg-zinc-900">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            </div>
             <canvas ref={canvasRef} className="hidden" />
-            <div className="flex gap-2 p-3">
+            <div className="flex gap-2 bg-zinc-900 p-3">
               <button
                 onClick={takePicture}
                 className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
@@ -212,7 +214,7 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
               </button>
               <button
                 onClick={closeCamera}
-                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 dark:border-zinc-600 dark:hover:bg-zinc-700"
               >
                 Abbrechen
               </button>
