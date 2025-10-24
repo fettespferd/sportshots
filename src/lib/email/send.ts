@@ -7,7 +7,9 @@ import {
   PayoutNotificationEmail,
 } from "./templates";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY 
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 const fromName = "SportShots";
@@ -19,6 +21,11 @@ interface SendEmailParams {
 }
 
 async function sendEmail({ to, subject, html }: SendEmailParams) {
+  if (!resend) {
+    console.warn("Resend API key not configured - skipping email send");
+    return { success: false, error: "Email service not configured" };
+  }
+
   try {
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
