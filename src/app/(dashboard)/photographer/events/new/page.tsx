@@ -70,7 +70,9 @@ export default function NewEventPage() {
       // Upload cover image if provided
       let coverImageUrl = null;
       if (coverImage) {
+        console.log("Uploading cover image:", coverImage.name);
         const fileName = `covers/${user.id}/${Date.now()}-${coverImage.name}`;
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("photos")
           .upload(fileName, coverImage, {
@@ -79,9 +81,22 @@ export default function NewEventPage() {
           });
 
         if (uploadError) {
+          console.error("Cover upload error:", uploadError);
+          
+          // Check if it's a policy error
+          if (uploadError.message.includes("policy") || uploadError.message.includes("not allowed")) {
+            throw new Error(
+              `Cover-Bild Upload fehlgeschlagen: Storage-Policy fehlt. ` +
+              `Bitte führe die Storage-Migration in Supabase aus. ` +
+              `Details: ${uploadError.message}`
+            );
+          }
+          
           throw new Error(`Cover-Bild Upload fehlgeschlagen: ${uploadError.message}`);
         }
 
+        console.log("Cover image uploaded successfully:", fileName);
+        
         const {
           data: { publicUrl },
         } = supabase.storage.from("photos").getPublicUrl(fileName);
