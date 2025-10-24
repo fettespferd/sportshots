@@ -233,6 +233,52 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
                   minHeight: '300px'
                 }}
               />
+              
+              {/* Face Oval Guide */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="relative" style={{ width: '60%', height: '80%' }}>
+                  {/* Overlay with cutout */}
+                  <svg className="absolute inset-0 h-full w-full">
+                    <defs>
+                      <mask id="face-mask">
+                        <rect width="100%" height="100%" fill="white" />
+                        <ellipse
+                          cx="50%"
+                          cy="50%"
+                          rx="45%"
+                          ry="48%"
+                          fill="black"
+                        />
+                      </mask>
+                    </defs>
+                    <rect
+                      width="100%"
+                      height="100%"
+                      fill="rgba(0, 0, 0, 0.5)"
+                      mask="url(#face-mask)"
+                    />
+                    <ellipse
+                      cx="50%"
+                      cy="50%"
+                      rx="45%"
+                      ry="48%"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="3"
+                      strokeDasharray="10,5"
+                      className="animate-pulse"
+                    />
+                  </svg>
+                  
+                  {/* Helper Text */}
+                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                    <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-zinc-900">
+                      👤 Positioniere dein Gesicht im Oval
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               <div className="absolute bottom-2 right-2 rounded bg-red-600 px-2 py-1 text-xs text-white">
                 🔴 LIVE
               </div>

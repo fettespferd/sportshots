@@ -23,10 +23,21 @@ export default function NewEventPage() {
   const [pricePerPhoto, setPricePerPhoto] = useState("8.00");
   const [packagePrice, setPackagePrice] = useState("");
   const [packagePhotoCount, setPackagePhotoCount] = useState("");
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverImage(file);
+      const preview = URL.createObjectURL(file);
+      setCoverImagePreview(preview);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +67,27 @@ export default function NewEventPage() {
         ? `${slug}-${Date.now().toString().slice(-6)}`
         : slug;
 
+      // Upload cover image if provided
+      let coverImageUrl = null;
+      if (coverImage) {
+        const fileName = `covers/${user.id}/${Date.now()}-${coverImage.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("photos")
+          .upload(fileName, coverImage, {
+            contentType: coverImage.type,
+            cacheControl: "3600",
+          });
+
+        if (uploadError) {
+          throw new Error(`Cover-Bild Upload fehlgeschlagen: ${uploadError.message}`);
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("photos").getPublicUrl(fileName);
+        coverImageUrl = publicUrl;
+      }
+
       const eventData = {
         photographer_id: user.id,
         title,
@@ -69,6 +101,7 @@ export default function NewEventPage() {
         package_photo_count: packagePhotoCount
           ? parseInt(packagePhotoCount)
           : null,
+        cover_image_url: coverImageUrl,
         is_published: false,
       };
 
@@ -143,6 +176,84 @@ export default function NewEventPage() {
               className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
               placeholder="Beschreibe das Event..."
             />
+          </div>
+
+          {/* Cover Image Upload */}
+          <div>
+            <label
+              htmlFor="coverImage"
+              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              Event-Titelbild
+            </label>
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              Optional: Lade ein ansprechendes Bild hoch (z.B. vom Veranstaltungsort, Logo, etc.)
+            </p>
+            
+            {coverImagePreview ? (
+              <div className="mt-2">
+                <div className="relative inline-block">
+                  <img
+                    src={coverImagePreview}
+                    alt="Cover Preview"
+                    className="h-32 w-auto rounded-lg object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCoverImage(null);
+                      setCoverImagePreview(null);
+                    }}
+                    className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label
+                htmlFor="coverImage"
+                className="mt-2 flex cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-zinc-300 px-6 py-8 transition-colors hover:border-zinc-400 dark:border-zinc-600 dark:hover:border-zinc-500"
+              >
+                <div className="text-center">
+                  <svg
+                    className="mx-auto h-12 w-12 text-zinc-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 16m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    Bild hochladen
+                  </p>
+                </div>
+                <input
+                  id="coverImage"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverImageChange}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

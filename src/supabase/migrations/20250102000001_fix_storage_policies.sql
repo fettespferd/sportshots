@@ -1,7 +1,7 @@
 -- Drop the old restrictive policy
 DROP POLICY IF EXISTS "Photographers can upload photos" ON storage.objects;
 
--- Create new policy that allows photographers to upload to originals, watermarks, and thumbnails
+-- Create new policy that allows photographers to upload to originals, watermarks, thumbnails, and covers
 CREATE POLICY "Photographers can upload photos to all folders"
 ON storage.objects
 FOR INSERT
@@ -11,7 +11,8 @@ WITH CHECK (
   (
     (storage.foldername(name))[1] = 'originals' OR
     (storage.foldername(name))[1] = 'watermarks' OR
-    (storage.foldername(name))[1] = 'thumbnails'
+    (storage.foldername(name))[1] = 'thumbnails' OR
+    (storage.foldername(name))[1] = 'covers'
   ) AND
   EXISTS (
     SELECT 1 FROM public.profiles
@@ -36,7 +37,8 @@ USING (
   (
     (storage.foldername(name))[1] = 'originals' OR
     (storage.foldername(name))[1] = 'watermarks' OR
-    (storage.foldername(name))[1] = 'thumbnails'
+    (storage.foldername(name))[1] = 'thumbnails' OR
+    (storage.foldername(name))[1] = 'covers'
   ) AND
   EXISTS (
     SELECT 1 FROM public.profiles

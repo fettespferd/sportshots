@@ -109,6 +109,18 @@ export default function PublicEventPage({
     }
   }, [bibNumberFilter, photos]);
 
+  const handleFaceSearchResults = (photoIds: string[]) => {
+    if (photoIds.length > 0) {
+      setFilteredPhotos(photos.filter((photo) => photoIds.includes(photo.id)));
+    }
+  };
+
+  const resetFilters = () => {
+    setBibNumberFilter("");
+    setFilteredPhotos(photos);
+    setSelectedPhotos(new Set());
+  };
+
   const togglePhotoSelection = (photoId: string) => {
     setSelectedPhotos((prev) => {
       const newSet = new Set(prev);
@@ -295,6 +307,41 @@ export default function PublicEventPage({
               setBibNumberFilter(""); // Clear bib filter
             }}
           />
+
+          {/* Reset Filter Button */}
+          {(bibNumberFilter || filteredPhotos.length !== photos.length) && (
+            <div className="mt-4 flex items-center justify-between rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
+              <div className="flex items-center gap-2">
+                <svg
+                  className="h-5 w-5 text-yellow-600 dark:text-yellow-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-yellow-900 dark:text-yellow-400">
+                    Filter aktiv
+                  </p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-500">
+                    {filteredPhotos.length} von {photos.length} Fotos werden angezeigt
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={resetFilters}
+                className="rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600"
+              >
+                ✕ Filter zurücksetzen
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Selected Photos Bar */}
