@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { FaceSearch } from "@/components/search/face-search";
 import { Modal } from "@/components/ui/modal";
+import { Lightbox } from "@/components/ui/lightbox";
 
 interface Event {
   id: string;
@@ -40,6 +41,8 @@ export default function PublicEventPage({
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState("");
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -427,19 +430,41 @@ export default function PublicEventPage({
             {filteredPhotos.map((photo) => (
               <div
                 key={photo.id}
-                className={`group relative cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
+                className={`group relative overflow-hidden rounded-lg border-2 transition-all ${
                   selectedPhotos.has(photo.id)
                     ? "border-zinc-900 dark:border-zinc-50"
                     : "border-transparent"
                 }`}
-                onClick={() => togglePhotoSelection(photo.id)}
               >
-                <div className="aspect-square w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
+                <div 
+                  className="aspect-square w-full cursor-zoom-in overflow-hidden bg-zinc-100 dark:bg-zinc-700"
+                  onClick={() => {
+                    setLightboxImage(photo.watermark_url);
+                    setLightboxOpen(true);
+                  }}
+                >
                   <img
                     src={photo.watermark_url}
                     alt=""
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />
+                  
+                  {/* Zoom icon hint */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/20 group-hover:opacity-100">
+                    <svg
+                      className="h-8 w-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
+                      />
+                    </svg>
+                  </div>
                 </div>
 
                 {photo.bib_number && (
@@ -448,10 +473,17 @@ export default function PublicEventPage({
                   </div>
                 )}
 
-                {selectedPhotos.has(photo.id) && (
-                  <div className="absolute right-2 top-2 rounded-full bg-zinc-900 p-1 dark:bg-zinc-50">
+                {/* Selection checkbox */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePhotoSelection(photo.id);
+                  }}
+                  className="absolute right-2 top-2 rounded-full bg-white/90 p-2 transition-colors hover:bg-white dark:bg-zinc-800/90 dark:hover:bg-zinc-800"
+                >
+                  {selectedPhotos.has(photo.id) ? (
                     <svg
-                      className="h-4 w-4 text-white dark:text-zinc-900"
+                      className="h-5 w-5 text-zinc-900 dark:text-zinc-50"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -463,8 +495,22 @@ export default function PublicEventPage({
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                  </div>
-                )}
+                  ) : (
+                    <svg
+                      className="h-5 w-5 text-zinc-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                  )}
+                </button>
 
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                   <span className="text-xs font-medium text-white">
@@ -484,6 +530,14 @@ export default function PublicEventPage({
         title={modalState.title}
         message={modalState.message}
         type={modalState.type}
+      />
+
+      {/* Lightbox */}
+      <Lightbox
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        imageUrl={lightboxImage}
+        alt="Foto"
       />
     </div>
   );

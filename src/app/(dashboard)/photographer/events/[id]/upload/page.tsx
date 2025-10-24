@@ -133,13 +133,22 @@ export default function UploadPhotosPage({
           body: watermarkFormData,
         });
 
-        if (!watermarkResponse.ok) {
-          console.warn("Watermark generation failed, using original");
-        }
+        let watermarkUrl = originalUrl;
+        let thumbnailUrl = originalUrl;
 
-        const { watermarkUrl, thumbnailUrl } = watermarkResponse.ok
-          ? await watermarkResponse.json()
-          : { watermarkUrl: originalUrl, thumbnailUrl: originalUrl };
+        if (!watermarkResponse.ok) {
+          const errorText = await watermarkResponse.text();
+          console.error("Watermark generation failed:", {
+            status: watermarkResponse.status,
+            error: errorText,
+          });
+          throw new Error(`Wasserzeichen-Generierung fehlgeschlagen: ${errorText}`);
+        } else {
+          const watermarkData = await watermarkResponse.json();
+          watermarkUrl = watermarkData.watermarkUrl;
+          thumbnailUrl = watermarkData.thumbnailUrl;
+          console.log("Watermark generated successfully:", { watermarkUrl, thumbnailUrl });
+        }
 
         // Perform OCR for bib number detection if no manual bib number provided
         let detectedBibNumber = uploadFile.bibNumber;
