@@ -1,70 +1,110 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
+"use client";
 
-export default async function EventDetailsPage({
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState, useEffect, use } from "react";
+
+export default function EventDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const supabase = await createClient();
+  const { id } = use(params);
+  const router = useRouter();
+  const supabase = createClient();
+  const [loading, setLoading] = useState(true);
+  const [event, setEvent] = useState<any>(null);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [purchases, setPurchases] = useState<any[]>([]);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    const loadData = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/signin");
+      if (!user) {
+        router.push("/signin");
+        return;
+      }
+
+      // Get event details
+      const { data: eventData, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", id)
+        .eq("photographer_id", user.id)
+        .single();
+
+      if (error || !eventData) {
+        router.push("/photographer/events");
+        return;
+      }
+
+      // Get photos for this event
+      const { data: photosData } = await supabase
+        .from("photos")
+        .select("*")
+        .eq("event_id", id)
+        .order("created_at", { ascending: false });
+
+      // Get purchases for this event
+      const { data: purchasesData } = await supabase
+        .from("purchases")
+        .select("*")
+        .eq("event_id", id)
+        .eq("status", "completed");
+
+      setEvent(eventData);
+      setPhotos(photosData || []);
+      setPurchases(purchasesData || []);
+      setLoading(false);
+    };
+
+    loadData();
+  }, [id]);
+
+  const handlePublishToggle = async () => {
+    try {
+      const { error } = await supabase
+        .from("events")
+        .update({ is_published: !event.is_published })
+        .eq("id", id);
+
+      if (error) {
+        console.error("Publish error:", error);
+        alert("Fehler beim Veröffentlichen: " + error.message);
+        return;
+      }
+
+      // Update local state
+      setEvent({ ...event, is_published: !event.is_published });
+      
+      // Show success message
+      alert(event.is_published ? "Event verborgen" : "Event veröffentlicht!");
+    } catch (error) {
+      console.error("Publish error:", error);
+      alert("Fehler beim Veröffentlichen");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-300 border-t-zinc-900 dark:border-zinc-700 dark:border-t-zinc-50"></div>
+      </div>
+    );
   }
 
-  // Get event details
-  const { data: event, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", id)
-    .eq("photographer_id", user.id)
-    .single();
-
-  if (error || !event) {
-    notFound();
+  if (!event) {
+    return null;
   }
-
-  // Get photos for this event
-  const { data: photos } = await supabase
-    .from("photos")
-    .select("*")
-    .eq("event_id", id)
-    .order("created_at", { ascending: false });
-
-  // Get purchases for this event
-  const { data: purchases } = await supabase
-    .from("purchases")
-    .select("*")
-    .eq("event_id", id)
-    .eq("status", "completed");
 
   const totalRevenue =
     purchases?.reduce((sum, p) => sum + Number(p.photographer_amount), 0) || 0;
   const photoCount = photos?.length || 0;
   const purchaseCount = purchases?.length || 0;
-
-  const handlePublishToggle = async () => {
-    "use server";
-    const supabase = await createClient();
-    const { id } = await params;
-
-    const { data: currentEvent } = await supabase
-      .from("events")
-      .select("is_published")
-      .eq("id", id)
-      .single();
-
-    await supabase
-      .from("events")
-      .update({ is_published: !currentEvent?.is_published })
-      .eq("id", id);
-  };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -121,14 +161,12 @@ export default async function EventDetailsPage({
 
             <div className="flex items-center space-x-3">
               {photoCount > 0 && (
-                <form action={handlePublishToggle}>
-                  <button
-                    type="submit"
-                    className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                  >
-                    {event.is_published ? "Verbergen" : "Veröffentlichen"}
-                  </button>
-                </form>
+                <button
+                  onClick={handlePublishToggle}
+                  className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                >
+                  {event.is_published ? "Verbergen" : "Veröffentlichen"}
+                </button>
               )}
               <Link
                 href={`/photographer/events/${id}/upload`}
