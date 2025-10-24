@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, use } from "react";
+import { Modal } from "@/components/ui/modal";
 
 export default function EventDetailsPage({
   params,
@@ -17,6 +18,17 @@ export default function EventDetailsPage({
   const [event, setEvent] = useState<any>(null);
   const [photos, setPhotos] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "error" | "warning";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -74,18 +86,34 @@ export default function EventDetailsPage({
 
       if (error) {
         console.error("Publish error:", error);
-        alert("Fehler beim Veröffentlichen: " + error.message);
+        setModalState({
+          isOpen: true,
+          title: "Fehler",
+          message: "Fehler beim Veröffentlichen: " + error.message,
+          type: "error",
+        });
         return;
       }
 
       // Update local state
+      const wasPublished = event.is_published;
       setEvent({ ...event, is_published: !event.is_published });
       
       // Show success message
-      alert(event.is_published ? "Event verborgen" : "Event veröffentlicht!");
+      setModalState({
+        isOpen: true,
+        title: "Erfolg",
+        message: wasPublished ? "Event wurde verborgen" : "Event wurde veröffentlicht!",
+        type: "success",
+      });
     } catch (error) {
       console.error("Publish error:", error);
-      alert("Fehler beim Veröffentlichen");
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
+        type: "error",
+      });
     }
   };
 

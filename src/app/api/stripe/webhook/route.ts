@@ -86,16 +86,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { data: purchase, error: purchaseError } = await supabase
     .from("purchases")
     .insert({
-      buyer_id: userId,
+      buyer_id: userId === "guest" ? null : userId,
       event_id: eventId,
       photographer_id: photographerId,
       stripe_payment_intent_id: session.payment_intent as string,
+      stripe_session_id: session.id,
       total_amount: totalAmount,
       platform_fee: fees.platformFee / 100,
       photographer_amount: fees.photographerAmount / 100,
       photo_ids: photoIds,
       status: "completed",
       completed_at: new Date().toISOString(),
+      metadata: {
+        customer_email: session.metadata?.customer_email || session.customer_email,
+      },
     })
     .select()
     .single();

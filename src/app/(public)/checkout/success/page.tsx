@@ -16,10 +16,10 @@ function SuccessContent() {
       return;
     }
 
-    // Verify session (optional - could call API to get details)
+    // Redirect to download page after short delay
     setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+      router.push(`/downloads/${sessionId}`);
+    }, 2000);
   }, [sessionId, router]);
 
   if (loading) {
