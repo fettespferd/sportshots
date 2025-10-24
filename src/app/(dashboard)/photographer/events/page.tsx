@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { StripeConnectButton } from "@/components/stripe/connect-button";
 
 export default async function PhotographerEventsPage() {
   const supabase = await createClient();
@@ -43,6 +44,11 @@ export default async function PhotographerEventsPage() {
           >
             Neues Event erstellen
           </Link>
+        </div>
+
+        {/* Stripe Connect Banner */}
+        <div className="mb-8">
+          <StripeConnectButton />
         </div>
 
         {!events || events.length === 0 ? (

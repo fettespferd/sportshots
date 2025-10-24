@@ -122,8 +122,45 @@ export default function UploadPhotosPage({
           data: { publicUrl: originalUrl },
         } = supabase.storage.from("photos").getPublicUrl(`originals/${fileName}`);
 
-        // For now, use same URL for watermark (will be replaced with actual watermarking later)
-        const watermarkUrl = originalUrl;
+        // Generate watermark version
+        const watermarkFormData = new FormData();
+        watermarkFormData.append("file", uploadFile.file);
+        watermarkFormData.append("eventId", eventId);
+        watermarkFormData.append("eventName", eventTitle);
+
+        const watermarkResponse = await fetch("/api/photos/watermark", {
+          method: "POST",
+          body: watermarkFormData,
+        });
+
+        if (!watermarkResponse.ok) {
+          console.warn("Watermark generation failed, using original");
+        }
+
+        const { watermarkUrl, thumbnailUrl } = watermarkResponse.ok
+          ? await watermarkResponse.json()
+          : { watermarkUrl: originalUrl, thumbnailUrl: originalUrl };
+
+        // Perform OCR for bib number detection if no manual bib number provided
+        let detectedBibNumber = uploadFile.bibNumber;
+        if (!detectedBibNumber) {
+          try {
+            const ocrResponse = await fetch("/api/photos/ocr", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ imageUrl: originalUrl }),
+            });
+
+            if (ocrResponse.ok) {
+              const { bibNumber } = await ocrResponse.json();
+              if (bibNumber) {
+                detectedBibNumber = bibNumber;
+              }
+            }
+          } catch (ocrError) {
+            console.warn("OCR failed:", ocrError);
+          }
+        }
 
         // Save to database
         const { error: dbError } = await supabase.from("photos").insert({
@@ -131,8 +168,9 @@ export default function UploadPhotosPage({
           photographer_id: user.id,
           original_url: originalUrl,
           watermark_url: watermarkUrl,
+          thumbnail_url: thumbnailUrl,
           price: event.price_per_photo,
-          bib_number: uploadFile.bibNumber || null,
+          bib_number: detectedBibNumber || null,
         });
 
         if (dbError) throw dbError;

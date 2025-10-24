@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { FaceSearch } from "@/components/search/face-search";
 
 interface Event {
   id: string;
@@ -233,28 +234,44 @@ export default function PublicEventPage({
       {/* Photo Gallery */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Search Bar */}
-        <div className="mb-6 rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex-1">
-              <label
-                htmlFor="bibNumber"
-                className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Nach Startnummer filtern
-              </label>
-              <input
-                id="bibNumber"
-                type="text"
-                value={bibNumberFilter}
-                onChange={(e) => setBibNumberFilter(e.target.value)}
-                placeholder="z.B. 243"
-                className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-              />
-            </div>
-            <div className="text-sm text-zinc-600 dark:text-zinc-400">
-              {filteredPhotos.length} von {photos.length} Fotos
+        <div className="mb-6 space-y-4">
+          {/* Startnummer-Suche */}
+          <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex-1">
+                <label
+                  htmlFor="bibNumber"
+                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Nach Startnummer filtern
+                </label>
+                <input
+                  id="bibNumber"
+                  type="text"
+                  value={bibNumberFilter}
+                  onChange={(e) => setBibNumberFilter(e.target.value)}
+                  placeholder="z.B. 243"
+                  className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                />
+              </div>
+              <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                {filteredPhotos.length} von {photos.length} Fotos
+              </div>
             </div>
           </div>
+
+          {/* Face Search */}
+          <FaceSearch
+            eventId={event.id}
+            onResults={(photoIds) => {
+              // Filter photos to show only matched ones
+              const matchedPhotos = photos.filter((p) =>
+                photoIds.includes(p.id)
+              );
+              setFilteredPhotos(matchedPhotos);
+              setBibNumberFilter(""); // Clear bib filter
+            }}
+          />
         </div>
 
         {/* Selected Photos Bar */}
@@ -270,11 +287,32 @@ export default function PublicEventPage({
                   {calculateTotal().toFixed(2)} €
                 </span>
                 <button
-                  onClick={() => {
-                    // TODO: Implement checkout
-                    alert(
-                      "Checkout-Funktionalität wird in Phase 5 implementiert"
-                    );
+                  onClick={async () => {
+                    try {
+                      const response = await fetch("/api/stripe/checkout", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          photoIds: Array.from(selectedPhotos),
+                          eventId: event.id,
+                        }),
+                      });
+
+                      const data = await response.json();
+
+                      if (data.error) {
+                        alert(data.error);
+                        return;
+                      }
+
+                      // Redirect to Stripe Checkout
+                      if (data.url) {
+                        window.location.href = data.url;
+                      }
+                    } catch (error) {
+                      console.error("Checkout error:", error);
+                      alert("Fehler beim Checkout");
+                    }
                   }}
                   className="rounded-md bg-white px-6 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
                 >

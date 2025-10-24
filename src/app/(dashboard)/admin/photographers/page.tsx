@@ -1,131 +1,150 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+"use client";
 
-export default async function AdminPhotographersPage() {
-  const supabase = await createClient();
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function AdminPhotographersPage() {
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+  const [photographers, setPhotographers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClient();
 
-  if (!user) {
-    redirect("/signin");
-  }
+  useEffect(() => {
+    const loadData = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-  // Check admin role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+      if (!user) {
+        router.push("/signin");
+        return;
+      }
 
-  if (profile?.role !== "admin") {
-    redirect("/");
-  }
+      // Check admin role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
 
-  // Get pending photographer requests
-  const { data: pendingRequests } = await supabase
-    .from("photographer_requests")
-    .select(
-      `
-      *,
-      profiles:user_id (
-        email,
-        full_name
-      )
-    `
-    )
-    .eq("status", "pending")
-    .order("created_at", { ascending: false });
+      if (profile?.role !== "admin") {
+        router.push("/");
+        return;
+      }
 
-  // Get all approved photographers
-  const { data: photographers } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("role", "photographer")
-    .order("created_at", { ascending: false });
+      // Get pending photographer requests
+      const { data: pendingData } = await supabase
+        .from("photographer_requests")
+        .select(
+          `
+          *,
+          profiles:user_id (
+            email,
+            full_name
+          )
+        `
+        )
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
 
-  const handleApprove = async (requestId: string, userId: string) => {
-    "use server";
-    const supabase = await createClient();
+      // Get all approved photographers
+      const { data: photographersData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "photographer")
+        .order("created_at", { ascending: false });
 
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser();
+      setPendingRequests(pendingData || []);
+      setPhotographers(photographersData || []);
+      setLoading(false);
+    };
 
-    if (!currentUser) return;
+    loadData();
+  }, []);
 
-    // Update request status
-    await supabase
-      .from("photographer_requests")
-      .update({
-        status: "approved",
-        reviewed_by: currentUser.id,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq("id", requestId);
+  const handleApprove = async (requestId: string) => {
+    try {
+      const response = await fetch("/api/admin/approve-photographer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId, action: "approved" }),
+      });
 
-    // Update user role
-    await supabase
-      .from("profiles")
-      .update({
-        role: "photographer",
-        photographer_status: "approved",
-      })
-      .eq("id", userId);
-
-    redirect("/admin/photographers");
+      if (response.ok) {
+        router.refresh();
+        // Reload data
+        window.location.reload();
+      } else {
+        alert("Freischaltung fehlgeschlagen");
+      }
+    } catch (error) {
+      console.error("Approval error:", error);
+      alert("Freischaltung fehlgeschlagen");
+    }
   };
 
   const handleReject = async (requestId: string) => {
-    "use server";
-    const supabase = await createClient();
+    try {
+      const response = await fetch("/api/admin/approve-photographer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId, action: "rejected" }),
+      });
 
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser();
-
-    if (!currentUser) return;
-
-    await supabase
-      .from("photographer_requests")
-      .update({
-        status: "rejected",
-        reviewed_by: currentUser.id,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq("id", requestId);
-
-    redirect("/admin/photographers");
+      if (response.ok) {
+        router.refresh();
+        // Reload data
+        window.location.reload();
+      } else {
+        alert("Ablehnung fehlgeschlagen");
+      }
+    } catch (error) {
+      console.error("Rejection error:", error);
+      alert("Ablehnung fehlgeschlagen");
+    }
   };
 
   const handleSuspend = async (userId: string) => {
-    "use server";
-    const supabase = await createClient();
+    try {
+      await supabase
+        .from("profiles")
+        .update({
+          photographer_status: "suspended",
+        })
+        .eq("id", userId);
 
-    await supabase
-      .from("profiles")
-      .update({
-        photographer_status: "suspended",
-      })
-      .eq("id", userId);
-
-    redirect("/admin/photographers");
+      window.location.reload();
+    } catch (error) {
+      console.error("Suspend error:", error);
+      alert("Sperrung fehlgeschlagen");
+    }
   };
 
   const handleActivate = async (userId: string) => {
-    "use server";
-    const supabase = await createClient();
+    try {
+      await supabase
+        .from("profiles")
+        .update({
+          photographer_status: "approved",
+        })
+        .eq("id", userId);
 
-    await supabase
-      .from("profiles")
-      .update({
-        photographer_status: "approved",
-      })
-      .eq("id", userId);
-
-    redirect("/admin/photographers");
+      window.location.reload();
+    } catch (error) {
+      console.error("Activation error:", error);
+      alert("Aktivierung fehlgeschlagen");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-300 border-t-zinc-900 dark:border-zinc-700 dark:border-t-zinc-50"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
