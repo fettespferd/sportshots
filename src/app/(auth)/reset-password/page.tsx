@@ -15,15 +15,35 @@ export default function ResetPasswordPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    // Check if we have a recovery token in the URL
+    // Check if we have a recovery token in the URL and set session
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
     const type = hashParams.get("type");
 
     if (!accessToken || type !== "recovery") {
       setError("Ungültiger oder abgelaufener Reset-Link");
+      return;
     }
-  }, []);
+
+    // Set the session with the tokens from URL
+    const setSession = async () => {
+      try {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || "",
+        });
+
+        if (sessionError) {
+          setError("Session konnte nicht wiederhergestellt werden");
+        }
+      } catch (err: any) {
+        setError("Fehler beim Wiederherstellen der Session");
+      }
+    };
+
+    setSession();
+  }, [supabase]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
