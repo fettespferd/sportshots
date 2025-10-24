@@ -1,0 +1,305 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { slugify } from "@/lib/utils/slugify";
+
+const eventTypes = [
+  { value: "running", label: "Laufen" },
+  { value: "cycling", label: "Radfahren" },
+  { value: "skiing", label: "Skifahren" },
+  { value: "surfing", label: "Surfen" },
+  { value: "triathlon", label: "Triathlon" },
+  { value: "other", label: "Sonstiges" },
+];
+
+export default function NewEventPage() {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [eventType, setEventType] = useState("running");
+  const [location, setLocation] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [pricePerPhoto, setPricePerPhoto] = useState("8.00");
+  const [packagePrice, setPackagePrice] = useState("");
+  const [packagePhotoCount, setPackagePhotoCount] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error("Nicht angemeldet");
+      }
+
+      // Generate slug from title
+      const slug = slugify(title);
+
+      // Check if slug already exists
+      const { data: existingEvent } = await supabase
+        .from("events")
+        .select("slug")
+        .eq("slug", slug)
+        .single();
+
+      const finalSlug = existingEvent
+        ? `${slug}-${Date.now().toString().slice(-6)}`
+        : slug;
+
+      const eventData = {
+        photographer_id: user.id,
+        title,
+        slug: finalSlug,
+        description: description || null,
+        event_type: eventType,
+        location,
+        event_date: eventDate,
+        price_per_photo: parseFloat(pricePerPhoto),
+        package_price: packagePrice ? parseFloat(packagePrice) : null,
+        package_photo_count: packagePhotoCount
+          ? parseInt(packagePhotoCount)
+          : null,
+        is_published: false,
+      };
+
+      const { data: newEvent, error: insertError } = await supabase
+        .from("events")
+        .insert(eventData)
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      router.push(`/photographer/events/${newEvent.id}`);
+    } catch (err: any) {
+      setError(err.message || "Event konnte nicht erstellt werden");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+            Neues Event erstellen
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            Erstelle ein neues Sportevent und lade deine Fotos hoch
+          </p>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 rounded-lg bg-white p-8 shadow dark:bg-zinc-800"
+        >
+          {error && (
+            <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              Event-Titel *
+            </label>
+            <input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+              placeholder="z.B. Berlin Marathon 2025"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              Beschreibung
+            </label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+              placeholder="Beschreibe das Event..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label
+                htmlFor="eventType"
+                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Event-Typ *
+              </label>
+              <select
+                id="eventType"
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value)}
+                required
+                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+              >
+                {eventTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="eventDate"
+                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Event-Datum *
+              </label>
+              <input
+                id="eventDate"
+                type="date"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                required
+                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="location"
+              className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            >
+              Ort *
+            </label>
+            <input
+              id="location"
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+              className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+              placeholder="z.B. Berlin, Deutschland"
+            />
+          </div>
+
+          <div className="border-t border-zinc-200 pt-6 dark:border-zinc-700">
+            <h3 className="mb-4 text-lg font-medium text-zinc-900 dark:text-zinc-50">
+              Preise
+            </h3>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div>
+                <label
+                  htmlFor="pricePerPhoto"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Preis pro Foto *
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    id="pricePerPhoto"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={pricePerPhoto}
+                    onChange={(e) => setPricePerPhoto(e.target.value)}
+                    required
+                    className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 pr-8 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                    placeholder="8.00"
+                  />
+                  <span className="pointer-events-none absolute right-3 top-2 text-zinc-500 dark:text-zinc-400">
+                    €
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="packagePrice"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Paketpreis (optional)
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    id="packagePrice"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={packagePrice}
+                    onChange={(e) => setPackagePrice(e.target.value)}
+                    className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 pr-8 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                    placeholder="20.00"
+                  />
+                  <span className="pointer-events-none absolute right-3 top-2 text-zinc-500 dark:text-zinc-400">
+                    €
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="packagePhotoCount"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Fotos im Paket
+                </label>
+                <input
+                  id="packagePhotoCount"
+                  type="number"
+                  min="1"
+                  value={packagePhotoCount}
+                  onChange={(e) => setPackagePhotoCount(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                  placeholder="3"
+                  disabled={!packagePrice}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end space-x-4 border-t border-zinc-200 pt-6 dark:border-zinc-700">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              {loading ? "Erstelle Event..." : "Event erstellen"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+

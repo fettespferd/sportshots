@@ -1,0 +1,38 @@
+# Kopiere diese Datei zu .env.local und fülle die Werte aus
+# Befehl: cp env-setup.txt .env.local
+
+# ============================================
+# SUPABASE CONFIGURATION (ERFORDERLICH)
+# ============================================
+# Diese Werte findest du in deinem Supabase Dashboard:
+# 1. Gehe zu https://supabase.com
+# 2. Klicke auf dein Projekt
+# 3. Gehe zu Settings > API
+
+NEXT_PUBLIC_SUPABASE_URL=https://deinprojekt.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=dein_langer_anon_key_hier
+
+# ============================================
+# APP CONFIGURATION (ERFORDERLICH)
+# ============================================
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+PLATFORM_FEE_PERCENTAGE=15
+
+# ============================================
+# STRIPE (OPTIONAL - FÜR PHASE 5)
+# ============================================
+# Lasse diese leer, solange du noch kein Stripe nutzt
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# ============================================
+# AWS S3 (OPTIONAL - FÜR ERWEITERTE FEATURES)
+# ============================================
+# Lasse diese leer, solange du Supabase Storage nutzt
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=eu-central-1
+AWS_S3_BUCKET=
+
+
