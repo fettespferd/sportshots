@@ -212,22 +212,18 @@ export default function AdminPhotographersPage() {
                   )}
 
                   <div className="flex items-center space-x-3">
-                    <form action={handleApprove.bind(null, request.id, request.user_id)}>
-                      <button
-                        type="submit"
-                        className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
-                      >
-                        Genehmigen
-                      </button>
-                    </form>
-                    <form action={handleReject.bind(null, request.id)}>
-                      <button
-                        type="submit"
-                        className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
-                      >
-                        Ablehnen
-                      </button>
-                    </form>
+                    <button
+                      onClick={() => handleApprove(request.id)}
+                      className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+                    >
+                      Genehmigen
+                    </button>
+                    <button
+                      onClick={() => handleReject(request.id)}
+                      className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                    >
+                      Ablehnen
+                    </button>
                   </div>
 
                   <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
@@ -301,23 +297,19 @@ export default function AdminPhotographersPage() {
                       </td>
                       <td className="py-3">
                         {photographer.photographer_status === "approved" ? (
-                          <form action={handleSuspend.bind(null, photographer.id)}>
-                            <button
-                              type="submit"
-                              className="text-sm text-red-600 hover:underline dark:text-red-400"
-                            >
-                              Sperren
-                            </button>
-                          </form>
+                          <button
+                            onClick={() => handleSuspend(photographer.id)}
+                            className="text-sm text-red-600 hover:underline dark:text-red-400"
+                          >
+                            Sperren
+                          </button>
                         ) : (
-                          <form action={handleActivate.bind(null, photographer.id)}>
-                            <button
-                              type="submit"
-                              className="text-sm text-green-600 hover:underline dark:text-green-400"
-                            >
-                              Aktivieren
-                            </button>
-                          </form>
+                          <button
+                            onClick={() => handleActivate(photographer.id)}
+                            className="text-sm text-green-600 hover:underline dark:text-green-400"
+                          >
+                            Aktivieren
+                          </button>
                         )}
                       </td>
                     </tr>
