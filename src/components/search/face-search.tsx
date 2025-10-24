@@ -234,19 +234,20 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
                 }}
               />
               
-              {/* Face Oval Guide */}
+              {/* Face Oval Guide - Portrait orientation like a head */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="relative" style={{ width: '60%', height: '80%' }}>
+                <div className="relative" style={{ width: '50%', height: '90%' }}>
                   {/* Overlay with cutout */}
                   <svg className="absolute inset-0 h-full w-full">
                     <defs>
                       <mask id="face-mask">
                         <rect width="100%" height="100%" fill="white" />
+                        {/* Portrait oval - schmaler und höher wie ein Kopf */}
                         <ellipse
                           cx="50%"
-                          cy="50%"
-                          rx="45%"
-                          ry="48%"
+                          cy="45%"
+                          rx="42%"
+                          ry="52%"
                           fill="black"
                         />
                       </mask>
@@ -254,14 +255,15 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
                     <rect
                       width="100%"
                       height="100%"
-                      fill="rgba(0, 0, 0, 0.5)"
+                      fill="rgba(0, 0, 0, 0.6)"
                       mask="url(#face-mask)"
                     />
+                    {/* Portrait oval - schmaler und höher */}
                     <ellipse
                       cx="50%"
-                      cy="50%"
-                      rx="45%"
-                      ry="48%"
+                      cy="45%"
+                      rx="42%"
+                      ry="52%"
                       fill="none"
                       stroke="white"
                       strokeWidth="3"
@@ -271,8 +273,8 @@ export function FaceSearch({ eventId, onResults }: FaceSearchProps) {
                   </svg>
                   
                   {/* Helper Text */}
-                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                    <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-zinc-900">
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                    <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-zinc-900 shadow-lg">
                       👤 Positioniere dein Gesicht im Oval
                     </div>
                   </div>
