@@ -31,18 +31,29 @@ export async function addWatermark(
 
   // Resize image if too large (for watermark preview)
   let processedImage = sharp(imageBuffer);
+  let width = originalWidth;
+  let height = originalHeight;
   
   if (originalWidth > maxWidth) {
-    processedImage = processedImage.resize(maxWidth, null, {
+    // Calculate new dimensions maintaining aspect ratio
+    const aspectRatio = originalHeight / originalWidth;
+    width = maxWidth;
+    height = Math.round(maxWidth * aspectRatio);
+    
+    processedImage = processedImage.resize(width, height, {
       withoutEnlargement: true,
       fit: "inside",
     });
   }
 
-  // Get new dimensions after resize
-  const resizedMetadata = await processedImage.metadata();
-  const width = resizedMetadata.width || maxWidth;
-  const height = resizedMetadata.height || Math.round((maxWidth * originalHeight) / originalWidth);
+  // Convert to buffer to get exact dimensions
+  const resizedBuffer = await processedImage.toBuffer();
+  const resizedMetadata = await sharp(resizedBuffer).metadata();
+  width = resizedMetadata.width || width;
+  height = resizedMetadata.height || height;
+  
+  // Start fresh with the resized buffer
+  processedImage = sharp(resizedBuffer);
 
   // Create watermark text SVG
   const fontSize = Math.max(24, Math.floor(width / 20));

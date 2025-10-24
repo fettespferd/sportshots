@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Modal } from "@/components/ui/modal";
 
 export function StripeConnectButton() {
   const [loading, setLoading] = useState(false);
@@ -8,6 +9,17 @@ export function StripeConnectButton() {
     connected: boolean;
     charges_enabled: boolean;
   } | null>(null);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "error" | "warning";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
 
   useEffect(() => {
     checkStatus();
@@ -33,7 +45,12 @@ export function StripeConnectButton() {
       const data = await response.json();
 
       if (data.error) {
-        alert(data.error);
+        setModalState({
+          isOpen: true,
+          title: "Fehler",
+          message: data.error,
+          type: "error",
+        });
         setLoading(false);
         return;
       }
@@ -44,7 +61,12 @@ export function StripeConnectButton() {
       }
     } catch (error) {
       console.error("Error connecting to Stripe:", error);
-      alert("Fehler beim Verbinden mit Stripe");
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Fehler beim Verbinden mit Stripe. Bitte versuche es erneut.",
+        type: "error",
+      });
       setLoading(false);
     }
   };
@@ -124,6 +146,15 @@ export function StripeConnectButton() {
       <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
         💰 Du erhältst 85% des Verkaufspreises (15% Plattform-Gebühr)
       </p>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState({ ...modalState, isOpen: false })}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+      />
     </div>
   );
 }

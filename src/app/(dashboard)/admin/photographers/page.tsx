@@ -3,11 +3,23 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { Modal } from "@/components/ui/modal";
 
 export default function AdminPhotographersPage() {
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [photographers, setPhotographers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "error" | "warning";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
   const router = useRouter();
   const supabase = createClient();
 
@@ -73,15 +85,30 @@ export default function AdminPhotographersPage() {
       });
 
       if (response.ok) {
-        router.refresh();
-        // Reload data
-        window.location.reload();
+        setModalState({
+          isOpen: true,
+          title: "Erfolg",
+          message: "Fotograf wurde erfolgreich freigeschaltet!",
+          type: "success",
+        });
+        // Reload data after modal close
+        setTimeout(() => window.location.reload(), 1500);
       } else {
-        alert("Freischaltung fehlgeschlagen");
+        setModalState({
+          isOpen: true,
+          title: "Fehler",
+          message: "Freischaltung fehlgeschlagen. Bitte versuche es erneut.",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Approval error:", error);
-      alert("Freischaltung fehlgeschlagen");
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Freischaltung fehlgeschlagen. Bitte versuche es erneut.",
+        type: "error",
+      });
     }
   };
 
@@ -94,47 +121,88 @@ export default function AdminPhotographersPage() {
       });
 
       if (response.ok) {
-        router.refresh();
-        // Reload data
-        window.location.reload();
+        setModalState({
+          isOpen: true,
+          title: "Erfolg",
+          message: "Anfrage wurde abgelehnt.",
+          type: "success",
+        });
+        // Reload data after modal close
+        setTimeout(() => window.location.reload(), 1500);
       } else {
-        alert("Ablehnung fehlgeschlagen");
+        setModalState({
+          isOpen: true,
+          title: "Fehler",
+          message: "Ablehnung fehlgeschlagen. Bitte versuche es erneut.",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Rejection error:", error);
-      alert("Ablehnung fehlgeschlagen");
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Ablehnung fehlgeschlagen. Bitte versuche es erneut.",
+        type: "error",
+      });
     }
   };
 
   const handleSuspend = async (userId: string) => {
     try {
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({
           photographer_status: "suspended",
         })
         .eq("id", userId);
 
-      window.location.reload();
+      if (error) throw error;
+
+      setModalState({
+        isOpen: true,
+        title: "Erfolg",
+        message: "Fotograf wurde gesperrt.",
+        type: "success",
+      });
+      setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       console.error("Suspend error:", error);
-      alert("Sperrung fehlgeschlagen");
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Sperrung fehlgeschlagen. Bitte versuche es erneut.",
+        type: "error",
+      });
     }
   };
 
   const handleActivate = async (userId: string) => {
     try {
-      await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({
           photographer_status: "approved",
         })
         .eq("id", userId);
 
-      window.location.reload();
+      if (error) throw error;
+
+      setModalState({
+        isOpen: true,
+        title: "Erfolg",
+        message: "Fotograf wurde aktiviert.",
+        type: "success",
+      });
+      setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       console.error("Activation error:", error);
-      alert("Aktivierung fehlgeschlagen");
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Aktivierung fehlgeschlagen. Bitte versuche es erneut.",
+        type: "error",
+      });
     }
   };
 
@@ -320,6 +388,15 @@ export default function AdminPhotographersPage() {
           )}
         </div>
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState({ ...modalState, isOpen: false })}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+      />
     </div>
   );
 }
