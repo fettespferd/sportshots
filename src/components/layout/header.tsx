@@ -162,6 +162,9 @@ export function Header() {
               </div>
             ) : (
               <div className="flex items-center space-x-3">
+                <span className="hidden text-xs text-zinc-500 dark:text-zinc-400 lg:block">
+                  Fotograf?
+                </span>
                 <Link
                   href="/signin"
                   className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"

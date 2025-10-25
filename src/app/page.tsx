@@ -46,7 +46,7 @@ export default async function Home() {
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
-                href="/search"
+                href="/find-photos"
                 className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-10 py-5 text-lg font-bold text-white shadow-2xl transition-all hover:scale-105 hover:shadow-blue-500/50 sm:w-auto"
               >
                 📸 Mit Selfie Fotos finden
@@ -56,16 +56,6 @@ export default async function Home() {
                 className="w-full rounded-lg border-2 border-white/30 bg-white/10 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/20 sm:w-auto"
               >
                 🔍 Event durchsuchen
-              </Link>
-            </div>
-            
-            {/* Small photographer link */}
-            <div className="mt-8 text-center">
-              <Link
-                href="/signup/photographer"
-                className="text-sm text-zinc-400 hover:text-white transition-colors"
-              >
-                Du bist Fotograf? → Jetzt registrieren
               </Link>
             </div>
           </div>
