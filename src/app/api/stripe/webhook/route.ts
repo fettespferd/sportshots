@@ -84,12 +84,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const eventId = session.metadata?.event_id;
   const photographerId = session.metadata?.photographer_id;
   const photoIds = JSON.parse(session.metadata?.photo_ids || "[]");
+  const customerEmail = session.metadata?.customer_email || session.customer_email;
 
   console.log("Metadata:", {
     userId,
     eventId,
     photographerId,
-    photoIdsCount: photoIds.length
+    photoIdsCount: photoIds.length,
+    customerEmail
   });
 
   if (!userId || !eventId || !photographerId || !photoIds.length) {
@@ -119,6 +121,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       p_platform_fee: fees.platformFee / 100,
       p_photographer_amount: fees.photographerAmount / 100,
       p_photo_ids: photoIds,
+      p_customer_email: customerEmail,
       p_status: "completed",
     }
   );

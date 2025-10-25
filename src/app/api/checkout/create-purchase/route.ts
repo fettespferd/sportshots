@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
         p_platform_fee: fees.platformFee / 100,
         p_photographer_amount: fees.photographerAmount / 100,
         p_photo_ids: photoIds,
+        p_customer_email: customerEmail,
         p_status: "completed",
       }
     );

@@ -256,7 +256,7 @@ export default async function PhotographerSalesPage() {
                         {sale.event?.title || "-"}
                       </td>
                       <td className="py-3 text-zinc-600 dark:text-zinc-400">
-                        {sale.buyer?.full_name || sale.buyer?.email || "-"}
+                        {sale.buyer?.email || sale.customer_email || "Keine Email"}
                       </td>
                       <td className="py-3 text-zinc-600 dark:text-zinc-400">
                         {sale.photo_ids?.length || 0}
