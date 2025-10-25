@@ -22,6 +22,8 @@ export default function UploadPhotosPage({
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [eventTitle, setEventTitle] = useState<string>("");
+  const [runningOCR, setRunningOCR] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState({ current: 0, total: 0 });
   const router = useRouter();
   const supabase = createClient();
 
@@ -210,6 +212,71 @@ export default function UploadPhotosPage({
     }
   };
 
+  const handleBatchOCR = async () => {
+    setRunningOCR(true);
+    
+    try {
+      // Get all photos for this event from database
+      const { data: photos, error } = await supabase
+        .from("photos")
+        .select("id, original_url, bib_number")
+        .eq("event_id", eventId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      if (!photos || photos.length === 0) {
+        alert("Keine Fotos zum Scannen gefunden");
+        return;
+      }
+
+      setOcrProgress({ current: 0, total: photos.length });
+
+      let updatedCount = 0;
+
+      // Process each photo
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
+        setOcrProgress({ current: i + 1, total: photos.length });
+
+        try {
+          // Call OCR API
+          const ocrResponse = await fetch("/api/photos/ocr", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ imageUrl: photo.original_url }),
+          });
+
+          if (ocrResponse.ok) {
+            const { bibNumber } = await ocrResponse.json();
+            
+            if (bibNumber) {
+              // Update database
+              const { error: updateError } = await supabase
+                .from("photos")
+                .update({ bib_number: bibNumber })
+                .eq("id", photo.id);
+
+              if (!updateError) {
+                updatedCount++;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`OCR failed for photo ${photo.id}:`, err);
+        }
+      }
+
+      alert(`Startnummererkennung abgeschlossen!\n${updatedCount} von ${photos.length} Fotos aktualisiert.`);
+      
+    } catch (error: any) {
+      console.error("Batch OCR error:", error);
+      alert("Fehler bei der Startnummererkennung: " + error.message);
+    } finally {
+      setRunningOCR(false);
+      setOcrProgress({ current: 0, total: 0 });
+    }
+  };
+
   const pendingCount = files.filter((f) => f.status === "pending").length;
   const successCount = files.filter((f) => f.status === "success").length;
   const errorCount = files.filter((f) => f.status === "error").length;
@@ -272,25 +339,64 @@ export default function UploadPhotosPage({
 
         {/* Upload Stats */}
         {files.length > 0 && (
-          <div className="mb-6 flex items-center space-x-4 rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
-            <div className="text-sm">
-              <span className="font-medium text-zinc-900 dark:text-zinc-50">
-                {files.length}
-              </span>{" "}
-              <span className="text-zinc-600 dark:text-zinc-400">
-                Fotos ausgewählt
-              </span>
+          <div className="mb-6 rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="text-sm">
+                  <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                    {files.length}
+                  </span>{" "}
+                  <span className="text-zinc-600 dark:text-zinc-400">
+                    Fotos ausgewählt
+                  </span>
+                </div>
+                {successCount > 0 && (
+                  <div className="text-sm text-green-600 dark:text-green-400">
+                    {successCount} erfolgreich
+                  </div>
+                )}
+                {errorCount > 0 && (
+                  <div className="text-sm text-red-600 dark:text-red-400">
+                    {errorCount} fehlgeschlagen
+                  </div>
+                )}
+              </div>
+
+              {/* OCR Button - show after successful upload */}
+              {successCount > 0 && !uploading && (
+                <button
+                  onClick={handleBatchOCR}
+                  disabled={runningOCR}
+                  className="flex items-center gap-2 rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 disabled:opacity-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                >
+                  {runningOCR ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent dark:border-blue-400"></div>
+                      <span>
+                        Erkenne {ocrProgress.current}/{ocrProgress.total}...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <span>Startnummern automatisch erkennen</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
-            {successCount > 0 && (
-              <div className="text-sm text-green-600 dark:text-green-400">
-                {successCount} erfolgreich
-              </div>
-            )}
-            {errorCount > 0 && (
-              <div className="text-sm text-red-600 dark:text-red-400">
-                {errorCount} fehlgeschlagen
-              </div>
-            )}
           </div>
         )}
 
