@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Modal } from "@/components/ui/modal";
 
 interface UploadFile {
   file: File;
@@ -24,6 +25,17 @@ export default function UploadPhotosPage({
   const [eventTitle, setEventTitle] = useState<string>("");
   const [runningOCR, setRunningOCR] = useState(false);
   const [ocrProgress, setOcrProgress] = useState({ current: 0, total: 0 });
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "error" | "warning";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
   const router = useRouter();
   const supabase = createClient();
 
@@ -75,7 +87,13 @@ export default function UploadPhotosPage({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      alert("Nicht angemeldet");
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Nicht angemeldet",
+        type: "error",
+      });
+      setUploading(false);
       return;
     }
 
@@ -87,7 +105,13 @@ export default function UploadPhotosPage({
       .single();
 
     if (!event) {
-      alert("Event nicht gefunden");
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Event nicht gefunden",
+        type: "error",
+      });
+      setUploading(false);
       return;
     }
 
@@ -216,61 +240,103 @@ export default function UploadPhotosPage({
     setRunningOCR(true);
     
     try {
-      // Get all photos for this event from database
-      const { data: photos, error } = await supabase
-        .from("photos")
-        .select("id, original_url, bib_number")
-        .eq("event_id", eventId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      if (!photos || photos.length === 0) {
-        alert("Keine Fotos zum Scannen gefunden");
+      // Get all pending files (not yet uploaded)
+      const pendingFiles = files.filter(f => f.status === "pending");
+      
+      if (pendingFiles.length === 0) {
+        setModalState({
+          isOpen: true,
+          title: "Keine Fotos",
+          message: "Bitte wähle zuerst Fotos aus",
+          type: "warning",
+        });
         return;
       }
 
-      setOcrProgress({ current: 0, total: photos.length });
+      setOcrProgress({ current: 0, total: pendingFiles.length });
 
-      let updatedCount = 0;
+      let recognizedCount = 0;
 
-      // Process each photo
-      for (let i = 0; i < photos.length; i++) {
-        const photo = photos[i];
-        setOcrProgress({ current: i + 1, total: photos.length });
+      // Process each file
+      for (let i = 0; i < pendingFiles.length; i++) {
+        const fileIndex = files.findIndex(f => f.file === pendingFiles[i].file);
+        setOcrProgress({ current: i + 1, total: pendingFiles.length });
 
         try {
+          // Upload file temporarily to get URL for OCR
+          const formData = new FormData();
+          formData.append("file", pendingFiles[i].file);
+
+          // Convert File to base64 or use a temporary upload
+          const reader = new FileReader();
+          const fileDataUrl = await new Promise<string>((resolve, reject) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(pendingFiles[i].file);
+          });
+
+          // Upload temporarily to storage for OCR
+          const fileExt = pendingFiles[i].file.name.split(".").pop();
+          const tempFileName = `temp-ocr/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from("photos")
+            .upload(tempFileName, pendingFiles[i].file, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          if (uploadError) {
+            console.warn("Temp upload failed:", uploadError);
+            continue;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from("photos")
+            .getPublicUrl(tempFileName);
+
           // Call OCR API
           const ocrResponse = await fetch("/api/photos/ocr", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageUrl: photo.original_url }),
+            body: JSON.stringify({ imageUrl: publicUrl }),
           });
 
           if (ocrResponse.ok) {
             const { bibNumber } = await ocrResponse.json();
             
             if (bibNumber) {
-              // Update database
-              const { error: updateError } = await supabase
-                .from("photos")
-                .update({ bib_number: bibNumber })
-                .eq("id", photo.id);
-
-              if (!updateError) {
-                updatedCount++;
-              }
+              // Update the file's bib number in state
+              setFiles(prev => prev.map((f, idx) => 
+                idx === fileIndex ? { ...f, bibNumber } : f
+              ));
+              recognizedCount++;
             }
           }
+
+          // Clean up temp file
+          await supabase.storage.from("photos").remove([tempFileName]);
+
         } catch (err) {
-          console.warn(`OCR failed for photo ${photo.id}:`, err);
+          console.warn(`OCR failed for file ${i}:`, err);
         }
       }
 
-      alert(`Startnummererkennung abgeschlossen!\n${updatedCount} von ${photos.length} Fotos aktualisiert.`);
+      setModalState({
+        isOpen: true,
+        title: "Startnummererkennung abgeschlossen",
+        message: `${recognizedCount} von ${pendingFiles.length} Startnummern erkannt.\n\nBitte überprüfe die Nummern und korrigiere sie bei Bedarf, bevor du die Fotos hochlädst.`,
+        type: "success",
+      });
       
     } catch (error: any) {
       console.error("Batch OCR error:", error);
-      alert("Fehler bei der Startnummererkennung: " + error.message);
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Fehler bei der Startnummererkennung: " + error.message,
+        type: "error",
+      });
     } finally {
       setRunningOCR(false);
       setOcrProgress({ current: 0, total: 0 });
@@ -362,16 +428,16 @@ export default function UploadPhotosPage({
                 )}
               </div>
 
-              {/* OCR Button - show after successful upload */}
-              {successCount > 0 && !uploading && (
+              {/* OCR Button - show BEFORE upload when files are pending */}
+              {pendingCount > 0 && !uploading && (
                 <button
                   onClick={handleBatchOCR}
                   disabled={runningOCR}
-                  className="flex items-center gap-2 rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 disabled:opacity-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                  className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
                 >
                   {runningOCR ? (
                     <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent dark:border-blue-400"></div>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                       <span>
                         Erkenne {ocrProgress.current}/{ocrProgress.total}...
                       </span>
@@ -391,7 +457,7 @@ export default function UploadPhotosPage({
                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                       </svg>
-                      <span>Startnummern automatisch erkennen</span>
+                      <span>🔍 Startnummern erkennen</span>
                     </>
                   )}
                 </button>
@@ -548,6 +614,15 @@ export default function UploadPhotosPage({
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState({ ...modalState, isOpen: false })}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+      />
     </div>
   );
 }
