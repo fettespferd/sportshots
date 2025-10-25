@@ -296,26 +296,40 @@ export default function UploadPhotosPage({
             .getPublicUrl(tempFileName);
 
           // Call OCR API
+          console.log(`🔍 Calling OCR for file ${i + 1}/${pendingFiles.length}`);
+          
           const ocrResponse = await fetch("/api/photos/ocr", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ imageUrl: publicUrl }),
           });
 
+          console.log(`📡 OCR Response status: ${ocrResponse.status}`);
+
           if (ocrResponse.ok) {
-            const { bibNumber } = await ocrResponse.json();
+            const ocrData = await ocrResponse.json();
+            console.log(`📊 OCR Data:`, ocrData);
+            
+            const { bibNumber } = ocrData;
             
             if (bibNumber) {
+              console.log(`✅ Found bib number: ${bibNumber}`);
               // Update the file's bib number in state
               setFiles(prev => prev.map((f, idx) => 
                 idx === fileIndex ? { ...f, bibNumber } : f
               ));
               recognizedCount++;
+            } else {
+              console.log(`⚠️ No bib number detected in image`);
             }
+          } else {
+            const errorText = await ocrResponse.text();
+            console.error(`❌ OCR failed with status ${ocrResponse.status}:`, errorText);
           }
 
           // Clean up temp file
           await supabase.storage.from("photos").remove([tempFileName]);
+          console.log(`🗑️ Cleaned up temp file: ${tempFileName}`);
 
         } catch (err) {
           console.warn(`OCR failed for file ${i}:`, err);

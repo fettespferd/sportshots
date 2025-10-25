@@ -21,10 +21,26 @@ const rekognitionClient = new RekognitionClient({
  */
 export async function detectTextInImage(imageUrl: string): Promise<string[]> {
   try {
+    // Check if AWS credentials are configured
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      console.error("❌ AWS Credentials not configured!");
+      console.error("Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in .env.local");
+      throw new Error("AWS Credentials not configured. Please check your .env.local file.");
+    }
+
+    console.log("🔍 OCR: Downloading image from:", imageUrl);
+    
     // Download image and convert to buffer
     const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
+    
     const arrayBuffer = await response.arrayBuffer();
     const imageBytes = new Uint8Array(arrayBuffer);
+    
+    console.log(`📸 OCR: Image downloaded, size: ${imageBytes.length} bytes`);
 
     const command = new DetectTextCommand({
       Image: {
@@ -32,21 +48,42 @@ export async function detectTextInImage(imageUrl: string): Promise<string[]> {
       },
     });
 
+    console.log("☁️ OCR: Calling AWS Rekognition...");
     const result = await rekognitionClient.send(command);
+    
+    console.log(`✅ OCR: AWS responded with ${result.TextDetections?.length || 0} text detections`);
 
-    // Extract detected text
+    // Extract ALL detected text for debugging
+    const allDetectedText = result.TextDetections?.map(detection => ({
+      text: detection.DetectedText,
+      type: detection.Type,
+      confidence: detection.Confidence
+    })) || [];
+    
+    console.log("📝 OCR: All detected text:", JSON.stringify(allDetectedText, null, 2));
+
+    // Extract detected text (LINE type for complete text lines)
     const detectedText =
       result.TextDetections?.filter((detection) => detection.Type === "LINE")
         .map((detection) => detection.DetectedText || "")
         .filter((text) => text.length > 0) || [];
 
+    console.log("📄 OCR: Detected lines:", detectedText);
+
     // Filter for numbers (likely bib numbers)
     const numbers = detectedText.filter((text) => /^\d+$/.test(text));
+    
+    console.log("🔢 OCR: Filtered numbers (pure digits):", numbers);
 
     return numbers;
-  } catch (error) {
-    console.error("Error detecting text:", error);
-    return [];
+  } catch (error: any) {
+    console.error("❌ Error detecting text:", error);
+    console.error("Error details:", {
+      message: error.message,
+      name: error.name,
+      code: error.$metadata?.httpStatusCode
+    });
+    throw error; // Re-throw to let the API handle it
   }
 }
 
