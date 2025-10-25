@@ -107,9 +107,9 @@ export function StripeConnectButton() {
   }
 
   return (
-    <div className="rounded-lg border border-zinc-200 p-6 dark:border-zinc-700">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow dark:border-zinc-700 dark:bg-zinc-800 sm:p-6">
       <div className="mb-4 flex items-start">
-        <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
+        <div className="mr-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
           <svg
             className="h-5 w-5 text-blue-600 dark:text-blue-400"
             fill="none"
@@ -124,9 +124,9 @@ export function StripeConnectButton() {
             />
           </svg>
         </div>
-        <div>
-          <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
-            Zahlungen aktivieren
+        <div className="flex-1">
+          <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50 sm:text-lg">
+            💳 Zahlungen aktivieren
           </h3>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Verbinde dein Stripe-Konto, um Zahlungen von Kunden zu empfangen.
@@ -138,12 +138,12 @@ export function StripeConnectButton() {
       <button
         onClick={handleConnect}
         disabled={loading}
-        className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+        className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:py-2"
       >
-        {loading ? "Wird verbunden..." : "Mit Stripe verbinden"}
+        {loading ? "⏳ Wird verbunden..." : "✓ Mit Stripe verbinden"}
       </button>
 
-      <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400 sm:text-sm">
         💰 Du erhältst 85% des Verkaufspreises (15% Plattform-Gebühr)
       </p>
 

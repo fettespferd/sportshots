@@ -162,7 +162,7 @@ export default function NewEventPage() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 md:text-3xl">
             Neues Event erstellen
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
@@ -172,7 +172,7 @@ export default function NewEventPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 rounded-lg bg-white p-8 shadow dark:bg-zinc-800"
+          className="space-y-6 rounded-lg bg-white p-4 shadow dark:bg-zinc-800 sm:p-8"
         >
           {error && (
             <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
@@ -500,20 +500,20 @@ export default function NewEventPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end space-x-4 border-t border-zinc-200 pt-6 dark:border-zinc-700">
+          <div className="flex flex-col gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-700 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => router.back()}
-              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              className="w-full rounded-md border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700 sm:w-auto sm:py-2"
             >
-              Abbrechen
+              ← Abbrechen
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="w-full rounded-md bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 sm:w-auto sm:py-2"
             >
-              {loading ? "Erstelle Event..." : "Event erstellen"}
+              {loading ? "⏳ Erstelle Event..." : "✓ Event erstellen"}
             </button>
           </div>
         </form>
