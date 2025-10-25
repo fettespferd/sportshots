@@ -51,10 +51,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Account Link for onboarding
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/photographer/events`,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/photographer/events`,
+      refresh_url: `${baseUrl}/photographer/events`,
+      return_url: `${baseUrl}/photographer/events`,
       type: "account_onboarding",
     });
 
