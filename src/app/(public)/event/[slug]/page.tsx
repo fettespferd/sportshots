@@ -308,8 +308,8 @@ export default function PublicEventPage({
             }}
           />
 
-          {/* Reset Filter Button */}
-          {(bibNumberFilter || filteredPhotos.length !== photos.length) && (
+          {/* Reset Filter Warning - Prominent only when NO photos found */}
+          {(bibNumberFilter || filteredPhotos.length !== photos.length) && filteredPhotos.length === 0 && (
             <div className="mt-4 flex items-center justify-between rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
               <div className="flex items-center gap-2">
                 <svg
@@ -327,10 +327,10 @@ export default function PublicEventPage({
                 </svg>
                 <div>
                   <p className="text-sm font-medium text-yellow-900 dark:text-yellow-400">
-                    Filter aktiv
+                    Keine Fotos gefunden
                   </p>
                   <p className="text-xs text-yellow-700 dark:text-yellow-500">
-                    {filteredPhotos.length} von {photos.length} Fotos werden angezeigt
+                    Keine Fotos entsprechen deinem Filter
                   </p>
                 </div>
               </div>
@@ -339,6 +339,21 @@ export default function PublicEventPage({
                 className="rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600"
               >
                 ✕ Filter zurücksetzen
+              </button>
+            </div>
+          )}
+
+          {/* Subtle filter hint - when photos ARE found */}
+          {(bibNumberFilter || filteredPhotos.length !== photos.length) && filteredPhotos.length > 0 && (
+            <div className="mt-4 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
+              <span>
+                {filteredPhotos.length} von {photos.length} Fotos werden angezeigt
+              </span>
+              <button
+                onClick={resetFilters}
+                className="text-zinc-700 underline transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
+              >
+                Filter zurücksetzen
               </button>
             </div>
           )}

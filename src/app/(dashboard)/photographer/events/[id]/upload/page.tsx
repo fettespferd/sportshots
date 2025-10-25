@@ -420,61 +420,24 @@ export default function UploadPhotosPage({
         {/* Upload Stats */}
         {files.length > 0 && (
           <div className="mb-6 rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="text-sm">
-                  <span className="font-medium text-zinc-900 dark:text-zinc-50">
-                    {files.length}
-                  </span>{" "}
-                  <span className="text-zinc-600 dark:text-zinc-400">
-                    Fotos ausgewählt
-                  </span>
-                </div>
-                {successCount > 0 && (
-                  <div className="text-sm text-green-600 dark:text-green-400">
-                    {successCount} erfolgreich
-                  </div>
-                )}
-                {errorCount > 0 && (
-                  <div className="text-sm text-red-600 dark:text-red-400">
-                    {errorCount} fehlgeschlagen
-                  </div>
-                )}
+            <div className="flex items-center space-x-4">
+              <div className="text-sm">
+                <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                  {files.length}
+                </span>{" "}
+                <span className="text-zinc-600 dark:text-zinc-400">
+                  Fotos ausgewählt
+                </span>
               </div>
-
-              {/* OCR Button - show BEFORE upload when files are pending */}
-              {pendingCount > 0 && !uploading && (
-                <button
-                  onClick={handleBatchOCR}
-                  disabled={runningOCR}
-                  className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
-                >
-                  {runningOCR ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      <span>
-                        Erkenne {ocrProgress.current}/{ocrProgress.total}...
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      <span>🔍 Startnummern erkennen</span>
-                    </>
-                  )}
-                </button>
+              {successCount > 0 && (
+                <div className="text-sm text-green-600 dark:text-green-400">
+                  {successCount} erfolgreich
+                </div>
+              )}
+              {errorCount > 0 && (
+                <div className="text-sm text-red-600 dark:text-red-400">
+                  {errorCount} fehlgeschlagen
+                </div>
               )}
             </div>
           </div>
@@ -608,23 +571,62 @@ export default function UploadPhotosPage({
 
         {/* Action Buttons */}
         {files.length > 0 && (
-          <div className="flex items-center justify-end space-x-4">
-            <button
-              onClick={() => router.back()}
-              disabled={uploading}
-              className="rounded-md border border-zinc-300 px-6 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
-              Abbrechen
-            </button>
-            <button
-              onClick={handleUpload}
-              disabled={uploading || pendingCount === 0}
-              className="rounded-md bg-zinc-900 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-              {uploading
-                ? `Uploading... (${successCount}/${files.length})`
-                : `${pendingCount} Fotos hochladen`}
-            </button>
+          <div className="flex items-center justify-between">
+            <div>
+              {/* OCR Button - show BEFORE upload when files are pending */}
+              {pendingCount > 0 && !uploading && (
+                <button
+                  onClick={handleBatchOCR}
+                  disabled={runningOCR}
+                  className="flex items-center gap-2 rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+                >
+                  {runningOCR ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <span>
+                        Erkenne {ocrProgress.current}/{ocrProgress.total}...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <span>🔍 Startnummern erkennen</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.back()}
+                disabled={uploading}
+                className="rounded-md border border-zinc-300 px-6 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleUpload}
+                disabled={uploading || pendingCount === 0}
+                className="rounded-md bg-zinc-900 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                {uploading
+                  ? `Uploading... (${successCount}/${files.length})`
+                  : `${pendingCount} Fotos hochladen`}
+              </button>
+            </div>
           </div>
         )}
       </div>

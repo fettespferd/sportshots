@@ -30,12 +30,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: TranslationKey, params?: Record<string, any>): string => {
-    let text = translations[locale][key] || translations.de[key] || key;
+    let text: string = translations[locale][key] || translations.de[key] || key;
 
     // Simple parameter replacement
     if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        text = text.replace(`{${key}}`, String(value));
+      Object.entries(params).forEach(([paramKey, value]) => {
+        text = text.replace(`{${paramKey}}`, String(value));
       });
     }
 
