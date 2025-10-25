@@ -19,13 +19,13 @@ export default async function Home() {
       <div className="relative overflow-hidden bg-zinc-900">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <Image
+        <Image
             src="/images/knut-robinson-DTHtjyRuozs-unsplash.jpg"
             alt="Sport Action"
             fill
             className="object-cover opacity-40"
-            priority
-          />
+          priority
+        />
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/50 via-zinc-900/70 to-zinc-900"></div>
         </div>
 
@@ -38,7 +38,7 @@ export default async function Home() {
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 Schnell gefunden.
               </span>
-            </h1>
+          </h1>
             <p className="mx-auto mt-6 max-w-2xl text-xl text-zinc-300">
               Finde und kaufe deine Sportfotos über Startnummer, Event-Suche
               oder Selfie-Abgleich. Fotografen können ihre Events erstellen und
@@ -47,15 +47,25 @@ export default async function Home() {
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/search"
-                className="w-full rounded-lg bg-white px-8 py-4 text-base font-semibold text-zinc-900 shadow-xl transition-all hover:scale-105 hover:bg-zinc-100 sm:w-auto"
+                className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-10 py-5 text-lg font-bold text-white shadow-2xl transition-all hover:scale-105 hover:shadow-blue-500/50 sm:w-auto"
               >
-                🔍 Event suchen
+                📸 Mit Selfie Fotos finden
               </Link>
               <Link
-                href="/signup/photographer"
+                href="/search"
                 className="w-full rounded-lg border-2 border-white/30 bg-white/10 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/20 sm:w-auto"
               >
-                📸 Als Fotograf starten
+                🔍 Event durchsuchen
+              </Link>
+            </div>
+            
+            {/* Small photographer link */}
+            <div className="mt-8 text-center">
+              <Link
+                href="/signup/photographer"
+                className="text-sm text-zinc-400 hover:text-white transition-colors"
+              >
+                Du bist Fotograf? → Jetzt registrieren
               </Link>
             </div>
           </div>
@@ -292,23 +302,49 @@ export default async function Home() {
         </div>
       )}
 
-      {/* CTA Section */}
-      <div className="bg-white dark:bg-zinc-800">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-              Bist du Sportfotograf?
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
-              Erstelle Events, lade Fotos hoch und verkaufe sie direkt an die
-              Athleten. Mit automatischer Auszahlung über Stripe Connect.
-            </p>
-            <Link
-              href="/signup/photographer"
-              className="mt-8 inline-block rounded-md bg-zinc-900 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-              Jetzt als Fotograf registrieren
-            </Link>
+      {/* Footer Info Section */}
+      <div className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-3">
+            {/* For Athletes */}
+            <div className="text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
+                <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h3 className="mb-2 font-semibold text-zinc-900 dark:text-zinc-50">Für Athleten</h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Finde deine Fotos mit Selfie oder Startnummer und kaufe sie sofort.
+              </p>
+            </div>
+
+            {/* For Photographers */}
+            <div className="text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/20">
+                <svg className="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="mb-2 font-semibold text-zinc-900 dark:text-zinc-50">Für Fotografen</h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Verkaufe deine Fotos direkt. <Link href="/signup/photographer" className="text-blue-600 hover:underline dark:text-blue-400">Jetzt registrieren →</Link>
+              </p>
+            </div>
+
+            {/* Security */}
+            <div className="text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+                <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <h3 className="mb-2 font-semibold text-zinc-900 dark:text-zinc-50">Sicher & Einfach</h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Sichere Zahlungen über Stripe. Sofortiger Download nach dem Kauf.
+              </p>
+            </div>
           </div>
         </div>
       </div>
