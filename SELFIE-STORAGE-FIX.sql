@@ -3,8 +3,13 @@
 -- Execute this in Supabase SQL Editor
 -- ============================================================
 
+-- First, drop existing policies if they exist (to avoid duplicates)
+DROP POLICY IF EXISTS "Allow public selfie uploads" ON storage.objects;
+DROP POLICY IF EXISTS "Allow reading selfies" ON storage.objects;
+DROP POLICY IF EXISTS "Allow deleting selfies" ON storage.objects;
+
 -- Step 1: Allow anonymous users to upload to selfies/ folder
-CREATE POLICY IF NOT EXISTS "Allow public selfie uploads"
+CREATE POLICY "Allow public selfie uploads"
 ON storage.objects FOR INSERT
 TO anon
 WITH CHECK (
@@ -13,7 +18,7 @@ WITH CHECK (
 );
 
 -- Step 2: Allow anonymous users to read selfies (for face detection API)
-CREATE POLICY IF NOT EXISTS "Allow reading selfies"
+CREATE POLICY "Allow reading selfies"
 ON storage.objects FOR SELECT
 TO anon
 USING (
@@ -22,7 +27,7 @@ USING (
 );
 
 -- Step 3: Allow anonymous users to delete selfies (cleanup)
-CREATE POLICY IF NOT EXISTS "Allow deleting selfies"
+CREATE POLICY "Allow deleting selfies"
 ON storage.objects FOR DELETE
 TO anon
 USING (
