@@ -45,10 +45,10 @@ export default function SignUpPage() {
       if (data.user) {
         console.log("User created successfully:", data.user.id);
         setMessage(
-          "Registrierung erfolgreich! Bitte überprüfe deine E-Mails, um dein Konto zu bestätigen."
+          "Registrierung erfolgreich! 🎉 Dein Account wurde als Fotograf erstellt. Ein Admin wird deine Anfrage prüfen. Du erhältst eine Benachrichtigung, sobald dein Account genehmigt wurde. Bitte überprüfe auch deine E-Mails."
         );
         // Redirect to signin after a delay
-        setTimeout(() => router.push("/signin"), 3000);
+        setTimeout(() => router.push("/signin"), 5000);
       }
     } catch (err: any) {
       console.error("Signup failed:", err);
@@ -63,10 +63,13 @@ export default function SignUpPage() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Bei SportShots registrieren
+            Als Fotograf registrieren
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Erstelle einen Account, um deine Sportfotos zu finden
+            Erstelle einen Account und verkaufe deine Sportfotos
+          </p>
+          <p className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
+            ⚠️ Dein Account muss von einem Admin genehmigt werden, bevor du Events erstellen kannst
           </p>
         </div>
 
@@ -157,15 +160,6 @@ export default function SignUpPage() {
               className="font-medium text-zinc-900 hover:underline dark:text-zinc-50"
             >
               Jetzt anmelden
-            </Link>
-          </div>
-
-          <div className="text-center">
-            <Link
-              href="/signup/photographer"
-              className="text-sm font-medium text-zinc-700 hover:underline dark:text-zinc-300"
-            >
-              Als Fotograf registrieren →
             </Link>
           </div>
         </form>

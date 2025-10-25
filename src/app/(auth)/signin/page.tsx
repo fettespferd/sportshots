@@ -133,15 +133,6 @@ function SignInForm() {
               {t("auth.signIn.signUp")}
             </Link>
           </div>
-
-          <div className="text-center">
-            <Link
-              href="/signup/photographer"
-              className="text-sm font-medium text-zinc-700 hover:underline dark:text-zinc-300"
-            >
-              {t("footer.photographerSignup")} →
-            </Link>
-          </div>
         </form>
       </div>
     </div>

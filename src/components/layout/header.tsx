@@ -18,6 +18,7 @@ export function Header() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -68,18 +69,19 @@ export function Header() {
   };
 
   return (
-    <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-xl font-bold text-zinc-900 dark:text-zinc-50"
-            >
-              SportShots
-            </Link>
+    <>
+      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center space-x-8">
+              <Link
+                href="/"
+                className="text-xl font-bold text-zinc-900 dark:text-zinc-50"
+              >
+                SportShots
+              </Link>
 
-            <nav className="hidden space-x-6 md:flex">
+              <nav className="hidden space-x-6 md:flex">
               <Link
                 href="/search"
                 className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
@@ -149,12 +151,13 @@ export function Header() {
           <div className="flex items-center space-x-4">
             <LanguageSelector />
             
+            {/* Desktop auth buttons */}
             {loading ? (
-              <div className="h-4 w-16 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+              <div className="hidden h-4 w-16 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700 md:block"></div>
             ) : user ? (
-              <div className="flex items-center space-x-4">
+              <div className="hidden items-center space-x-4 md:flex">
                 {profile?.full_name && (
-                  <span className="hidden text-sm text-zinc-700 dark:text-zinc-300 sm:block">
+                  <span className="text-sm text-zinc-700 dark:text-zinc-300">
                     {profile.full_name}
                   </span>
                 )}
@@ -166,7 +169,7 @@ export function Header() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="hidden items-center space-x-3 md:flex">
                 <Link
                   href="/signin"
                   className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
@@ -181,10 +184,180 @@ export function Header() {
                 </Link>
               </div>
             )}
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-md p-2 text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 md:hidden"
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </div>
       </div>
     </header>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Menu panel */}
+          <div className="fixed right-0 top-0 h-full w-80 bg-white dark:bg-zinc-900 shadow-xl">
+            <div className="flex h-16 items-center justify-between border-b border-zinc-200 px-4 dark:border-zinc-800">
+              <span className="text-xl font-bold text-zinc-900 dark:text-zinc-50">Menu</span>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-md p-2 text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <nav className="flex flex-col space-y-1 p-4">
+              {/* Events suchen */}
+              <Link
+                href="/search"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                {t("nav.events")}
+              </Link>
+
+              {/* Photographer Navigation */}
+              {((profile?.role === "photographer" && profile?.photographer_status === "approved") || profile?.role === "admin") && (
+                <>
+                  <div className="px-4 pt-4 pb-2">
+                    <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                      Fotograf
+                    </p>
+                  </div>
+                  <Link
+                    href="/photographer/events"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {t("nav.myEvents")}
+                  </Link>
+                  <Link
+                    href="/photographer/sales"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {t("nav.sales")}
+                  </Link>
+                  <Link
+                    href="/photographer/analytics"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {t("nav.analytics")}
+                  </Link>
+                </>
+              )}
+
+              {/* Admin Navigation */}
+              {profile?.role === "admin" && (
+                <>
+                  <div className="px-4 pt-4 pb-2">
+                    <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                      Admin
+                    </p>
+                  </div>
+                  <Link
+                    href="/admin/photographers"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {t("nav.photographers")}
+                  </Link>
+                  <Link
+                    href="/admin/revenue"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {t("nav.revenue")}
+                  </Link>
+                  <Link
+                    href="/admin/analytics"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {t("nav.analytics")}
+                  </Link>
+                </>
+              )}
+
+              {/* Orders for athletes */}
+              {user && profile?.role === "athlete" && (
+                <Link
+                  href="/orders"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                >
+                  {t("nav.orders")}
+                </Link>
+              )}
+
+              {/* Auth section */}
+              <div className="border-t border-zinc-200 dark:border-zinc-800 mt-4 pt-4">
+                {user ? (
+                  <div className="space-y-1">
+                    {profile?.full_name && (
+                      <div className="px-4 py-2">
+                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{profile.full_name}</p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full rounded-md px-4 py-3 text-left text-base font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                    >
+                      {t("nav.signOut")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      href="/signin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block w-full rounded-md border border-zinc-300 px-4 py-3 text-center text-base font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      {t("nav.signIn")}
+                    </Link>
+                    <Link
+                      href="/signup"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block w-full rounded-md bg-zinc-900 px-4 py-3 text-center text-base font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                      {t("nav.signUp")}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

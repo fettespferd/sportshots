@@ -54,7 +54,7 @@ export function Hero() {
             {/* Small photographer link */}
             <div className="mt-8 text-center">
               <Link
-                href="/signup/photographer"
+                href="/signup"
                 className="text-sm text-zinc-400 transition-colors hover:text-white"
               >
                 {t("footer.photographerSignup")} →
