@@ -21,6 +21,9 @@ export default function EventDetailsPage({
   const [purchases, setPurchases] = useState<any[]>([]);
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [editingPhoto, setEditingPhoto] = useState<any>(null);
+  const [editBibNumber, setEditBibNumber] = useState("");
+  const [deletingPhoto, setDeletingPhoto] = useState<string | null>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -180,6 +183,87 @@ export default function EventDetailsPage({
       });
     } finally {
       setUploadingCover(false);
+    }
+  };
+
+  // Update bib number
+  const handleUpdateBibNumber = async () => {
+    if (!editingPhoto) return;
+
+    try {
+      const { error } = await supabase
+        .from("photos")
+        .update({ bib_number: editBibNumber || null })
+        .eq("id", editingPhoto.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setPhotos(
+        photos.map((p) =>
+          p.id === editingPhoto.id ? { ...p, bib_number: editBibNumber || null } : p
+        )
+      );
+
+      setEditingPhoto(null);
+      setEditBibNumber("");
+
+      setModalState({
+        isOpen: true,
+        title: "Erfolg",
+        message: "Startnummer wurde aktualisiert!",
+        type: "success",
+      });
+    } catch (error: any) {
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: error.message || "Fehler beim Aktualisieren der Startnummer",
+        type: "error",
+      });
+    }
+  };
+
+  // Delete photo
+  const handleDeletePhoto = async (photoId: string) => {
+    setDeletingPhoto(photoId);
+
+    try {
+      const photo = photos.find((p) => p.id === photoId);
+      if (!photo) throw new Error("Foto nicht gefunden");
+
+      // Delete from storage
+      const watermarkPath = photo.watermark_url.split("/photos/")[1];
+      const originalPath = photo.original_url.split("/photos/")[1];
+
+      await Promise.all([
+        supabase.storage.from("photos").remove([watermarkPath]),
+        supabase.storage.from("photos").remove([originalPath]),
+      ]);
+
+      // Delete from database
+      const { error } = await supabase.from("photos").delete().eq("id", photoId);
+
+      if (error) throw error;
+
+      // Update local state
+      setPhotos(photos.filter((p) => p.id !== photoId));
+
+      setModalState({
+        isOpen: true,
+        title: "Gelöscht",
+        message: "Das Foto wurde erfolgreich gelöscht.",
+        type: "success",
+      });
+    } catch (error: any) {
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: error.message || "Fehler beim Löschen des Fotos",
+        type: "error",
+      });
+    } finally {
+      setDeletingPhoto(null);
     }
   };
 
@@ -574,22 +658,58 @@ export default function EventDetailsPage({
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {photos.map((photo) => (
                 <div
                   key={photo.id}
-                  className="group relative aspect-square overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-700"
+                  className="group relative overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-700"
                 >
-                  <img
-                    src={photo.watermark_url}
-                    alt=""
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
-                  {photo.bib_number && (
-                    <div className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-1 text-xs font-medium text-white">
-                      #{photo.bib_number}
-                    </div>
-                  )}
+                  <div className="aspect-square">
+                    <img
+                      src={photo.watermark_url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  {/* Bib Number */}
+                  <div className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-xs font-medium text-white">
+                    {photo.bib_number ? `#${photo.bib_number}` : "Keine Startnummer"}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="absolute right-2 top-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={() => {
+                        setEditingPhoto(photo);
+                        setEditBibNumber(photo.bib_number || "");
+                      }}
+                      className="rounded-full bg-blue-600 p-2 text-white shadow-lg transition-transform hover:scale-110"
+                      title="Startnummer bearbeiten"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm("Foto wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+                          handleDeletePhoto(photo.id);
+                        }
+                      }}
+                      disabled={deletingPhoto === photo.id}
+                      className="rounded-full bg-red-600 p-2 text-white shadow-lg transition-transform hover:scale-110 disabled:opacity-50"
+                      title="Foto löschen"
+                    >
+                      {deletingPhoto === photo.id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      ) : (
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

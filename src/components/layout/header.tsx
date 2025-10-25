@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import { LanguageSelector } from "./language-selector";
 
 interface Profile {
   role: string;
@@ -144,6 +145,8 @@ export function Header() {
           </div>
 
           <div className="flex items-center space-x-4">
+            <LanguageSelector />
+            
             {loading ? (
               <div className="h-4 w-16 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
             ) : user ? (
