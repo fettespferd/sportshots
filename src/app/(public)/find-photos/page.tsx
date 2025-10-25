@@ -42,11 +42,18 @@ export default function FindPhotosPage() {
         video: { facingMode: "user", width: 1280, height: 720 },
       });
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setCameraActive(true);
-      }
+      streamRef.current = stream;
+      setCameraActive(true);
+
+      // Wait for next render cycle to ensure video element exists
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch((err) => {
+            console.error("Video play error:", err);
+          });
+        }
+      }, 100);
     } catch (error) {
       console.error("Camera error:", error);
       setModalState({
@@ -217,16 +224,17 @@ export default function FindPhotosPage() {
 
           {cameraActive && (
             <div className="space-y-6">
-              <div className="relative overflow-hidden rounded-xl bg-zinc-900">
+              <div className="relative aspect-video overflow-hidden rounded-xl bg-zinc-900">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  className="w-full"
+                  muted
+                  className="h-full w-full object-cover"
                   style={{ transform: "scaleX(-1)" }}
                 />
                 {/* Oval Guide */}
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <div
                     className="border-4 border-white/50 shadow-2xl"
                     style={{
