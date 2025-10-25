@@ -5,13 +5,30 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/modal";
+import { extractExifData, formatMetadataForDB } from "@/lib/utils/exif";
+import { supportsStations, supportsHeats, supportsCategories } from "@/lib/utils/event-config";
 
 interface UploadFile {
   file: File;
   preview: string;
   bibNumber: string;
+  stationTag?: string;
+  heatNumber?: number;
+  category?: string;
+  isFinishLine?: boolean;
+  teamPartnerBib?: string;
   status: "pending" | "uploading" | "success" | "error";
   error?: string;
+}
+
+interface EventData {
+  id: string;
+  title: string;
+  event_type: string;
+  stations: string[] | null;
+  heat_count: number | null;
+  event_category: string | null;
+  division: string | null;
 }
 
 export default function UploadPhotosPage({
@@ -22,7 +39,7 @@ export default function UploadPhotosPage({
   const { id: eventId } = use(params);
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [eventTitle, setEventTitle] = useState<string>("");
+  const [event, setEvent] = useState<EventData | null>(null);
   const [runningOCR, setRunningOCR] = useState(false);
   const [ocrProgress, setOcrProgress] = useState({ current: 0, total: 0 });
   const [modalState, setModalState] = useState<{
@@ -40,17 +57,19 @@ export default function UploadPhotosPage({
   const supabase = createClient();
 
   // Load event title
-  useState(() => {
+  useEffect(() => {
     const loadEvent = async () => {
       const { data } = await supabase
         .from("events")
-        .select("title")
+        .select("id, title, event_type, stations, heat_count, event_category, division")
         .eq("id", eventId)
         .single();
-      if (data) setEventTitle(data.title);
+      if (data) {
+        setEvent(data);
+      }
     };
     loadEvent();
-  });
+  }, [eventId]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -68,6 +87,12 @@ export default function UploadPhotosPage({
   const updateBibNumber = (index: number, bibNumber: string) => {
     setFiles((prev) =>
       prev.map((f, i) => (i === index ? { ...f, bibNumber } : f))
+    );
+  };
+
+  const updateFileField = (index: number, field: keyof UploadFile, value: any) => {
+    setFiles((prev) =>
+      prev.map((f, i) => (i === index ? { ...f, [field]: value } : f))
     );
   };
 
@@ -98,13 +123,13 @@ export default function UploadPhotosPage({
     }
 
     // Get event details for pricing
-    const { data: event } = await supabase
+    const { data: eventPricing } = await supabase
       .from("events")
       .select("price_per_photo")
       .eq("id", eventId)
       .single();
 
-    if (!event) {
+    if (!eventPricing) {
       setModalState({
         isOpen: true,
         title: "Fehler",
@@ -152,7 +177,7 @@ export default function UploadPhotosPage({
         const watermarkFormData = new FormData();
         watermarkFormData.append("file", uploadFile.file);
         watermarkFormData.append("eventId", eventId);
-        watermarkFormData.append("eventName", eventTitle);
+        watermarkFormData.append("eventName", event?.title || "Event");
 
         const watermarkResponse = await fetch("/api/photos/watermark", {
           method: "POST",
@@ -176,6 +201,12 @@ export default function UploadPhotosPage({
           console.log("Watermark generated successfully:", { watermarkUrl, thumbnailUrl });
         }
 
+        // Extract EXIF metadata
+        console.log("Extracting EXIF metadata...");
+        const metadata = await extractExifData(uploadFile.file);
+        const formattedMetadata = formatMetadataForDB(metadata);
+        console.log("EXIF metadata extracted:", formattedMetadata);
+
         // Perform OCR for bib number detection if no manual bib number provided
         let detectedBibNumber = uploadFile.bibNumber;
         if (!detectedBibNumber) {
@@ -197,15 +228,22 @@ export default function UploadPhotosPage({
           }
         }
 
-        // Save to database
+        // Save to database with metadata
         const { error: dbError } = await supabase.from("photos").insert({
           event_id: eventId,
           photographer_id: user.id,
           original_url: originalUrl,
           watermark_url: watermarkUrl,
           thumbnail_url: thumbnailUrl,
-          price: event.price_per_photo,
+          price: eventPricing.price_per_photo,
           bib_number: detectedBibNumber || null,
+          ...formattedMetadata,
+          // Hyrox/CrossFit specific fields (only if event supports it)
+          station_tag: uploadFile.stationTag || null,
+          heat_number: uploadFile.heatNumber || null,
+          category: uploadFile.category || null,
+          is_finish_line: uploadFile.isFinishLine || false,
+          team_partner_bib: uploadFile.teamPartnerBib || null,
         });
 
         if (dbError) throw dbError;
@@ -389,7 +427,7 @@ export default function UploadPhotosPage({
               href={`/photographer/events/${eventId}`}
               className="hover:text-zinc-900 dark:hover:text-zinc-50"
             >
-              {eventTitle || "Event"}
+              {event?.title || "Event"}
             </Link>
             <svg
               className="mx-2 h-4 w-4"
@@ -539,18 +577,73 @@ export default function UploadPhotosPage({
                     </div>
                   )}
 
-                  <div className="p-4">
+                  <div className="p-2 space-y-2">
+                    {/* Startnummer */}
                     <input
                       type="text"
-                      placeholder="Startnummer (optional)"
+                      placeholder="Startnummer"
                       value={uploadFile.bibNumber}
                       onChange={(e) => updateBibNumber(index, e.target.value)}
                       disabled={uploading || uploadFile.status === "success"}
-                      className="mb-2 w-full rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      className="w-full rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-zinc-500 focus:outline-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                     />
 
+                    {/* Hyrox/CrossFit Fields - nur wenn Event das unterstützt */}
+                    {event && supportsStations(event.event_type) && event.stations && (
+                      <select
+                        value={uploadFile.stationTag || ""}
+                        onChange={(e) => updateFileField(index, "stationTag", e.target.value)}
+                        disabled={uploading || uploadFile.status === "success"}
+                        className="w-full rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-zinc-500 focus:outline-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      >
+                        <option value="">Station wählen...</option>
+                        {event.stations.map((station) => (
+                          <option key={station} value={station}>
+                            {station}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {event && supportsHeats(event.event_type) && event.heat_count && event.heat_count > 1 && (
+                      <input
+                        type="number"
+                        placeholder="Heat Nr."
+                        min="1"
+                        max={event.heat_count}
+                        value={uploadFile.heatNumber || ""}
+                        onChange={(e) => updateFileField(index, "heatNumber", parseInt(e.target.value) || undefined)}
+                        disabled={uploading || uploadFile.status === "success"}
+                        className="w-full rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-zinc-500 focus:outline-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      />
+                    )}
+
+                    {event && (event.event_category === "doubles" || event.event_category === "relay") && (
+                      <input
+                        type="text"
+                        placeholder="Partner Startnr."
+                        value={uploadFile.teamPartnerBib || ""}
+                        onChange={(e) => updateFileField(index, "teamPartnerBib", e.target.value)}
+                        disabled={uploading || uploadFile.status === "success"}
+                        className="w-full rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-zinc-500 focus:outline-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      />
+                    )}
+
+                    {event && supportsStations(event.event_type) && (
+                      <label className="flex items-center gap-1 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={uploadFile.isFinishLine || false}
+                          onChange={(e) => updateFileField(index, "isFinishLine", e.target.checked)}
+                          disabled={uploading || uploadFile.status === "success"}
+                          className="rounded"
+                        />
+                        <span className="text-zinc-700 dark:text-zinc-300">Finish Line</span>
+                      </label>
+                    )}
+
                     {uploadFile.error && (
-                      <p className="mb-2 text-xs text-red-600 dark:text-red-400">
+                      <p className="text-xs text-red-600 dark:text-red-400">
                         {uploadFile.error}
                       </p>
                     )}
@@ -558,7 +651,7 @@ export default function UploadPhotosPage({
                     <button
                       onClick={() => removeFile(index)}
                       disabled={uploading}
-                      className="text-xs text-red-600 hover:underline disabled:opacity-50 dark:text-red-400"
+                      className="w-full rounded bg-red-500 px-2 py-1 text-xs text-white hover:bg-red-600 disabled:opacity-50"
                     >
                       Entfernen
                     </button>

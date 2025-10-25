@@ -4,15 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/utils/slugify";
-
-const eventTypes = [
-  { value: "running", label: "Laufen" },
-  { value: "cycling", label: "Radfahren" },
-  { value: "skiing", label: "Skifahren" },
-  { value: "surfing", label: "Surfen" },
-  { value: "triathlon", label: "Triathlon" },
-  { value: "other", label: "Sonstiges" },
-];
+import { 
+  EVENT_TYPES, 
+  EVENT_CATEGORIES, 
+  DIVISIONS,
+  getStationsForEventType,
+  supportsStations,
+  supportsHeats,
+  supportsCategories
+} from "@/lib/utils/event-config";
 
 export default function NewEventPage() {
   const [title, setTitle] = useState("");
@@ -25,10 +25,27 @@ export default function NewEventPage() {
   const [packagePhotoCount, setPackagePhotoCount] = useState("");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  
+  // Hyrox/CrossFit specific fields
+  const [eventCategory, setEventCategory] = useState<string>("");
+  const [division, setDivision] = useState<string>("");
+  const [heatCount, setHeatCount] = useState<number>(1);
+  const [selectedStations, setSelectedStations] = useState<string[]>([]);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+
+  // Update stations when event type changes
+  const handleEventTypeChange = (newType: string) => {
+    setEventType(newType);
+    if (supportsStations(newType)) {
+      setSelectedStations(Array.from(getStationsForEventType(newType)));
+    } else {
+      setSelectedStations([]);
+    }
+  };
 
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -118,6 +135,11 @@ export default function NewEventPage() {
           : null,
         cover_image_url: coverImageUrl,
         is_published: false,
+        // Hyrox/CrossFit specific fields
+        event_category: eventCategory || null,
+        division: division || null,
+        heat_count: supportsHeats(eventType) ? heatCount : null,
+        stations: selectedStations.length > 0 ? selectedStations : null,
       };
 
       const { data: newEvent, error: insertError } = await supabase
@@ -282,17 +304,89 @@ export default function NewEventPage() {
               <select
                 id="eventType"
                 value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
+                onChange={(e) => handleEventTypeChange(e.target.value)}
                 required
                 className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
               >
-                {eventTypes.map((type) => (
+                {EVENT_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* Hyrox/CrossFit specific fields */}
+            {supportsCategories(eventType) && (
+              <>
+                <div>
+                  <label
+                    htmlFor="eventCategory"
+                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    Kategorie
+                  </label>
+                  <select
+                    id="eventCategory"
+                    value={eventCategory}
+                    onChange={(e) => setEventCategory(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                  >
+                    <option value="">Keine Angabe</option>
+                    {EVENT_CATEGORIES.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="division"
+                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    Division
+                  </label>
+                  <select
+                    id="division"
+                    value={division}
+                    onChange={(e) => setDivision(e.target.value)}
+                    className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                  >
+                    <option value="">Keine Angabe</option>
+                    {DIVISIONS.map((div) => (
+                      <option key={div.value} value={div.value}>
+                        {div.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {supportsHeats(eventType) && (
+              <div>
+                <label
+                  htmlFor="heatCount"
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Anzahl Heats/Wellen
+                </label>
+                <input
+                  id="heatCount"
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={heatCount}
+                  onChange={(e) => setHeatCount(parseInt(e.target.value) || 1)}
+                  className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                />
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  Anzahl der Start-Wellen (z.B. Heat 1, Heat 2, ...)
+                </p>
+              </div>
+            )}
 
             <div>
               <label

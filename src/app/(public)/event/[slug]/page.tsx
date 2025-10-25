@@ -25,6 +25,9 @@ interface Photo {
   watermark_url: string;
   bib_number: string | null;
   price: number;
+  taken_at: string | null;
+  camera_make: string | null;
+  camera_model: string | null;
 }
 
 export default function PublicEventPage({
@@ -37,12 +40,16 @@ export default function PublicEventPage({
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]);
   const [bibNumberFilter, setBibNumberFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [timeRangeStart, setTimeRangeStart] = useState("");
+  const [timeRangeEnd, setTimeRangeEnd] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
+  const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -79,12 +86,12 @@ export default function PublicEventPage({
 
       setEvent(eventData);
 
-      // Get photos
+      // Get photos with metadata
       const { data: photosData } = await supabase
         .from("photos")
-        .select("id, watermark_url, bib_number, price")
+        .select("id, watermark_url, bib_number, price, taken_at, camera_make, camera_model")
         .eq("event_id", eventData.id)
-        .order("created_at", { ascending: false });
+        .order("taken_at", { ascending: false, nullsFirst: false });
 
       if (photosData) {
         setPhotos(photosData);
@@ -98,16 +105,39 @@ export default function PublicEventPage({
   }, [slug]);
 
   useEffect(() => {
+    let filtered = photos;
+
+    // Filter by bib number
     if (bibNumberFilter) {
-      setFilteredPhotos(
-        photos.filter((photo) =>
-          photo.bib_number?.includes(bibNumberFilter)
-        )
+      filtered = filtered.filter((photo) =>
+        photo.bib_number?.includes(bibNumberFilter)
       );
-    } else {
-      setFilteredPhotos(photos);
     }
-  }, [bibNumberFilter, photos]);
+
+    // Filter by date
+    if (dateFilter) {
+      filtered = filtered.filter((photo) => {
+        if (!photo.taken_at) return false;
+        const photoDate = new Date(photo.taken_at).toISOString().split('T')[0];
+        return photoDate === dateFilter;
+      });
+    }
+
+    // Filter by time range
+    if (timeRangeStart || timeRangeEnd) {
+      filtered = filtered.filter((photo) => {
+        if (!photo.taken_at) return false;
+        const photoTime = new Date(photo.taken_at).toTimeString().slice(0, 5);
+        
+        if (timeRangeStart && photoTime < timeRangeStart) return false;
+        if (timeRangeEnd && photoTime > timeRangeEnd) return false;
+        
+        return true;
+      });
+    }
+
+    setFilteredPhotos(filtered);
+  }, [bibNumberFilter, dateFilter, timeRangeStart, timeRangeEnd, photos]);
 
   const handleFaceSearchResults = (photoIds: string[]) => {
     if (photoIds.length > 0) {
@@ -117,6 +147,9 @@ export default function PublicEventPage({
 
   const resetFilters = () => {
     setBibNumberFilter("");
+    setDateFilter("");
+    setTimeRangeStart("");
+    setTimeRangeEnd("");
     setFilteredPhotos(photos);
     setSelectedPhotos(new Set());
   };
@@ -270,27 +303,79 @@ export default function PublicEventPage({
       <div className={`mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 ${selectedPhotos.size > 0 ? 'pb-32 sm:pb-8' : ''}`}>
         {/* Search Bar */}
         <div className="mb-6 space-y-4">
-          {/* Startnummer-Suche */}
+          {/* Filter Section */}
           <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex-1">
-                <label
-                  htmlFor="bibNumber"
-                  className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  Nach Startnummer filtern
-                </label>
-                <input
-                  id="bibNumber"
-                  type="text"
-                  value={bibNumberFilter}
-                  onChange={(e) => setBibNumberFilter(e.target.value)}
-                  placeholder="z.B. 243"
-                  className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-                />
+            <div className="space-y-4">
+              {/* Startnummer-Suche */}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="flex-1">
+                  <label
+                    htmlFor="bibNumber"
+                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    Nach Startnummer filtern
+                  </label>
+                  <input
+                    id="bibNumber"
+                    type="text"
+                    value={bibNumberFilter}
+                    onChange={(e) => setBibNumberFilter(e.target.value)}
+                    placeholder="z.B. 243"
+                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                  />
+                </div>
+                <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:min-w-[140px] sm:text-right">
+                  {filteredPhotos.length} von {photos.length} Fotos
+                </div>
               </div>
-              <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                {filteredPhotos.length} von {photos.length} Fotos
+
+              {/* Datum & Zeit Filter */}
+              <div className="grid gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-700 sm:grid-cols-3">
+                <div>
+                  <label
+                    htmlFor="dateFilter"
+                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    📅 Nach Datum
+                  </label>
+                  <input
+                    id="dateFilter"
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="timeRangeStart"
+                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    ⏰ Von Uhrzeit
+                  </label>
+                  <input
+                    id="timeRangeStart"
+                    type="time"
+                    value={timeRangeStart}
+                    onChange={(e) => setTimeRangeStart(e.target.value)}
+                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="timeRangeEnd"
+                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    ⏰ Bis Uhrzeit
+                  </label>
+                  <input
+                    id="timeRangeEnd"
+                    type="time"
+                    value={timeRangeEnd}
+                    onChange={(e) => setTimeRangeEnd(e.target.value)}
+                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -309,7 +394,7 @@ export default function PublicEventPage({
           />
 
           {/* Reset Filter Warning - Prominent only when NO photos found */}
-          {(bibNumberFilter || filteredPhotos.length !== photos.length) && filteredPhotos.length === 0 && (
+          {(bibNumberFilter || dateFilter || timeRangeStart || timeRangeEnd || filteredPhotos.length !== photos.length) && filteredPhotos.length === 0 && (
             <div className="mt-4 flex items-center justify-between rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
               <div className="flex items-center gap-2">
                 <svg
@@ -344,7 +429,7 @@ export default function PublicEventPage({
           )}
 
           {/* Subtle filter hint - when photos ARE found */}
-          {(bibNumberFilter || filteredPhotos.length !== photos.length) && filteredPhotos.length > 0 && (
+          {(bibNumberFilter || dateFilter || timeRangeStart || timeRangeEnd || filteredPhotos.length !== photos.length) && filteredPhotos.length > 0 && (
             <div className="mt-4 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
               <span>
                 {filteredPhotos.length} von {photos.length} Fotos werden angezeigt
@@ -503,6 +588,7 @@ export default function PublicEventPage({
                   className="aspect-square w-full cursor-zoom-in overflow-hidden bg-zinc-100 dark:bg-zinc-700"
                   onClick={() => {
                     setLightboxImage(photo.watermark_url);
+                    setLightboxPhoto(photo);
                     setLightboxOpen(true);
                   }}
                 >
@@ -598,9 +684,29 @@ export default function PublicEventPage({
       {/* Lightbox */}
       <Lightbox
         isOpen={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
+        onClose={() => {
+          setLightboxOpen(false);
+          setLightboxPhoto(null);
+        }}
         imageUrl={lightboxImage}
         alt="Foto"
+        photoId={lightboxPhoto?.id}
+        bibNumber={lightboxPhoto?.bib_number}
+        price={lightboxPhoto?.price}
+        takenAt={lightboxPhoto?.taken_at}
+        cameraMake={lightboxPhoto?.camera_make}
+        cameraModel={lightboxPhoto?.camera_model}
+        isInCart={lightboxPhoto ? selectedPhotos.has(lightboxPhoto.id) : false}
+        onAddToCart={(photoId) => {
+          setSelectedPhotos(prev => new Set([...prev, photoId]));
+        }}
+        onRemoveFromCart={(photoId) => {
+          setSelectedPhotos(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(photoId);
+            return newSet;
+          });
+        }}
       />
     </div>
   );
