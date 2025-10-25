@@ -22,6 +22,8 @@ export default function SignUpPage() {
     setMessage(null);
 
     try {
+      console.log("Starting signup process...", { email });
+      
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -33,9 +35,15 @@ export default function SignUpPage() {
         },
       });
 
-      if (signUpError) throw signUpError;
+      console.log("Signup response:", { data, error: signUpError });
+
+      if (signUpError) {
+        console.error("Signup error:", signUpError);
+        throw signUpError;
+      }
 
       if (data.user) {
+        console.log("User created successfully:", data.user.id);
         setMessage(
           "Registrierung erfolgreich! Bitte überprüfe deine E-Mails, um dein Konto zu bestätigen."
         );
@@ -43,7 +51,8 @@ export default function SignUpPage() {
         setTimeout(() => router.push("/signin"), 3000);
       }
     } catch (err: any) {
-      setError(err.message || "Registrierung fehlgeschlagen");
+      console.error("Signup failed:", err);
+      setError(err.message || "Registrierung fehlgeschlagen. Bitte versuche es erneut.");
     } finally {
       setLoading(false);
     }

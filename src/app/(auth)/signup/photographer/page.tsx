@@ -24,6 +24,8 @@ export default function PhotographerSignUpPage() {
     setSuccess(false);
 
     try {
+      console.log("Starting photographer signup...", { email, fullName });
+      
       // 1. Sign up the user
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -36,9 +38,16 @@ export default function PhotographerSignUpPage() {
         },
       });
 
-      if (signUpError) throw signUpError;
+      console.log("Signup response:", { data, error: signUpError });
+
+      if (signUpError) {
+        console.error("Signup error:", signUpError);
+        throw signUpError;
+      }
 
       if (data.user) {
+        console.log("User created, now creating photographer request...", data.user.id);
+        
         // 2. Create photographer request
         const { error: requestError } = await supabase
           .from("photographer_requests")
@@ -51,12 +60,17 @@ export default function PhotographerSignUpPage() {
             status: "pending",
           });
 
-        if (requestError) throw requestError;
+        if (requestError) {
+          console.error("Photographer request error:", requestError);
+          throw requestError;
+        }
 
+        console.log("Photographer request created successfully!");
         setSuccess(true);
       }
     } catch (err: any) {
-      setError(err.message || "Registrierung fehlgeschlagen");
+      console.error("Photographer signup failed:", err);
+      setError(err.message || "Registrierung fehlgeschlagen. Bitte versuche es erneut.");
     } finally {
       setLoading(false);
     }
