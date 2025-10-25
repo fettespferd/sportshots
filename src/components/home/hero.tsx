@@ -51,15 +51,6 @@ export function Hero() {
               </Link>
             </div>
 
-            {/* Small photographer link */}
-            <div className="mt-8 text-center">
-              <Link
-                href="/signup"
-                className="text-sm text-zinc-400 transition-colors hover:text-white"
-              >
-                {t("footer.photographerSignup")} →
-              </Link>
-            </div>
           </div>
         </div>
       </div>
@@ -116,6 +107,51 @@ export function Hero() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Photographer CTA Section */}
+      <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 py-20">
+        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+          <div className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-8 shadow-2xl backdrop-blur-sm sm:p-12">
+            <div className="mb-6 text-6xl">📸</div>
+            <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
+              Bist du Sportfotograf?
+            </h2>
+            <p className="mx-auto mb-8 max-w-2xl text-lg text-zinc-300">
+              Verkaufe deine Eventfotos direkt an Athleten. Automatische Gesichtserkennung, 
+              sichere Zahlungen und sofortige Auszahlungen über Stripe Connect.
+            </p>
+            
+            <div className="mb-8 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-lg bg-zinc-700/30 p-4">
+                <div className="mb-2 text-3xl">🤖</div>
+                <div className="text-sm font-semibold text-white">KI-Gesichtserkennung</div>
+                <div className="mt-1 text-xs text-zinc-400">Automatische Zuordnung</div>
+              </div>
+              <div className="rounded-lg bg-zinc-700/30 p-4">
+                <div className="mb-2 text-3xl">💳</div>
+                <div className="text-sm font-semibold text-white">Sichere Zahlungen</div>
+                <div className="mt-1 text-xs text-zinc-400">Via Stripe Connect</div>
+              </div>
+              <div className="rounded-lg bg-zinc-700/30 p-4">
+                <div className="mb-2 text-3xl">⚡</div>
+                <div className="text-sm font-semibold text-white">Sofort-Auszahlung</div>
+                <div className="mt-1 text-xs text-zinc-400">Direkt auf dein Konto</div>
+              </div>
+            </div>
+
+            <Link
+              href="/signup"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-blue-500/50"
+            >
+              🚀 Jetzt als Fotograf starten
+            </Link>
+            
+            <p className="mt-4 text-sm text-zinc-400">
+              Kostenlos registrieren • Keine Setup-Gebühren • Nur 10% Provision
+            </p>
           </div>
         </div>
       </div>

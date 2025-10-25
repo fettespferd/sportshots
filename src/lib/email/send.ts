@@ -90,16 +90,14 @@ export async function sendPurchaseConfirmationEmail(
   customerName: string,
   eventName: string,
   photoCount: number,
-  totalAmount: number,
-  downloadLinks: string[]
+  downloadUrl: string
 ) {
   const html = await render(
     PurchaseConfirmationEmail({
       customerName,
       eventName,
       photoCount,
-      totalAmount,
-      downloadLinks,
+      downloadUrl,
     })
   );
 

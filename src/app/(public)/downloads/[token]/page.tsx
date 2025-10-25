@@ -135,7 +135,7 @@ export default function DownloadsPage({
 
         {/* Purchase Info */}
         <div className="mb-8 rounded-lg bg-white p-6 shadow dark:bg-zinc-800">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 Bestellung vom
@@ -150,14 +150,6 @@ export default function DownloadsPage({
               </p>
               <p className="font-semibold text-zinc-900 dark:text-zinc-50">
                 {purchase.photos.length}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Gesamtbetrag
-              </p>
-              <p className="font-semibold text-zinc-900 dark:text-zinc-50">
-                {(purchase.total_amount / 100).toFixed(2)} €
               </p>
             </div>
           </div>

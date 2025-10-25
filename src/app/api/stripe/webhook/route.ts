@@ -5,15 +5,21 @@ import { sendPurchaseConfirmationEmail, sendPayoutNotificationEmail } from "@/li
 import Stripe from "stripe";
 
 export async function POST(request: NextRequest) {
+  console.log("=== STRIPE WEBHOOK RECEIVED ===");
+  console.log("Has STRIPE_WEBHOOK_SECRET:", !!process.env.STRIPE_WEBHOOK_SECRET);
+  
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
   if (!signature) {
+    console.error("❌ No stripe-signature header found");
     return NextResponse.json(
       { error: "No signature" },
       { status: 400 }
     );
   }
+
+  console.log("✅ Signature found, verifying...");
 
   let event: Stripe.Event;
 
@@ -23,6 +29,7 @@ export async function POST(request: NextRequest) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
+    console.log("✅ Webhook signature verified. Event type:", event.type);
   } catch (error: any) {
     console.error("Webhook signature verification failed:", error.message);
     return NextResponse.json(
@@ -67,6 +74,10 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  console.log("=== CHECKOUT COMPLETED WEBHOOK ===");
+  console.log("Session ID:", session.id);
+  console.log("Payment Intent:", session.payment_intent);
+  
   const supabase = await createClient();
 
   const userId = session.metadata?.user_id;
@@ -74,66 +85,56 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const photographerId = session.metadata?.photographer_id;
   const photoIds = JSON.parse(session.metadata?.photo_ids || "[]");
 
+  console.log("Metadata:", {
+    userId,
+    eventId,
+    photographerId,
+    photoIdsCount: photoIds.length
+  });
+
   if (!userId || !eventId || !photographerId || !photoIds.length) {
-    console.error("Missing metadata in checkout session");
+    console.error("❌ Missing metadata in checkout session");
     return;
   }
 
   const totalAmount = session.amount_total! / 100; // Convert from cents
   const fees = calculateFees(session.amount_total!);
+  
+  console.log("Amount details:", {
+    totalAmount,
+    platformFee: fees.platformFee / 100,
+    photographerAmount: fees.photographerAmount / 100
+  });
 
-  // Create purchase record
-  const { data: purchase, error: purchaseError } = await supabase
-    .from("purchases")
-    .insert({
-      buyer_id: userId === "guest" ? null : userId,
-      event_id: eventId,
-      photographer_id: photographerId,
-      stripe_payment_intent_id: session.payment_intent as string,
-      stripe_session_id: session.id,
-      total_amount: totalAmount,
-      platform_fee: fees.platformFee / 100,
-      photographer_amount: fees.photographerAmount / 100,
-      photo_ids: photoIds,
-      status: "completed",
-      completed_at: new Date().toISOString(),
-      metadata: {
-        customer_email: session.metadata?.customer_email || session.customer_email,
-      },
-    })
-    .select()
-    .single();
+  // Create purchase record using stored function (bypasses RLS)
+  const { data: result, error: purchaseError } = await supabase.rpc(
+    "create_purchase_with_photos",
+    {
+      p_buyer_id: userId === "guest" ? null : userId,
+      p_event_id: eventId,
+      p_photographer_id: photographerId,
+      p_stripe_payment_intent_id: session.payment_intent as string,
+      p_stripe_session_id: session.id,
+      p_total_amount: totalAmount,
+      p_platform_fee: fees.platformFee / 100,
+      p_photographer_amount: fees.photographerAmount / 100,
+      p_photo_ids: photoIds,
+      p_status: "completed",
+    }
+  );
 
-  if (purchaseError) {
-    console.error("Error creating purchase:", purchaseError);
+  if (purchaseError || !result || result.length === 0) {
+    console.error("❌ Error creating purchase:", purchaseError);
     return;
   }
 
-  // Create purchase_photos records
-  const purchasePhotos = photoIds.map((photoId: string) => ({
-    purchase_id: purchase.id,
-    photo_id: photoId,
-  }));
-
-  const { error: junctionError } = await supabase
-    .from("purchase_photos")
-    .insert(purchasePhotos);
-
-  if (junctionError) {
-    console.error("Error creating purchase_photos:", junctionError);
-  }
-
-  console.log("Purchase created successfully:", purchase.id);
+  const purchaseId = result[0].purchase_id;
+  console.log("✅ Purchase created:", purchaseId);
+  console.log("✅ Purchase photos linked:", photoIds.length);
+  console.log("✅ Purchase completed successfully:", purchaseId);
 
   // Send email notifications
   try {
-    // Get buyer details
-    const { data: buyer } = await supabase
-      .from("profiles")
-      .select("email, full_name")
-      .eq("id", userId)
-      .single();
-
     // Get event details
     const { data: event } = await supabase
       .from("events")
@@ -148,23 +149,31 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       .eq("id", photographerId)
       .single();
 
-    // Get photo URLs for download links
-    const { data: photos } = await supabase
-      .from("photos")
-      .select("original_url")
-      .in("id", photoIds);
+    // Get customer email from metadata or profile
+    const customerEmail = session.metadata?.customer_email || session.customer_email;
+    let customerName = "Kunde";
+    
+    if (userId && userId !== "guest") {
+      const { data: buyer } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", userId)
+        .single();
+      customerName = buyer?.full_name || "Kunde";
+    }
 
-    const downloadLinks = photos?.map((photo) => photo.original_url) || [];
+    // Create download URL
+    const downloadUrl = `${process.env.NEXT_PUBLIC_APP_URL}/downloads/${session.id}`;
 
     // Send purchase confirmation to buyer
-    if (buyer && event) {
+    if (customerEmail && event) {
+      console.log("Sending confirmation email to:", customerEmail);
       await sendPurchaseConfirmationEmail(
-        buyer.email,
-        buyer.full_name || "Kunde",
+        customerEmail,
+        customerName,
         event.title,
         photoIds.length,
-        totalAmount,
-        downloadLinks
+        downloadUrl
       );
     }
 

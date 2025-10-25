@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { LanguageSelector } from "./language-selector";
+import { UserMenu } from "./user-menu";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface Profile {
   role: string;
   photographer_status: string | null;
   full_name: string | null;
+  account_type: string | null;
+  username: string | null;
 }
 
 export function Header() {
@@ -33,7 +36,7 @@ export function Header() {
       if (currentUser) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("role, photographer_status, full_name")
+          .select("role, photographer_status, full_name, account_type, username")
           .eq("id", currentUser.id)
           .single();
 
@@ -81,7 +84,7 @@ export function Header() {
                 SportShots
               </Link>
 
-              <nav className="hidden space-x-6 md:flex">
+              <nav className="hidden items-center space-x-4 md:flex">
               <Link
                 href="/search"
                 className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
@@ -105,36 +108,16 @@ export function Header() {
                   >
                     {t("nav.sales")}
                   </Link>
-                  <Link
-                    href="/photographer/analytics"
-                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
-                  >
-                    {t("nav.analytics")}
-                  </Link>
                 </>
               )}
 
               {profile?.role === "admin" && (
-                <>
-                  <Link
-                    href="/admin/photographers"
-                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
-                  >
-                    {t("nav.photographers")}
-                  </Link>
-                  <Link
-                    href="/admin/revenue"
-                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
-                  >
-                    {t("nav.revenue")}
-                  </Link>
-                  <Link
-                    href="/admin/analytics"
-                    className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
-                  >
-                    {t("nav.analytics")}
-                  </Link>
-                </>
+                <Link
+                  href="/admin/photographers"
+                  className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
+                >
+                  Admin
+                </Link>
               )}
 
               {user && profile?.role === "athlete" && (
@@ -148,40 +131,13 @@ export function Header() {
             </nav>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <LanguageSelector />
             
-            {/* Desktop auth buttons */}
-            {loading ? (
-              <div className="hidden h-4 w-16 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700 md:block"></div>
-            ) : user ? (
-              <div className="hidden items-center space-x-4 md:flex">
-                {profile?.full_name && (
-                  <span className="text-sm text-zinc-700 dark:text-zinc-300">
-                    {profile.full_name}
-                  </span>
-                )}
-                <button
-                  onClick={handleSignOut}
-                  className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  {t("nav.signOut")}
-                </button>
-              </div>
-            ) : (
-              <div className="hidden items-center space-x-3 md:flex">
-                <Link
-                  href="/signin"
-                  className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
-                >
-                  {t("nav.signIn")}
-                </Link>
-                <Link
-                  href="/signup"
-                  className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                >
-                  {t("nav.signUp")}
-                </Link>
+            {/* User menu for logged in users */}
+            {!loading && user && (
+              <div className="hidden md:block">
+                <UserMenu profile={profile} user={user} onSignOut={handleSignOut} />
               </div>
             )}
 
@@ -242,64 +198,82 @@ export function Header() {
               {/* Photographer Navigation */}
               {((profile?.role === "photographer" && profile?.photographer_status === "approved") || profile?.role === "admin") && (
                 <>
-                  <div className="px-4 pt-4 pb-2">
-                    <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
-                      Fotograf
-                    </p>
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 mt-2 pt-2">
+                    <div className="px-4 pb-2">
+                      <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                        Fotograf
+                      </p>
+                    </div>
+                    <Link
+                      href="/photographer/events"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <span>📸</span>
+                      <span>{t("nav.myEvents")}</span>
+                    </Link>
+                    <Link
+                      href="/photographer/sales"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <span>💰</span>
+                      <span>{t("nav.sales")}</span>
+                    </Link>
+                    <Link
+                      href="/photographer/analytics"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <span>📊</span>
+                      <span>Analytics</span>
+                    </Link>
+                    <Link
+                      href="/photographer/settings"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <span>⚙️</span>
+                      <span>Einstellungen</span>
+                    </Link>
                   </div>
-                  <Link
-                    href="/photographer/events"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    {t("nav.myEvents")}
-                  </Link>
-                  <Link
-                    href="/photographer/sales"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    {t("nav.sales")}
-                  </Link>
-                  <Link
-                    href="/photographer/analytics"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    {t("nav.analytics")}
-                  </Link>
                 </>
               )}
 
               {/* Admin Navigation */}
               {profile?.role === "admin" && (
                 <>
-                  <div className="px-4 pt-4 pb-2">
-                    <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
-                      Admin
-                    </p>
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 mt-2 pt-2">
+                    <div className="px-4 pb-2">
+                      <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                        Admin
+                      </p>
+                    </div>
+                    <Link
+                      href="/admin/photographers"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <span>👥</span>
+                      <span>{t("nav.photographers")}</span>
+                    </Link>
+                    <Link
+                      href="/admin/revenue"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <span>💰</span>
+                      <span>{t("nav.revenue")}</span>
+                    </Link>
+                    <Link
+                      href="/admin/analytics"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <span>📈</span>
+                      <span>Admin Analytics</span>
+                    </Link>
                   </div>
-                  <Link
-                    href="/admin/photographers"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    {t("nav.photographers")}
-                  </Link>
-                  <Link
-                    href="/admin/revenue"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    {t("nav.revenue")}
-                  </Link>
-                  <Link
-                    href="/admin/analytics"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    {t("nav.analytics")}
-                  </Link>
                 </>
               )}
 
@@ -314,14 +288,23 @@ export function Header() {
                 </Link>
               )}
 
-              {/* Auth section */}
-              <div className="border-t border-zinc-200 dark:border-zinc-800 mt-4 pt-4">
-                {user ? (
+              {/* User section - only show if logged in */}
+              {user && (
+                <div className="border-t border-zinc-200 dark:border-zinc-800 mt-4 pt-4">
                   <div className="space-y-1">
                     {profile?.full_name && (
                       <div className="px-4 py-2">
                         <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{profile.full_name}</p>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</p>
+                        {profile?.username && (
+                          <Link
+                            href={`/${profile.username}`}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="mt-1 block text-xs text-blue-600 hover:underline dark:text-blue-400"
+                          >
+                            sportshots.brainmotion.ai/{profile.username}
+                          </Link>
+                        )}
                       </div>
                     )}
                     <button
@@ -329,30 +312,14 @@ export function Header() {
                         handleSignOut();
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full rounded-md px-4 py-3 text-left text-base font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                      className="flex w-full items-center gap-2 rounded-md px-4 py-3 text-left text-base font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                     >
-                      {t("nav.signOut")}
+                      <span>🚪</span>
+                      <span>{t("nav.signOut")}</span>
                     </button>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Link
-                      href="/signin"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full rounded-md border border-zinc-300 px-4 py-3 text-center text-base font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                    >
-                      {t("nav.signIn")}
-                    </Link>
-                    <Link
-                      href="/signup"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full rounded-md bg-zinc-900 px-4 py-3 text-center text-base font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                    >
-                      {t("nav.signUp")}
-                    </Link>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </nav>
           </div>
         </div>

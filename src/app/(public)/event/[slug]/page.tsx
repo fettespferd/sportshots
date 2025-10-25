@@ -50,6 +50,7 @@ export default function PublicEventPage({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -477,7 +478,8 @@ export default function PublicEventPage({
               )}
 
               <button
-                className="w-full rounded-md bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800 sm:px-6 sm:py-3 sm:text-base"
+                className="w-full rounded-md bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800 sm:px-6 sm:py-3 sm:text-base"
+                disabled={isCheckingOut}
                 onClick={async () => {
                   // Validate guest email
                   if (!isAuthenticated && !guestEmail) {
@@ -504,6 +506,8 @@ export default function PublicEventPage({
                     }
                   }
 
+                  setIsCheckingOut(true);
+
                   try {
                     const response = await fetch("/api/stripe/checkout", {
                       method: "POST",
@@ -524,12 +528,14 @@ export default function PublicEventPage({
                         message: data.error,
                         type: "error",
                       });
+                      setIsCheckingOut(false);
                       return;
                     }
 
                     // Redirect to Stripe Checkout
                     if (data.url) {
                       window.location.href = data.url;
+                      // Keep loading state active during redirect
                     }
                   } catch (error) {
                     console.error("Checkout error:", error);
@@ -539,10 +545,21 @@ export default function PublicEventPage({
                       message: "Ein Fehler ist beim Checkout aufgetreten. Bitte versuche es erneut.",
                       type: "error",
                     });
+                    setIsCheckingOut(false);
                   }
                 }}
               >
-                Zur Kasse
+                {isCheckingOut ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Wird geladen...</span>
+                  </span>
+                ) : (
+                  "Zur Kasse"
+                )}
               </button>
             </div>
           </div>

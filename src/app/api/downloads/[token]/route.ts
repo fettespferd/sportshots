@@ -7,6 +7,10 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
+    console.log("=== DOWNLOAD REQUEST ===");
+    console.log("Session ID:", token);
+    
+    // Create Supabase client
     const supabase = await createClient();
 
     // Get purchase by session ID (token)
@@ -30,12 +34,23 @@ export async function GET(
       .eq("status", "completed")
       .single();
 
-    if (error || !purchase) {
+    if (error) {
+      console.error("❌ Error fetching purchase:", error);
       return NextResponse.json(
         { error: "Purchase not found or not completed" },
         { status: 404 }
       );
     }
+    
+    if (!purchase) {
+      console.error("❌ Purchase not found for session:", token);
+      return NextResponse.json(
+        { error: "Purchase not found or not completed" },
+        { status: 404 }
+      );
+    }
+    
+    console.log("✅ Purchase found:", purchase.id);
 
     return NextResponse.json({
       success: true,

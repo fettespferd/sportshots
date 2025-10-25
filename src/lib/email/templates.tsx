@@ -107,61 +107,68 @@ export function PurchaseConfirmationEmail({
   customerName,
   eventName,
   photoCount,
-  totalAmount,
-  downloadLinks,
+  downloadUrl,
 }: {
   customerName: string;
   eventName: string;
   photoCount: number;
-  totalAmount: number;
-  downloadLinks: string[];
+  downloadUrl: string;
 }) {
   return (
     <Html>
       <Head />
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>✅ Vielen Dank für deinen Kauf!</Heading>
+          <Heading style={h1}>🎉 Herzlichen Glückwunsch!</Heading>
           <Text style={text}>
             Hallo {customerName},
           </Text>
           <Text style={text}>
-            Deine Bestellung für <strong>{eventName}</strong> wurde erfolgreich
-            abgeschlossen.
+            Vielen Dank für deinen Kauf! 🎊 Deine Bestellung für <strong>{eventName}</strong> wurde erfolgreich
+            abgeschlossen und deine unvergesslichen Momente stehen jetzt zum Download bereit!
           </Text>
           <Hr style={hr} />
-          <Text style={text}>
-            <strong>Bestelldetails:</strong>
-            <br />
-            Anzahl Fotos: {photoCount}
-            <br />
-            Gesamtbetrag: {totalAmount.toFixed(2)} €
-          </Text>
-          <Section style={buttonContainer}>
-            <Button style={button} href={`${baseUrl}/orders`}>
-              Meine Bestellungen
-            </Button>
+          <Section style={celebrationBox}>
+            <Text style={celebrationEmoji}>📸</Text>
+            <Text style={celebrationText}>
+              {photoCount} {photoCount === 1 ? "Foto" : "Fotos"} in hoher Qualität
+            </Text>
           </Section>
           <Hr style={hr} />
+          <Section style={buttonContainer}>
+            <Button style={button} href={downloadUrl}>
+              🚀 Jetzt herunterladen
+            </Button>
+          </Section>
           <Text style={text}>
-            <strong>Download-Links:</strong>
+            <strong>💡 Gut zu wissen:</strong>
+            <br />
+            • Deine Fotos sind in voller Auflösung verfügbar
+            <br />
+            • Der Download-Link bleibt dauerhaft gültig
+            <br />
+            • Du kannst die Fotos jederzeit erneut herunterladen
+            <br />
+            • Teile deine besten Momente mit Freunden und Familie!
           </Text>
-          {downloadLinks.slice(0, 5).map((downloadUrl, index) => (
-            <Text key={index} style={downloadLink}>
-              <Link href={downloadUrl} style={link}>
-                Foto {index + 1} herunterladen
-              </Link>
-            </Text>
-          ))}
-          {downloadLinks.length > 5 && (
-            <Text style={footer}>
-              ...und {downloadLinks.length - 5} weitere. Alle Downloads findest
-              du in deinem Konto.
-            </Text>
-          )}
+          <Hr style={hr} />
+          <Text style={text}>
+            <strong>🔗 Dein persönlicher Download-Link:</strong>
+          </Text>
+          <Text style={downloadLink}>
+            <Link href={downloadUrl} style={link}>
+              {downloadUrl}
+            </Link>
+          </Text>
+          <Text style={downloadLinkNote}>
+            Speichere diesen Link für späteren Zugriff!
+          </Text>
           <Hr style={hr} />
           <Text style={footer}>
-            Deine Fotos bleiben dauerhaft in deinem Konto verfügbar.
+            Wir hoffen, du hattest großartige Momente bei {eventName}! 🌟
+            <br />
+            <br />
+            Viel Spaß mit deinen Fotos!
             <br />
             Dein SportShots Team
           </Text>
@@ -294,6 +301,35 @@ const downloadLink = {
   padding: "0 40px",
 };
 
+const downloadLinkNote = {
+  color: "#8898aa",
+  fontSize: "13px",
+  fontStyle: "italic" as const,
+  margin: "4px 0 0",
+  padding: "0 40px",
+};
+
+const celebrationBox = {
+  backgroundColor: "#fef3c7",
+  border: "2px solid #fbbf24",
+  borderRadius: "12px",
+  padding: "32px",
+  margin: "24px 40px",
+  textAlign: "center" as const,
+};
+
+const celebrationEmoji = {
+  fontSize: "64px",
+  margin: "0 0 16px",
+};
+
+const celebrationText = {
+  color: "#92400e",
+  fontSize: "24px",
+  fontWeight: "600",
+  margin: "0",
+};
+
 const amountBox = {
   backgroundColor: "#f0fdf4",
   border: "2px solid #86efac",
@@ -315,4 +351,5 @@ const amountLabel = {
   fontSize: "14px",
   margin: "8px 0 0",
 };
+
 
