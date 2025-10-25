@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function Footer() {
+  const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -10,17 +14,17 @@ export function Footer() {
           {/* Company Info */}
           <div>
             <h3 className="mb-4 text-lg font-bold text-zinc-900 dark:text-zinc-50">
-              SportShots
+              {t("footer.company")}
             </h3>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Die Plattform für Sportfotografie. Finde deine Fotos mit Selfie-Suche oder Startnummer.
+              {t("footer.description")}
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-50">
-              Schnellzugriff
+              {t("footer.quickLinks")}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -28,7 +32,7 @@ export function Footer() {
                   href="/find-photos"
                   className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 >
-                  Fotos finden
+                  {t("footer.findPhotos")}
                 </Link>
               </li>
               <li>
@@ -36,7 +40,7 @@ export function Footer() {
                   href="/search"
                   className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 >
-                  Events suchen
+                  {t("footer.searchEvents")}
                 </Link>
               </li>
               <li>
@@ -44,7 +48,7 @@ export function Footer() {
                   href="/signup/photographer"
                   className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 >
-                  Als Fotograf registrieren
+                  {t("footer.photographerSignup")}
                 </Link>
               </li>
             </ul>
@@ -53,7 +57,7 @@ export function Footer() {
           {/* Legal */}
           <div>
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-50">
-              Rechtliches
+              {t("footer.legal")}
             </h3>
             <ul className="space-y-2">
               <li>
@@ -61,7 +65,7 @@ export function Footer() {
                   href="/impressum"
                   className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 >
-                  Impressum
+                  {t("footer.imprint")}
                 </Link>
               </li>
               <li>
@@ -69,7 +73,7 @@ export function Footer() {
                   href="/datenschutz"
                   className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 >
-                  Datenschutz
+                  {t("footer.privacy")}
                 </Link>
               </li>
               <li>
@@ -77,7 +81,7 @@ export function Footer() {
                   href="mailto:julius.faubel@brainmotion.ai"
                   className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 >
-                  Kontakt
+                  {t("footer.contact")}
                 </a>
               </li>
             </ul>
@@ -87,7 +91,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 border-t border-zinc-200 pt-8 dark:border-zinc-800">
           <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-            © {currentYear} SportShots by Brainmotion. Alle Rechte vorbehalten.
+            {t("footer.copyright", { year: currentYear })}
           </p>
         </div>
       </div>

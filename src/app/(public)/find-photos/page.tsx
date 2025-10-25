@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Modal } from "@/components/ui/modal";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface MatchedPhoto {
   id: string;
@@ -16,6 +17,7 @@ interface MatchedPhoto {
 }
 
 export default function FindPhotosPage() {
+  const { t } = useLanguage();
   const [cameraActive, setCameraActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
@@ -193,10 +195,10 @@ export default function FindPhotosPage() {
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-5xl">
-            Finde deine Fotos
+            {t("findPhotos.title")}
           </h1>
           <p className="mt-3 text-lg text-zinc-600 dark:text-zinc-400">
-            Mach ein Selfie – wir durchsuchen alle Events für dich
+            {t("findPhotos.subtitle")}
           </p>
         </div>
 

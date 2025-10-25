@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { LanguageSelector } from "./language-selector";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface Profile {
   role: string;
@@ -13,6 +14,7 @@ interface Profile {
 }
 
 export function Header() {
+  const { t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,7 +84,7 @@ export function Header() {
                 href="/search"
                 className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
               >
-                Events suchen
+                {t("nav.events")}
               </Link>
 
               {((profile?.role === "photographer" &&
@@ -93,19 +95,19 @@ export function Header() {
                     href="/photographer/events"
                     className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                   >
-                    Meine Events
+                    {t("nav.myEvents")}
                   </Link>
                   <Link
                     href="/photographer/sales"
                     className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                   >
-                    Verkäufe
+                    {t("nav.sales")}
                   </Link>
                   <Link
                     href="/photographer/analytics"
                     className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                   >
-                    Analytics
+                    {t("nav.analytics")}
                   </Link>
                 </>
               )}
@@ -116,19 +118,19 @@ export function Header() {
                     href="/admin/photographers"
                     className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                   >
-                    Fotografen
+                    {t("nav.photographers")}
                   </Link>
                   <Link
                     href="/admin/revenue"
                     className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                   >
-                    Umsatz
+                    {t("nav.revenue")}
                   </Link>
                   <Link
                     href="/admin/analytics"
                     className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                   >
-                    Analytics
+                    {t("nav.analytics")}
                   </Link>
                 </>
               )}
@@ -138,7 +140,7 @@ export function Header() {
                   href="/orders"
                   className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                 >
-                  Meine Bestellungen
+                  {t("nav.orders")}
                 </Link>
               )}
             </nav>
@@ -160,25 +162,25 @@ export function Header() {
                   onClick={handleSignOut}
                   className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
                 >
-                  Abmelden
+                  {t("nav.signOut")}
                 </button>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
                 <span className="hidden text-xs text-zinc-500 dark:text-zinc-400 lg:block">
-                  Fotograf?
+                  {t("nav.photographer")}
                 </span>
                 <Link
                   href="/signin"
                   className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
                 >
-                  Anmelden
+                  {t("nav.signIn")}
                 </Link>
                 <Link
                   href="/signup"
                   className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
-                  Registrieren
+                  {t("nav.signUp")}
                 </Link>
               </div>
             )}
