@@ -65,7 +65,7 @@ export function UserMenu({ profile, user, onSignOut }: UserMenuProps) {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+        <div className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
           {/* User Info */}
           <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-700">
             <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
