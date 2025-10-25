@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface Event {
   id: string;
@@ -16,6 +17,7 @@ interface Event {
 }
 
 export default function SearchPage() {
+  const { t } = useLanguage();
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,10 +86,10 @@ export default function SearchPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-            Events durchsuchen
+            {t("search.title")}
           </h1>
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            Finde dein Event und entdecke deine Fotos
+            {t("search.subtitle")}
           </p>
         </div>
 
