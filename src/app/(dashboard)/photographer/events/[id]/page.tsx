@@ -716,6 +716,65 @@ export default function EventDetailsPage({
           )}
         </div>
       </div>
+
+      {/* Edit Bib Number Modal */}
+      {editingPhoto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-800">
+            <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Startnummer bearbeiten
+            </h3>
+            
+            <div className="mb-6">
+              <label
+                htmlFor="bibNumber"
+                className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Startnummer
+              </label>
+              <input
+                id="bibNumber"
+                type="text"
+                value={editBibNumber}
+                onChange={(e) => setEditBibNumber(e.target.value)}
+                placeholder="z.B. 457"
+                className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                autoFocus
+              />
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Lasse das Feld leer, um die Startnummer zu entfernen
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setEditingPhoto(null);
+                  setEditBibNumber("");
+                }}
+                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleUpdateBibNumber}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              >
+                Speichern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Standard Modal for notifications */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState({ ...modalState, isOpen: false })}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+      />
     </div>
   );
 }
