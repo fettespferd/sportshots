@@ -14,13 +14,13 @@ export function Hero() {
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
-            src="/images/knut-robinson-DTHtjyRuozs-unsplash.jpg"
-            alt="Sport Action"
+            src="/images/knut-robinson-DTHtjyRuozs-unsplash.png"
+            alt="Surfing Action"
             fill
-            className="object-cover opacity-40"
+            className="object-cover opacity-70"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/50 via-zinc-900/70 to-zinc-900"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/40 via-zinc-900/50 to-zinc-900/80"></div>
         </div>
 
         {/* Hero Content */}
