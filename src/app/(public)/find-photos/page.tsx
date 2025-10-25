@@ -107,15 +107,19 @@ export default function FindPhotosPage() {
 
       try {
         // Upload selfie to temporary storage
-        const fileName = `selfies/${Date.now()}.jpg`;
+        const fileName = `selfies/temp/${Date.now()}.jpg`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("photos")
           .upload(fileName, blob, {
             contentType: "image/jpeg",
             cacheControl: "3600",
+            upsert: true,
           });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw uploadError;
+        }
 
         const {
           data: { publicUrl },
