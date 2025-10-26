@@ -7,6 +7,7 @@ interface Photo {
   id: string;
   original_url: string;
   event_title: string;
+  rotation?: number;
 }
 
 interface Purchase {
