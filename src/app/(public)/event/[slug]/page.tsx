@@ -489,33 +489,32 @@ export default function PublicEventPage({
           )}
         </div>
 
-        {/* Selected Photos Bar - Mobile Optimized */}
+        {/* Selected Photos Bar - Mobile Optimized with Safe Area */}
         {selectedPhotos.size > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-white/20 bg-zinc-900 p-3 shadow-2xl dark:border-zinc-800 dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:border-0 sm:p-6 sm:shadow-lg">
-            <div className="mx-auto flex max-w-7xl flex-col gap-2 sm:gap-4">
-              {/* Summary Row */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-white/20 bg-zinc-900 shadow-2xl dark:border-zinc-800 dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:border-0 sm:p-6 sm:shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}>
+            <div className="mx-auto flex max-w-7xl flex-col gap-2 px-3 py-2.5 sm:gap-4 sm:px-0 sm:py-0">
+              {/* Compact Summary Row */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-white dark:text-zinc-900 sm:text-base">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold dark:bg-zinc-900/20 sm:h-8 sm:w-8">
+                <div className="flex items-center gap-2 text-xs text-white dark:text-zinc-900 sm:text-base">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold dark:bg-zinc-900/20 sm:h-8 sm:w-8">
                     {selectedPhotos.size}
                   </div>
-                  <span className="font-medium">
-                    <span className="hidden xs:inline">Fotos ausgewählt</span>
+                  <span className="font-semibold">
+                    <span className="hidden xs:inline">Fotos</span>
                     <span className="xs:hidden">Fotos</span>
                   </span>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-white/70 dark:text-zinc-600 sm:hidden">Gesamt</div>
-                  <span className="text-lg font-bold text-white dark:text-zinc-900 sm:text-2xl">
+                  <span className="text-base font-bold text-white dark:text-zinc-900 sm:text-2xl">
                     {calculateTotal().toFixed(2)} €
                   </span>
                 </div>
               </div>
               
-              {/* Email input for guests - Mobile optimized */}
+              {/* Email input for guests - Ultra compact on mobile */}
               {!isAuthenticated && (
-                <div className="flex flex-col gap-1.5 sm:gap-2">
-                  <label className="text-xs font-medium text-white/90 dark:text-zinc-700 sm:text-sm">
+                <div className="flex flex-col gap-1 sm:gap-2">
+                  <label className="text-[10px] font-medium text-white/80 dark:text-zinc-700 sm:text-sm">
                     📧 E-Mail für Download-Link:
                   </label>
                   <input
@@ -523,7 +522,7 @@ export default function PublicEventPage({
                     value={guestEmail}
                     onChange={(e) => setGuestEmail(e.target.value)}
                     placeholder="deine@email.de"
-                    className="w-full rounded-lg border-2 border-white/20 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3"
+                    className="w-full rounded-lg border-2 border-white/20 bg-white px-2.5 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3"
                     required
                     autoComplete="email"
                     inputMode="email"
@@ -532,7 +531,7 @@ export default function PublicEventPage({
               )}
 
               <button
-                className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
+                className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
                 disabled={isCheckingOut}
                 onClick={async () => {
                   // Validate guest email
@@ -645,7 +644,7 @@ export default function PublicEventPage({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+          <div className="mb-32 grid grid-cols-2 gap-2 sm:mb-6 sm:gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
             {filteredPhotos.map((photo) => (
               <div
                 key={photo.id}

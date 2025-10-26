@@ -44,7 +44,11 @@ export function Lightbox({
 }: LightboxProps) {
   useEffect(() => {
     if (isOpen) {
+      // Prevent scrolling and touch behaviors
       document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.touchAction = "none";
       
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
@@ -55,7 +59,10 @@ export function Lightbox({
       document.addEventListener("keydown", handleEscape);
       
       return () => {
-        document.body.style.overflow = "unset";
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.width = "";
+        document.body.style.touchAction = "";
         document.removeEventListener("keydown", handleEscape);
       };
     }
@@ -64,29 +71,45 @@ export function Lightbox({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex touch-none items-center justify-center overflow-hidden">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/95 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Action buttons */}
-      <div className="absolute right-4 top-4 z-10 flex gap-2">
+      {/* Action buttons - Prominent Share Button on Mobile */}
+      <div className="absolute right-3 top-3 z-20 flex flex-col gap-2 sm:right-4 sm:top-4 sm:flex-row">
         {showShare && shareUrl && (
-          <div className="rounded-full bg-white/20 backdrop-blur-md shadow-lg ring-1 ring-white/30">
-            <ShareButton
-              url={shareUrl}
-              title={shareTitle}
-              text={shareTitle}
-              variant="icon"
-              className="p-3 text-white hover:bg-white/30"
-            />
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // Trigger share
+              if (navigator.share) {
+                navigator.share({
+                  title: shareTitle,
+                  text: shareTitle,
+                  url: shareUrl,
+                }).catch(() => {
+                  // Fallback to clipboard
+                  navigator.clipboard.writeText(shareUrl);
+                });
+              } else {
+                navigator.clipboard.writeText(shareUrl);
+              }
+            }}
+            className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 sm:px-3 sm:py-3"
+            aria-label="Teilen"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <span className="sm:hidden">Teilen</span>
+          </button>
         )}
         <button
           onClick={onClose}
-          className="rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
+          className="flex items-center justify-center rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95"
           aria-label="Schließen"
         >
           <svg
@@ -157,22 +180,21 @@ export function Lightbox({
         )}
       </div>
 
-      {/* Add to cart button - Mobile optimized */}
+      {/* Add to cart button - Centered at bottom on mobile */}
       {photoId && (onAddToCart || onRemoveFromCart) && (
-        <div className="absolute bottom-2 right-2 z-10 sm:bottom-4 sm:right-4">
+        <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 sm:bottom-4 sm:left-auto sm:right-4 sm:translate-x-0">
           {isInCart ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onRemoveFromCart?.(photoId);
               }}
-              className="flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105 hover:bg-red-700 sm:gap-2 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
+              className="flex items-center gap-2 rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-red-700 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
             >
-              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-              <span className="hidden sm:inline">Aus Warenkorb entfernen</span>
-              <span className="sm:hidden">Entfernen</span>
+              <span>Entfernen</span>
             </button>
           ) : (
             <button
@@ -180,20 +202,19 @@ export function Lightbox({
                 e.stopPropagation();
                 onAddToCart?.(photoId);
               }}
-              className="flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105 hover:bg-green-700 sm:gap-2 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
+              className="flex items-center gap-2 rounded-full bg-green-600 px-6 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-green-700 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
             >
-              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span className="hidden sm:inline">Zum Warenkorb hinzufügen</span>
-              <span className="sm:hidden">Hinzufügen</span>
+              <span>Hinzufügen</span>
             </button>
           )}
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 text-sm text-white/70">
+      {/* Instructions - Hidden on mobile */}
+      <div className="absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 text-sm text-white/70 sm:block">
         Klicke außerhalb oder drücke ESC zum Schließen
       </div>
     </div>
