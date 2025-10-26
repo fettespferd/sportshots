@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorKey } from "@/lib/i18n/error-messages";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { AGB_VERSION } from "@/app/(public)/agb/page";
+import { DATENSCHUTZ_VERSION } from "@/app/(public)/datenschutz/page";
 
 export default function SignUpPage() {
   const { t } = useLanguage();
@@ -19,6 +21,8 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [acceptedAGB, setAcceptedAGB] = useState(false);
+  const [acceptedDatenschutz, setAcceptedDatenschutz] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -94,6 +98,13 @@ export default function SignUpPage() {
       return;
     }
 
+    // Validate legal consent
+    if (!acceptedAGB || !acceptedDatenschutz) {
+      setError("Du musst den AGB und der Datenschutzerklärung zustimmen, um dich zu registrieren.");
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log("Starting signup process...", { email, username, accountType });
       
@@ -131,6 +142,28 @@ export default function SignUpPage() {
 
         if (updateError) {
           console.error("Error updating profile:", updateError);
+        }
+
+        // Store legal consent with versions
+        const consentPromises = [
+          supabase.from("user_legal_consents").insert({
+            user_id: data.user.id,
+            document_type: "agb",
+            version: AGB_VERSION,
+          }),
+          supabase.from("user_legal_consents").insert({
+            user_id: data.user.id,
+            document_type: "datenschutz",
+            version: DATENSCHUTZ_VERSION,
+          }),
+        ];
+
+        const consentResults = await Promise.all(consentPromises);
+        const consentErrors = consentResults.filter(result => result.error);
+        
+        if (consentErrors.length > 0) {
+          console.error("Error storing legal consent:", consentErrors);
+          // Don't block signup, but log the error
         }
 
         setMessage(
@@ -305,10 +338,69 @@ export default function SignUpPage() {
               />
             </div>
 
+            {/* Legal Consent Checkboxes */}
+            <div className="space-y-3 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+              <div className="flex items-start gap-3">
+                <input
+                  id="accept-agb"
+                  type="checkbox"
+                  checked={acceptedAGB}
+                  onChange={(e) => setAcceptedAGB(e.target.checked)}
+                  required
+                  className="mt-1 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-2 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700"
+                />
+                <label
+                  htmlFor="accept-agb"
+                  className="text-sm text-zinc-700 dark:text-zinc-300"
+                >
+                  Ich akzeptiere die{" "}
+                  <Link
+                    href="/agb"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-zinc-900 underline hover:text-zinc-700 dark:text-zinc-50 dark:hover:text-zinc-300"
+                  >
+                    Allgemeinen Geschäftsbedingungen (Version {AGB_VERSION})
+                  </Link>
+                  <span className="text-red-600 dark:text-red-400"> *</span>
+                </label>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <input
+                  id="accept-datenschutz"
+                  type="checkbox"
+                  checked={acceptedDatenschutz}
+                  onChange={(e) => setAcceptedDatenschutz(e.target.checked)}
+                  required
+                  className="mt-1 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-2 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700"
+                />
+                <label
+                  htmlFor="accept-datenschutz"
+                  className="text-sm text-zinc-700 dark:text-zinc-300"
+                >
+                  Ich akzeptiere die{" "}
+                  <Link
+                    href="/datenschutz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-zinc-900 underline hover:text-zinc-700 dark:text-zinc-50 dark:hover:text-zinc-300"
+                  >
+                    Datenschutzerklärung (Version {DATENSCHUTZ_VERSION})
+                  </Link>
+                  <span className="text-red-600 dark:text-red-400"> *</span>
+                </label>
+              </div>
+
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <span className="text-red-600 dark:text-red-400">*</span> Pflichtfeld - Die Zustimmung ist erforderlich für die Registrierung
+              </p>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
-              className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              disabled={loading || !acceptedAGB || !acceptedDatenschutz}
+              className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               {loading ? "Wird registriert..." : "Registrieren"}
             </button>

@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+// Current version of AGB - must match database version
+export const AGB_VERSION = "1.0";
+export const AGB_EFFECTIVE_DATE = "2025-01-26";
+
 export default function AGBPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -414,11 +418,11 @@ export default function AGBPage() {
           {/* Stand */}
           <section className="border-t border-zinc-200 pt-6 dark:border-zinc-700">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Stand: {new Date().toLocaleDateString("de-DE", {
+              Stand: {new Date(AGB_EFFECTIVE_DATE).toLocaleDateString("de-DE", {
                 year: "numeric",
                 month: "long",
                 day: "numeric"
-              })}
+              })} | Version {AGB_VERSION}
             </p>
           </section>
 

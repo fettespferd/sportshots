@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+// Current version of Privacy Policy - must match database version
+export const DATENSCHUTZ_VERSION = "1.0";
+export const DATENSCHUTZ_EFFECTIVE_DATE = "2025-01-26";
+
 export default function DatenschutzPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -404,11 +408,11 @@ export default function DatenschutzPage() {
           {/* Stand */}
           <section>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Stand: {new Date().toLocaleDateString("de-DE", { 
+              Stand: {new Date(DATENSCHUTZ_EFFECTIVE_DATE).toLocaleDateString("de-DE", { 
                 year: "numeric", 
                 month: "long", 
                 day: "numeric" 
-              })}
+              })} | Version {DATENSCHUTZ_VERSION}
             </p>
           </section>
 
