@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ShareButton } from "./share-button";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -46,8 +46,20 @@ export function Lightbox({
   shareTitle
 }: LightboxProps) {
   const { t } = useLanguage();
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragDistance, setDragDistance] = useState(0);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
+
   useEffect(() => {
     if (isOpen) {
+      // Show swipe hint and hide after 3 seconds
+      setShowSwipeHint(true);
+      const hintTimer = setTimeout(() => {
+        setShowSwipeHint(false);
+      }, 3000);
+
       // Prevent page scrolling but allow pinch-zoom on image
       const scrollY = window.scrollY;
       document.body.style.position = "fixed";
@@ -64,6 +76,7 @@ export function Lightbox({
       document.addEventListener("keydown", handleEscape);
       
       return () => {
+        clearTimeout(hintTimer);
         const scrollY = document.body.style.top;
         document.body.style.position = "";
         document.body.style.top = "";
@@ -75,66 +88,134 @@ export function Lightbox({
     }
   }, [isOpen, onClose]);
 
+  // Handle swipe down to close
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientY);
+    setIsDragging(true);
+    setShowSwipeHint(false); // Hide hint immediately when user starts swiping
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const currentTouch = e.targetTouches[0].clientY;
+    const distance = currentTouch - touchStart;
+    
+    // Only allow dragging down, not up
+    if (distance > 0) {
+      setDragDistance(distance);
+      setTouchEnd(currentTouch);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    
+    // If dragged down more than 100px, close the lightbox
+    if (dragDistance > 100) {
+      onClose();
+    }
+    
+    // Reset
+    setDragDistance(0);
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex touch-auto items-center justify-center overflow-hidden">
+    <div 
+      className="fixed inset-0 z-50 flex touch-auto items-center justify-center overflow-hidden"
+      style={{
+        transform: `translateY(${dragDistance}px)`,
+        transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+        opacity: isDragging ? Math.max(1 - dragDistance / 300, 0.5) : 1
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/95 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Action buttons - Prominent Share Button on Mobile */}
-      <div className="absolute right-3 top-3 z-20 flex flex-col gap-2 sm:right-4 sm:top-4 sm:flex-row">
-        {showShare && shareUrl && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // Trigger share
-              const title = shareTitle || t("lightbox.sharePhoto");
-              if (navigator.share) {
-                navigator.share({
-                  title: title,
-                  text: title,
-                  url: shareUrl,
-                }).catch(() => {
-                  // Fallback to clipboard
-                  navigator.clipboard.writeText(shareUrl);
-                });
-              } else {
-                navigator.clipboard.writeText(shareUrl);
-              }
-            }}
-            className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 sm:px-3 sm:py-3"
-            aria-label={t("lightbox.share")}
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-            <span className="sm:hidden">{t("lightbox.share")}</span>
-          </button>
-        )}
-        <button
-          onClick={onClose}
-          className="flex items-center justify-center rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95"
-          aria-label={t("lightbox.close")}
+      {/* Mobile: Close button bottom-left (Instagram-style) */}
+      <button
+        onClick={onClose}
+        className="absolute z-50 flex items-center justify-center rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95 md:hidden"
+        style={{
+          left: 'max(1rem, env(safe-area-inset-left))',
+          bottom: 'max(1rem, env(safe-area-inset-bottom))',
+        }}
+        aria-label={t("lightbox.close")}
+      >
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+      
+      {/* Desktop: Close button top-right */}
+      <button
+        onClick={onClose}
+        className="absolute right-4 top-4 z-50 hidden items-center justify-center rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95 md:flex"
+        aria-label={t("lightbox.close")}
+      >
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      {/* Action buttons - Share Button (Top Right) */}
+      {showShare && shareUrl && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            // Trigger share
+            const title = shareTitle || t("lightbox.sharePhoto");
+            if (navigator.share) {
+              navigator.share({
+                title: title,
+                text: title,
+                url: shareUrl,
+              }).catch(() => {
+                // Fallback to clipboard
+                navigator.clipboard.writeText(shareUrl);
+              });
+            } else {
+              navigator.clipboard.writeText(shareUrl);
+            }
+          }}
+          className="absolute right-3 top-3 z-20 flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 sm:right-4 sm:top-4 sm:px-3 sm:py-3"
+          aria-label={t("lightbox.share")}
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
+          <span className="sm:hidden">{t("lightbox.share")}</span>
         </button>
-      </div>
+      )}
 
       {/* Image - Mobile optimized with pinch-zoom enabled */}
       <div className="relative z-10 flex h-[60vh] w-full max-w-[95vw] touch-auto items-center justify-center overflow-auto sm:h-[85vh] sm:max-w-[90vw]">
@@ -244,6 +325,19 @@ export function Lightbox({
               <span>{t("lightbox.addToCart")}</span>
             </button>
           )}
+        </div>
+      )}
+
+      {/* Swipe indicator - Visible only on mobile, fades out after 3s */}
+      {showSwipeHint && (
+        <div 
+          className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 flex-col items-center gap-1 text-white/70 transition-opacity duration-500 md:hidden"
+          style={{ opacity: showSwipeHint ? 1 : 0 }}
+        >
+          <svg className="h-6 w-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+          <span className="text-xs font-medium">Wischen zum Schließen</span>
         </div>
       )}
 
