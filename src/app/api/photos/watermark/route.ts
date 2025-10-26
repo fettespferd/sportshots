@@ -13,20 +13,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File;
-    const eventId = formData.get("eventId") as string;
-    const eventName = formData.get("eventName") as string;
+    const body = await request.json();
+    const { imageUrl, eventId, eventName } = body;
 
-    if (!file || !eventId) {
+    if (!imageUrl || !eventId) {
       return NextResponse.json(
-        { error: "File and event ID required" },
+        { error: "Image URL and event ID required" },
         { status: 400 }
       );
     }
 
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
+    // Download image from URL
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error("Failed to download image");
+    }
+    const arrayBuffer = await imageResponse.arrayBuffer();
     const imageBuffer = Buffer.from(arrayBuffer);
 
     // Generate watermark version

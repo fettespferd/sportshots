@@ -98,6 +98,16 @@ export const translations = {
     "auth.resetPassword.title": "Passwort zurücksetzen",
     "auth.resetPassword.newPassword": "Neues Passwort",
     "auth.resetPassword.button": "Passwort ändern",
+    
+    // Auth Errors
+    "auth.error.invalidCredentials": "Ungültige E-Mail oder Passwort",
+    "auth.error.emailExists": "Diese E-Mail ist bereits registriert",
+    "auth.error.weakPassword": "Passwort muss mindestens 6 Zeichen lang sein",
+    "auth.error.invalidEmail": "Ungültige E-Mail-Adresse",
+    "auth.error.userNotFound": "Benutzer nicht gefunden",
+    "auth.error.tooManyRequests": "Zu viele Anfragen. Bitte versuche es später erneut",
+    "auth.error.networkError": "Netzwerkfehler. Bitte überprüfe deine Internetverbindung",
+    "auth.error.unknownError": "Ein unbekannter Fehler ist aufgetreten",
 
     // Search Page
     "search.title": "Events durchsuchen",
@@ -267,6 +277,16 @@ export const translations = {
     "auth.resetPassword.title": "Reset Password",
     "auth.resetPassword.newPassword": "New Password",
     "auth.resetPassword.button": "Change Password",
+    
+    // Auth Errors
+    "auth.error.invalidCredentials": "Invalid email or password",
+    "auth.error.emailExists": "This email is already registered",
+    "auth.error.weakPassword": "Password must be at least 6 characters long",
+    "auth.error.invalidEmail": "Invalid email address",
+    "auth.error.userNotFound": "User not found",
+    "auth.error.tooManyRequests": "Too many requests. Please try again later",
+    "auth.error.networkError": "Network error. Please check your internet connection",
+    "auth.error.unknownError": "An unknown error occurred",
 
     // Search Page
     "search.title": "Browse Events",
@@ -436,6 +456,16 @@ export const translations = {
     "auth.resetPassword.title": "Restablecer Contraseña",
     "auth.resetPassword.newPassword": "Nueva Contraseña",
     "auth.resetPassword.button": "Cambiar Contraseña",
+    
+    // Auth Errors
+    "auth.error.invalidCredentials": "Correo electrónico o contraseña no válidos",
+    "auth.error.emailExists": "Este correo electrónico ya está registrado",
+    "auth.error.weakPassword": "La contraseña debe tener al menos 6 caracteres",
+    "auth.error.invalidEmail": "Dirección de correo electrónico no válida",
+    "auth.error.userNotFound": "Usuario no encontrado",
+    "auth.error.tooManyRequests": "Demasiadas solicitudes. Por favor, inténtalo más tarde",
+    "auth.error.networkError": "Error de red. Por favor, verifica tu conexión a Internet",
+    "auth.error.unknownError": "Se produjo un error desconocido",
 
     // Search Page
     "search.title": "Explorar Eventos",
@@ -605,6 +635,16 @@ export const translations = {
     "auth.resetPassword.title": "Réinitialiser le Mot de Passe",
     "auth.resetPassword.newPassword": "Nouveau Mot de Passe",
     "auth.resetPassword.button": "Changer le Mot de Passe",
+    
+    // Auth Errors
+    "auth.error.invalidCredentials": "Email ou mot de passe invalide",
+    "auth.error.emailExists": "Cet email est déjà enregistré",
+    "auth.error.weakPassword": "Le mot de passe doit contenir au moins 6 caractères",
+    "auth.error.invalidEmail": "Adresse email invalide",
+    "auth.error.userNotFound": "Utilisateur non trouvé",
+    "auth.error.tooManyRequests": "Trop de demandes. Veuillez réessayer plus tard",
+    "auth.error.networkError": "Erreur réseau. Veuillez vérifier votre connexion Internet",
+    "auth.error.unknownError": "Une erreur inconnue s'est produite",
 
     // Search Page
     "search.title": "Explorer les Événements",

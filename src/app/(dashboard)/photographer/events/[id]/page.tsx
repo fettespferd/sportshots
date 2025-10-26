@@ -24,6 +24,7 @@ export default function EventDetailsPage({
   const [editingPhoto, setEditingPhoto] = useState<any>(null);
   const [editBibNumber, setEditBibNumber] = useState("");
   const [deletingPhoto, setDeletingPhoto] = useState<string | null>(null);
+  const [confirmDeletePhoto, setConfirmDeletePhoto] = useState<string | null>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -219,6 +220,39 @@ export default function EventDetailsPage({
         isOpen: true,
         title: "Fehler",
         message: error.message || "Fehler beim Aktualisieren der Startnummer",
+        type: "error",
+      });
+    }
+  };
+
+  // Delete bib number
+  const handleDeleteBibNumber = async (photoId: string) => {
+    try {
+      const { error } = await supabase
+        .from("photos")
+        .update({ bib_number: null })
+        .eq("id", photoId);
+
+      if (error) throw error;
+
+      // Update local state
+      setPhotos(
+        photos.map((p) =>
+          p.id === photoId ? { ...p, bib_number: null } : p
+        )
+      );
+
+      setModalState({
+        isOpen: true,
+        title: "Erfolg",
+        message: "Startnummer wurde gelöscht!",
+        type: "success",
+      });
+    } catch (error: any) {
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: error.message || "Fehler beim Löschen der Startnummer",
         type: "error",
       });
     }
@@ -694,11 +728,7 @@ export default function EventDetailsPage({
                       </svg>
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm("Foto wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
-                          handleDeletePhoto(photo.id);
-                        }
-                      }}
+                      onClick={() => setConfirmDeletePhoto(photo.id)}
                       disabled={deletingPhoto === photo.id}
                       className="rounded-full bg-red-600 p-2 text-white shadow-lg transition-transform hover:scale-110 disabled:opacity-50"
                       title="Foto löschen"
@@ -748,21 +778,66 @@ export default function EventDetailsPage({
               </p>
             </div>
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex items-center justify-between gap-3">
               <button
                 onClick={() => {
+                  handleDeleteBibNumber(editingPhoto.id);
                   setEditingPhoto(null);
                   setEditBibNumber("");
                 }}
+                className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+              >
+                🗑️ Startnummer löschen
+              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setEditingPhoto(null);
+                    setEditBibNumber("");
+                  }}
+                  className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={handleUpdateBibNumber}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                >
+                  Speichern
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Photo Confirmation Modal */}
+      {confirmDeletePhoto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-800">
+            <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Foto wirklich löschen?
+            </h3>
+            
+            <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </p>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setConfirmDeletePhoto(null)}
                 className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
               >
                 Abbrechen
               </button>
               <button
-                onClick={handleUpdateBibNumber}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                onClick={() => {
+                  handleDeletePhoto(confirmDeletePhoto);
+                  setConfirmDeletePhoto(null);
+                }}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
               >
-                Speichern
+                Löschen
               </button>
             </div>
           </div>

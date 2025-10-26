@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { getAuthErrorKey } from "@/lib/i18n/error-messages";
 
 function SignInForm() {
   const { t } = useLanguage();
@@ -51,7 +52,8 @@ function SignInForm() {
         router.refresh();
       }
     } catch (err: any) {
-      setError(err.message || "Anmeldung fehlgeschlagen");
+      const errorKey = getAuthErrorKey(err);
+      setError(t(errorKey));
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 interface Profile {
@@ -18,6 +19,7 @@ interface Profile {
 }
 
 export function ProfileSettings({ profile }: { profile: Profile }) {
+  const router = useRouter();
   const [fullName, setFullName] = useState(profile.full_name);
   const [bio, setBio] = useState(
     profile.account_type === "team" ? profile.team_bio || "" : profile.bio || ""
@@ -65,6 +67,11 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
         type: "success",
         text: "Profil erfolgreich aktualisiert! 🎉",
       });
+
+      // Refresh the page to update the header
+      setTimeout(() => {
+        router.refresh();
+      }, 500);
     } catch (error: any) {
       console.error("Error updating profile:", error);
       setMessage({

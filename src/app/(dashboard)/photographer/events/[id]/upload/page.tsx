@@ -173,19 +173,16 @@ export default function UploadPhotosPage({
           data: { publicUrl: originalUrl },
         } = supabase.storage.from("photos").getPublicUrl(`originals/${fileName}`);
 
-        // Generate watermark version
-        const watermarkFormData = new FormData();
-        watermarkFormData.append("file", uploadFile.file);
-        watermarkFormData.append("eventId", eventId);
-        watermarkFormData.append("eventName", event?.title || "Event");
-
+        // Generate watermark version (send URL instead of file to avoid size limits)
         const watermarkResponse = await fetch("/api/photos/watermark", {
           method: "POST",
-          body: watermarkFormData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageUrl: originalUrl,
+            eventId: eventId,
+            eventName: event?.title || "Event",
+          }),
         });
-
-        let watermarkUrl = originalUrl;
-        let thumbnailUrl = originalUrl;
 
         if (!watermarkResponse.ok) {
           const errorText = await watermarkResponse.text();
@@ -193,13 +190,18 @@ export default function UploadPhotosPage({
             status: watermarkResponse.status,
             error: errorText,
           });
+          
+          // Delete the original file since watermark generation failed
+          console.log("Deleting original file due to watermark failure...");
+          await supabase.storage.from("photos").remove([`originals/${fileName}`]);
+          
           throw new Error(`Wasserzeichen-Generierung fehlgeschlagen: ${errorText}`);
-        } else {
-          const watermarkData = await watermarkResponse.json();
-          watermarkUrl = watermarkData.watermarkUrl;
-          thumbnailUrl = watermarkData.thumbnailUrl;
-          console.log("Watermark generated successfully:", { watermarkUrl, thumbnailUrl });
         }
+        
+        const watermarkData = await watermarkResponse.json();
+        const watermarkUrl = watermarkData.watermarkUrl;
+        const thumbnailUrl = watermarkData.thumbnailUrl;
+        console.log("Watermark generated successfully:", { watermarkUrl, thumbnailUrl });
 
         // Extract EXIF metadata
         console.log("Extracting EXIF metadata...");

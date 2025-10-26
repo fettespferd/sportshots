@@ -4,8 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthErrorKey } from "@/lib/i18n/error-messages";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function SignUpPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -138,7 +141,8 @@ export default function SignUpPage() {
       }
     } catch (err: any) {
       console.error("Signup failed:", err);
-      setError(err.message || "Registrierung fehlgeschlagen. Bitte versuche es erneut.");
+      const errorKey = getAuthErrorKey(err);
+      setError(t(errorKey));
     } finally {
       setLoading(false);
     }
