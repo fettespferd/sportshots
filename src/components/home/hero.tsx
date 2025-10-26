@@ -150,7 +150,7 @@ export function Hero() {
             </Link>
             
             <p className="mt-4 text-sm text-zinc-400">
-              Kostenlos registrieren • Keine Setup-Gebühren • Nur 10% Provision
+              Kostenlos registrieren • Keine Setup-Gebühren • Nur 15% Provision
             </p>
           </div>
         </div>

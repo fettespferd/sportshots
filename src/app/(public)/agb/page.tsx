@@ -190,7 +190,7 @@ export default function AGBPage() {
                 einen Download-Link per E-Mail.
               </p>
               <p>
-                <strong>5.4 Provision:</strong> SportShots erhebt eine Provision von 10%
+                <strong>5.4 Provision:</strong> SportShots erhebt eine Provision von 15%
                 auf jeden Verkauf. Diese wird automatisch von der Auszahlung an den
                 Fotografen abgezogen.
               </p>
