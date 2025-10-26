@@ -62,10 +62,10 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/impressum"
+                  href="/agb"
                   className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 >
-                  {t("footer.imprint")}
+                  {t("footer.terms")}
                 </Link>
               </li>
               <li>
@@ -74,6 +74,14 @@ export function Footer() {
                   className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
                 >
                   {t("footer.privacy")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/impressum"
+                  className="text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                >
+                  {t("footer.imprint")}
                 </Link>
               </li>
               <li>

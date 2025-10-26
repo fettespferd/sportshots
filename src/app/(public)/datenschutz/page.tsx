@@ -41,10 +41,66 @@ export default function DatenschutzPage() {
             </div>
           </section>
 
+          {/* WICHTIG: Verantwortlichkeiten */}
+          <section className="rounded-lg border-4 border-orange-500 bg-orange-50 p-6 dark:border-orange-600 dark:bg-orange-900/20">
+            <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+              ⚠️ 2. Wichtiger Hinweis: Verantwortlichkeit der Fotografen
+            </h2>
+            <div className="space-y-4 text-zinc-700 dark:text-zinc-300">
+              <div className="rounded-lg bg-white p-4 dark:bg-zinc-800">
+                <p className="mb-3 font-bold">Plattform-Modell:</p>
+                <p>
+                  SportShots ist eine <strong>Vermittlungsplattform</strong>. Wir hosten und verkaufen Fotos im Auftrag von Fotografen, sind aber <strong>nicht</strong> Verkäufer oder Urheber der Fotos.
+                </p>
+              </div>
+              
+              <div className="rounded-lg border-2 border-orange-500 bg-white p-4 dark:border-orange-600 dark:bg-zinc-800">
+                <p className="mb-2 font-bold text-orange-800 dark:text-orange-300">
+                  Fotografen sind verantwortlich für:
+                </p>
+                <ul className="space-y-2 pl-4">
+                  <li className="flex gap-2">
+                    <span className="font-bold">✓</span>
+                    <span>Die Rechtmäßigkeit aller hochgeladenen Fotos</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold">✓</span>
+                    <span>Einholung erforderlicher Einwilligungen (z.B. durch Event-Hinweise, Teilnahmebedingungen)</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold">✓</span>
+                    <span>Einhaltung der DSGVO und aller Persönlichkeitsrechte</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold">✓</span>
+                    <span>Löschung von Fotos bei berechtigtem Widerspruch</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+                <p className="font-semibold text-blue-900 dark:text-blue-300">
+                  Ihr Widerspruchsrecht:
+                </p>
+                <p className="mt-2 text-sm">
+                  Sollten Sie auf einem Foto abgebildet sein und die Veröffentlichung widersprechen, kontaktieren Sie bitte:{" "}
+                  <a
+                    href="mailto:julius.faubel@brainmotion.ai"
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    julius.faubel@brainmotion.ai
+                  </a>
+                  <br />
+                  Wir werden das Foto innerhalb von 48 Stunden prüfen und ggf. löschen.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Gesichtserkennung - WICHTIG! */}
           <section className="rounded-lg bg-yellow-50 p-6 dark:bg-yellow-900/20">
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              2. Gesichtserkennung und biometrische Daten
+              3. Gesichtserkennung und biometrische Daten
             </h2>
             <div className="space-y-4 text-zinc-700 dark:text-zinc-300">
               <p className="font-semibold">
@@ -102,11 +158,11 @@ export default function DatenschutzPage() {
           {/* Datenverarbeitung */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              3. Welche Daten wir verarbeiten
+              4. Welche Daten wir verarbeiten
             </h2>
             <div className="space-y-4 text-zinc-700 dark:text-zinc-300">
               <div>
-                <p className="font-semibold">3.1 Registrierung und Nutzerkonto</p>
+                <p className="font-semibold">4.1 Registrierung und Nutzerkonto</p>
                 <ul className="mt-2 list-inside list-disc space-y-1 pl-4">
                   <li>E-Mail-Adresse</li>
                   <li>Name</li>
@@ -118,7 +174,7 @@ export default function DatenschutzPage() {
               </div>
 
               <div>
-                <p className="font-semibold">3.2 Fotografen-Profil</p>
+                <p className="font-semibold">4.2 Fotografen-Profil</p>
                 <ul className="mt-2 list-inside list-disc space-y-1 pl-4">
                   <li>Portfolio-Link</li>
                   <li>Stripe-Kontoinformationen (für Auszahlungen)</li>
@@ -130,7 +186,7 @@ export default function DatenschutzPage() {
               </div>
 
               <div>
-                <p className="font-semibold">3.3 Käufe und Zahlungen</p>
+                <p className="font-semibold">4.3 Käufe und Zahlungen</p>
                 <ul className="mt-2 list-inside list-disc space-y-1 pl-4">
                   <li>Zahlungsinformationen (verarbeitet durch Stripe)</li>
                   <li>Bestellhistorie</li>
@@ -143,7 +199,7 @@ export default function DatenschutzPage() {
               </div>
 
               <div>
-                <p className="font-semibold">3.4 Selfie-Suche (optional)</p>
+                <p className="font-semibold">4.4 Selfie-Suche (optional)</p>
                 <ul className="mt-2 list-inside list-disc space-y-1 pl-4">
                   <li>Temporäres Selfie-Foto (wird sofort nach Suche gelöscht)</li>
                   <li>Keine dauerhafte Speicherung biometrischer Daten</li>
@@ -159,11 +215,11 @@ export default function DatenschutzPage() {
           {/* Drittanbieter */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              4. Weitergabe an Drittanbieter
+              5. Weitergabe an Drittanbieter
             </h2>
             <div className="space-y-4 text-zinc-700 dark:text-zinc-300">
               <div>
-                <p className="font-semibold">4.1 Supabase (Hosting & Datenbank)</p>
+                <p className="font-semibold">5.1 Supabase (Hosting & Datenbank)</p>
                 <p>
                   Wir nutzen Supabase für Hosting, Authentifizierung und
                   Datenspeicherung. Server-Standort: EU. Datenschutzerklärung:{" "}
@@ -179,7 +235,7 @@ export default function DatenschutzPage() {
               </div>
 
               <div>
-                <p className="font-semibold">4.2 Stripe (Zahlungsabwicklung)</p>
+                <p className="font-semibold">5.2 Stripe (Zahlungsabwicklung)</p>
                 <p>
                   Zahlungen werden über Stripe abgewickelt. Stripe ist PCI-DSS
                   zertifiziert. Datenschutzerklärung:{" "}
@@ -195,7 +251,7 @@ export default function DatenschutzPage() {
               </div>
 
               <div>
-                <p className="font-semibold">4.3 Amazon Rekognition (AWS)</p>
+                <p className="font-semibold">5.3 Amazon Rekognition (AWS)</p>
                 <p>
                   Für die Gesichtserkennung nutzen wir Amazon Rekognition. Ihre
                   Selfie-Daten werden verschlüsselt übertragen und sofort nach der
@@ -213,7 +269,7 @@ export default function DatenschutzPage() {
               </div>
 
               <div>
-                <p className="font-semibold">4.4 Resend (E-Mail-Versand)</p>
+                <p className="font-semibold">5.4 Resend (E-Mail-Versand)</p>
                 <p>
                   Für Transaktions-E-Mails (Bestellbestätigungen, etc.) nutzen wir
                   Resend. Datenschutzerklärung:{" "}
@@ -233,7 +289,7 @@ export default function DatenschutzPage() {
           {/* Speicherdauer */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              5. Speicherdauer
+              6. Speicherdauer
             </h2>
             <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
               <ul className="list-inside list-disc space-y-1 pl-4">
@@ -259,7 +315,7 @@ export default function DatenschutzPage() {
           {/* Ihre Rechte */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              6. Ihre Rechte
+              7. Ihre Rechte
             </h2>
             <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
               <p>Sie haben jederzeit das Recht auf:</p>
@@ -302,7 +358,7 @@ export default function DatenschutzPage() {
           {/* Cookies */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              7. Cookies und lokaler Speicher
+              8. Cookies und lokaler Speicher
             </h2>
             <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
               <p>
@@ -319,7 +375,7 @@ export default function DatenschutzPage() {
           {/* Sicherheit */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              8. Datensicherheit
+              9. Datensicherheit
             </h2>
             <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
               <p>Wir treffen umfangreiche Sicherheitsmaßnahmen:</p>
@@ -336,7 +392,7 @@ export default function DatenschutzPage() {
           {/* Beschwerderecht */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              9. Beschwerderecht
+              10. Beschwerderecht
             </h2>
             <p className="text-zinc-700 dark:text-zinc-300">
               Sie haben das Recht, sich bei einer Aufsichtsbehörde zu beschweren. Die
