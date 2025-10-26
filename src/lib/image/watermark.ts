@@ -24,13 +24,18 @@ export async function addWatermark(
     position = "diagonal",
   } = options;
 
+  // Normalize EXIF orientation first - this ensures both original and watermark have the same rotation
+  const normalizedBuffer = await sharp(imageBuffer)
+    .rotate() // Auto-rotates based on EXIF and removes EXIF orientation tag
+    .toBuffer();
+
   // Get image metadata
-  const metadata = await sharp(imageBuffer).metadata();
+  const metadata = await sharp(normalizedBuffer).metadata();
   const originalWidth = metadata.width || 1920;
   const originalHeight = metadata.height || 1080;
 
   // Resize image if too large (for watermark preview)
-  let processedImage = sharp(imageBuffer);
+  let processedImage = sharp(normalizedBuffer);
   let width = originalWidth;
   let height = originalHeight;
   
@@ -62,9 +67,9 @@ export async function addWatermark(
   let watermarkSvg: string;
 
   if (position === "diagonal") {
-    // Diagonal repeating pattern
-    const rows = 8;
-    const cols = 8;
+    // Diagonal repeating pattern - balanced coverage
+    const rows = 5; // Balanced coverage
+    const cols = 5;
     let textElements = "";
 
     for (let row = 0; row < rows; row++) {
@@ -72,16 +77,32 @@ export async function addWatermark(
         const x = (col * width) / cols + width / (cols * 2);
         const y = (row * height) / rows + height / (rows * 2);
         
+        // Balanced watermark visibility
+        // Use web-safe font stack to avoid rendering issues
         textElements += `
           <text
             x="${x}"
+            y="${y + 1}"
+            font-family="Helvetica, Arial, sans-serif"
+            font-size="${fontSize * 0.85}"
+            font-weight="500"
+            fill="black"
+            opacity="${opacity * 0.35}"
+            transform="rotate(-45 ${x} ${y})"
+            text-anchor="middle"
+            style="font-family: Helvetica, Arial, sans-serif;"
+          >${text}</text>
+          <text
+            x="${x}"
             y="${y}"
-            font-family="Arial, sans-serif"
-            font-size="${fontSize}"
+            font-family="Helvetica, Arial, sans-serif"
+            font-size="${fontSize * 0.85}"
+            font-weight="500"
             fill="white"
             opacity="${opacity}"
             transform="rotate(-45 ${x} ${y})"
             text-anchor="middle"
+            style="font-family: Helvetica, Arial, sans-serif;"
           >${text}</text>
         `;
       }
@@ -189,6 +210,19 @@ export async function createThumbnail(
       fit: "inside",
     })
     .jpeg({ quality: 80 })
+    .toBuffer();
+}
+
+/**
+ * Normalize image EXIF orientation
+ * This removes EXIF orientation tags and physically rotates the image
+ */
+export async function normalizeImageOrientation(
+  imageBuffer: Buffer
+): Promise<Buffer> {
+  return sharp(imageBuffer)
+    .rotate() // Auto-rotates based on EXIF and removes EXIF orientation tag
+    .jpeg({ quality: 95 }) // High quality for original
     .toBuffer();
 }
 

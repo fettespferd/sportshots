@@ -171,6 +171,9 @@ export default function DownloadsPage({
                     src={photo.original_url}
                     alt={`Foto ${index + 1}`}
                     className="h-full w-full object-cover"
+                    style={{
+                      transform: `rotate(${photo.rotation || 0}deg)`,
+                    }}
                   />
                 </div>
                 <div className="p-4">

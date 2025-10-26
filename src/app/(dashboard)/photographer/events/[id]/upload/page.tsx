@@ -168,7 +168,24 @@ export default function UploadPhotosPage({
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
+        // Normalize EXIF orientation of the original image
+        console.log("Normalizing EXIF orientation...");
+        const normalizeResponse = await fetch("/api/photos/normalize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageUrl: supabase.storage.from("photos").getPublicUrl(`originals/${fileName}`).data.publicUrl,
+            storagePath: `originals/${fileName}`,
+          }),
+        });
+
+        if (!normalizeResponse.ok) {
+          const errorText = await normalizeResponse.text();
+          console.error("Normalization failed:", errorText);
+          throw new Error(`Bild-Normalisierung fehlgeschlagen: ${errorText}`);
+        }
+
+        // Get public URL (now with normalized image)
         const {
           data: { publicUrl: originalUrl },
         } = supabase.storage.from("photos").getPublicUrl(`originals/${fileName}`);
@@ -404,6 +421,27 @@ export default function UploadPhotosPage({
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <Link
+          href={`/photographer/events/${eventId}`}
+          className="mb-6 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 shadow transition-all hover:bg-zinc-50 hover:shadow-md dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+        >
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          <span>Zurück zum Event</span>
+        </Link>
+
         <div className="mb-8">
           <div className="mb-4 flex items-center text-sm text-zinc-600 dark:text-zinc-400">
             <Link
@@ -703,13 +741,14 @@ export default function UploadPhotosPage({
             )}
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                onClick={() => router.back()}
-                disabled={uploading}
-                className="w-full rounded-md border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700 sm:w-auto"
+              <Link
+                href={`/photographer/events/${eventId}`}
+                className={`w-full rounded-md border border-zinc-300 px-6 py-3 text-center text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700 sm:w-auto ${
+                  uploading ? "pointer-events-none opacity-50" : ""
+                }`}
               >
                 ← Abbrechen
-              </button>
+              </Link>
               <button
                 onClick={handleUpload}
                 disabled={uploading || pendingCount === 0}

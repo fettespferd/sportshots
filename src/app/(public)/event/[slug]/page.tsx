@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FaceSearch } from "@/components/search/face-search";
 import { Modal } from "@/components/ui/modal";
 import { Lightbox } from "@/components/ui/lightbox";
+import { ShareButton } from "@/components/ui/share-button";
 
 interface Event {
   id: string;
@@ -222,9 +223,17 @@ export default function PublicEventPage({
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2 md:gap-8">
             <div>
-              <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-3xl md:text-4xl">
-                {event.title}
-              </h1>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-3xl md:text-4xl">
+                  {event.title}
+                </h1>
+                <ShareButton
+                  url={typeof window !== "undefined" ? window.location.href : ""}
+                  title={`${event.title} - Fotos ansehen`}
+                  text={`Schau dir die Fotos von ${event.title} an!`}
+                  className="flex-shrink-0 shadow-md"
+                />
+              </div>
               <div className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400 sm:mt-4">
                 <div className="flex items-center">
                   <svg
@@ -271,27 +280,57 @@ export default function PublicEventPage({
               )}
             </div>
 
-            <div className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-700 sm:p-6">
-              <h2 className="mb-3 text-base font-semibold text-zinc-900 dark:text-zinc-50 sm:mb-4 sm:text-lg">
+            <div className="overflow-hidden rounded-lg bg-gradient-to-br from-zinc-50 to-zinc-100 p-6 shadow-sm dark:from-zinc-800 dark:to-zinc-700">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                <span className="text-xl">💰</span>
                 Preise
               </h2>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-zinc-600 dark:text-zinc-400">
-                    Einzelnes Foto
-                  </span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-50">
-                    {event.price_per_photo.toFixed(2)} €
-                  </span>
+              <div className="space-y-3">
+                {/* Single Photo Price */}
+                <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-zinc-900">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                        <span className="text-lg">📸</span>
+                      </div>
+                      <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                        Einzelnes Foto
+                      </span>
+                    </div>
+                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {event.price_per_photo.toFixed(2)} €
+                    </span>
+                  </div>
                 </div>
+                
+                {/* Package Price */}
                 {event.package_price && event.package_photo_count && (
-                  <div className="flex justify-between border-t border-zinc-200 pt-2 text-sm dark:border-zinc-600 sm:text-base">
-                    <span className="text-zinc-600 dark:text-zinc-400">
-                      {event.package_photo_count} Fotos Paket
-                    </span>
-                    <span className="font-semibold text-zinc-900 dark:text-zinc-50">
-                      {event.package_price.toFixed(2)} €
-                    </span>
+                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 p-4 shadow-md">
+                    <div className="absolute right-0 top-0 -mr-4 -mt-4 h-16 w-16 rounded-full bg-white/10" />
+                    <div className="absolute right-4 top-0 -mr-2 -mt-2 h-12 w-12 rounded-full bg-white/10" />
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                          <span className="text-lg">📦</span>
+                        </div>
+                        <div className="text-white">
+                          <div className="text-xs font-medium uppercase tracking-wide opacity-90">
+                            Sparpaket
+                          </div>
+                          <div className="font-semibold">
+                            {event.package_photo_count} Fotos
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-white">
+                          {event.package_price.toFixed(2)} €
+                        </div>
+                        <div className="text-xs text-white/80">
+                          {(event.package_price / event.package_photo_count).toFixed(2)} € pro Foto
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -307,8 +346,8 @@ export default function PublicEventPage({
           {/* Filter Section */}
           <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
             <div className="space-y-4">
-              {/* Startnummer-Suche */}
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              {/* Startnummer & Datum nebeneinander */}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
                 <div className="flex-1">
                   <label
                     htmlFor="bibNumber"
@@ -325,14 +364,8 @@ export default function PublicEventPage({
                     className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
                   />
                 </div>
-                <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:min-w-[140px] sm:text-right">
-                  {filteredPhotos.length} von {photos.length} Fotos
-                </div>
-              </div>
-
-              {/* Datum & Zeit Filter */}
-              <div className="grid gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-700 sm:grid-cols-3">
-                <div>
+                
+                <div className="flex-1">
                   <label
                     htmlFor="dateFilter"
                     className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
@@ -347,6 +380,15 @@ export default function PublicEventPage({
                     className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                   />
                 </div>
+                
+                <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:min-w-[140px] sm:text-right">
+                  {filteredPhotos.length} von {photos.length} Fotos
+                </div>
+              </div>
+
+              {/* Ausgeblendete Zeit-Filter */}
+              <div className="hidden">
+                {/* Zeit-Filter vorübergehend ausgeblendet
                 <div>
                   <label
                     htmlFor="timeRangeStart"
@@ -377,6 +419,7 @@ export default function PublicEventPage({
                     className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                   />
                 </div>
+                */}
               </div>
             </div>
           </div>
@@ -445,40 +488,50 @@ export default function PublicEventPage({
           )}
         </div>
 
-        {/* Selected Photos Bar */}
+        {/* Selected Photos Bar - Mobile Optimized */}
         {selectedPhotos.size > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-900 p-4 shadow-2xl dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:p-6 sm:shadow-lg">
-            <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:gap-4">
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-white/20 bg-zinc-900 p-3 shadow-2xl dark:border-zinc-800 dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:border-0 sm:p-6 sm:shadow-lg">
+            <div className="mx-auto flex max-w-7xl flex-col gap-2 sm:gap-4">
+              {/* Summary Row */}
               <div className="flex items-center justify-between">
-                <div className="text-sm text-white dark:text-zinc-900 sm:text-base">
-                  <span className="font-semibold">{selectedPhotos.size}</span>{" "}
-                  <span className="hidden xs:inline">Fotos ausgewählt</span>
-                  <span className="xs:hidden">Fotos</span>
+                <div className="flex items-center gap-2 text-sm text-white dark:text-zinc-900 sm:text-base">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold dark:bg-zinc-900/20 sm:h-8 sm:w-8">
+                    {selectedPhotos.size}
+                  </div>
+                  <span className="font-medium">
+                    <span className="hidden xs:inline">Fotos ausgewählt</span>
+                    <span className="xs:hidden">Fotos</span>
+                  </span>
                 </div>
-                <span className="text-xl font-bold text-white dark:text-zinc-900 sm:text-2xl">
-                  {calculateTotal().toFixed(2)} €
-                </span>
+                <div className="text-right">
+                  <div className="text-xs text-white/70 dark:text-zinc-600 sm:hidden">Gesamt</div>
+                  <span className="text-lg font-bold text-white dark:text-zinc-900 sm:text-2xl">
+                    {calculateTotal().toFixed(2)} €
+                  </span>
+                </div>
               </div>
               
-              {/* Email input for guests - always visible */}
+              {/* Email input for guests - Mobile optimized */}
               {!isAuthenticated && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-white dark:text-zinc-900">
-                    Deine E-Mail-Adresse für den Download-Link:
+                <div className="flex flex-col gap-1.5 sm:gap-2">
+                  <label className="text-xs font-medium text-white/90 dark:text-zinc-700 sm:text-sm">
+                    📧 E-Mail für Download-Link:
                   </label>
                   <input
                     type="email"
                     value={guestEmail}
                     onChange={(e) => setGuestEmail(e.target.value)}
-                    placeholder="beispiel@email.de"
-                    className="rounded-md border border-zinc-300 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                    placeholder="deine@email.de"
+                    className="w-full rounded-lg border-2 border-white/20 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3"
                     required
+                    autoComplete="email"
+                    inputMode="email"
                   />
                 </div>
               )}
 
               <button
-                className="w-full rounded-md bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800 sm:px-6 sm:py-3 sm:text-base"
+                className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
                 disabled={isCheckingOut}
                 onClick={async () => {
                   // Validate guest email
@@ -612,7 +665,11 @@ export default function PublicEventPage({
                   <img
                     src={photo.watermark_url}
                     alt=""
+                    loading="lazy"
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    style={{
+                      transform: `rotate(${photo.rotation || 0}deg) ${selectedPhotos.has(photo.id) ? 'scale(1.05)' : ''}`,
+                    }}
                   />
                   
                   {/* Zoom icon hint */}
@@ -713,6 +770,7 @@ export default function PublicEventPage({
         takenAt={lightboxPhoto?.taken_at}
         cameraMake={lightboxPhoto?.camera_make}
         cameraModel={lightboxPhoto?.camera_model}
+        rotation={lightboxPhoto?.rotation || 0}
         isInCart={lightboxPhoto ? selectedPhotos.has(lightboxPhoto.id) : false}
         onAddToCart={(photoId) => {
           setSelectedPhotos(prev => new Set([...prev, photoId]));
@@ -724,6 +782,9 @@ export default function PublicEventPage({
             return newSet;
           });
         }}
+        showShare={true}
+        shareUrl={typeof window !== "undefined" && lightboxPhoto ? `${window.location.origin}/event/${slug}?photo=${lightboxPhoto.id}` : ""}
+        shareTitle={`${event.title}${lightboxPhoto?.bib_number ? ` - #${lightboxPhoto.bib_number}` : ""}`}
       />
     </div>
   );

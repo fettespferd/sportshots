@@ -5,6 +5,7 @@ import { UsernameSettings } from "@/components/settings/username-settings";
 import { ProfileSettings } from "@/components/settings/profile-settings";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { StripeConnectSettings } from "@/components/settings/stripe-connect-settings";
+import { GallerySettings } from "@/components/settings/gallery-settings";
 
 export default async function PhotographerSettingsPage() {
   const supabase = await createClient();
@@ -55,6 +56,11 @@ export default async function PhotographerSettingsPage() {
         {/* Stripe Connect */}
         <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
           <StripeConnectSettings profile={profile} />
+        </div>
+
+        {/* Gallery Settings */}
+        <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
+          <GallerySettings profile={profile} />
         </div>
 
         {/* Team Settings (nur für Teams) */}

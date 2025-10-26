@@ -14,6 +14,8 @@ interface Profile {
   full_name: string | null;
   account_type: string | null;
   username: string | null;
+  avatar_url: string | null;
+  team_logo_url: string | null;
 }
 
 export function Header() {
@@ -36,7 +38,7 @@ export function Header() {
       if (currentUser) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("role, photographer_status, full_name, account_type, username")
+          .select("role, photographer_status, full_name, account_type, username, avatar_url, team_logo_url")
           .eq("id", currentUser.id)
           .single();
 

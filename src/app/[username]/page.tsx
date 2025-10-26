@@ -47,6 +47,17 @@ export default async function PublicProfilePage({
 
   const { data: events } = await eventsQuery;
 
+  // Load gallery images
+  const { data: galleryImages } = await supabase
+    .from("gallery_images")
+    .select("*")
+    .eq("photographer_id", profile.id)
+    .order("display_order", { ascending: true })
+    .limit(10);
+
+  // Use first gallery image as profile picture if no avatar/logo is set
+  const profileImageUrl = profile.team_logo_url || profile.avatar_url || (galleryImages && galleryImages.length > 0 ? galleryImages[0].image_url : null);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       {/* Profile Header */}
@@ -54,10 +65,10 @@ export default async function PublicProfilePage({
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
             {/* Logo/Avatar */}
-            {(profile.team_logo_url || profile.avatar_url) && (
+            {profileImageUrl && (
               <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-zinc-200 dark:border-zinc-700">
                 <Image
-                  src={profile.team_logo_url || profile.avatar_url}
+                  src={profileImageUrl}
                   alt={profile.full_name}
                   fill
                   className="object-cover"
@@ -154,16 +165,48 @@ export default async function PublicProfilePage({
               )}
             </div>
           </div>
-
-          {/* QR Code Section */}
-          <div className="mt-8">
-            <ProfileQRCode username={username} />
-          </div>
         </div>
       </div>
 
-      {/* Events Section */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Gallery Section */}
+      {galleryImages && galleryImages.length > 0 && (
+        <div className="border-b bg-white dark:border-zinc-800 dark:bg-zinc-800">
+          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+              Beispielbilder
+            </h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Ein Eindruck von unserer Arbeit
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              {galleryImages.map((image: any) => (
+                <div
+                  key={image.id}
+                  className="group relative aspect-square overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-700"
+                >
+                  <Image
+                    src={image.thumbnail_url || image.image_url}
+                    alt={image.caption || "Gallery"}
+                    fill
+                    loading="lazy"
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  {image.caption && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
+                      <p className="text-xs text-white">{image.caption}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Events Section - Moved to top */}
+      <div className="border-b bg-white dark:border-zinc-800 dark:bg-zinc-800">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
           Verfügbare Events
         </h2>
@@ -193,6 +236,7 @@ export default async function PublicProfilePage({
                       src={event.cover_image_url}
                       alt={event.title}
                       fill
+                      loading="lazy"
                       className="object-cover transition-transform group-hover:scale-105"
                     />
                   </div>
@@ -245,6 +289,14 @@ export default async function PublicProfilePage({
             ))}
           </div>
         )}
+        </div>
+      </div>
+
+      {/* QR Code Section - Moved to bottom */}
+      <div className="bg-zinc-50 dark:bg-zinc-900">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <ProfileQRCode username={username} />
+        </div>
       </div>
     </div>
   );

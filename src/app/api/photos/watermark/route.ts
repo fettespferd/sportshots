@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     const watermarkedBuffer = await addWatermark(imageBuffer, {
       text: watermarkText,
-      opacity: 0.35,
+      opacity: 0.4, // Balanced opacity for good visibility and protection
       maxWidth: 1200,
       position: "diagonal",
     });

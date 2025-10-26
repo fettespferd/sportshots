@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState, useEffect, use } from "react";
 import { Modal } from "@/components/ui/modal";
 import { EventQRCode } from "@/components/event/event-qr-code";
+import { Lightbox } from "@/components/ui/lightbox";
 
 export default function EventDetailsPage({
   params,
@@ -25,6 +26,11 @@ export default function EventDetailsPage({
   const [editBibNumber, setEditBibNumber] = useState("");
   const [deletingPhoto, setDeletingPhoto] = useState<string | null>(null);
   const [confirmDeletePhoto, setConfirmDeletePhoto] = useState<string | null>(null);
+  const [rotatingPhoto, setRotatingPhoto] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxPhoto, setLightboxPhoto] = useState<any>(null);
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -301,6 +307,132 @@ export default function EventDetailsPage({
     }
   };
 
+  const handleBatchDeletePhotos = async () => {
+    if (selectedPhotos.size === 0) return;
+
+    setBatchDeleting(true);
+
+    try {
+      const photosToDelete = photos.filter(p => selectedPhotos.has(p.id));
+      const photoIds = photosToDelete.map(p => p.id);
+
+      // Batch delete from database (single query)
+      const { error: dbError } = await supabase
+        .from("photos")
+        .delete()
+        .in("id", photoIds);
+
+      if (dbError) {
+        throw dbError;
+      }
+
+      // Batch delete from storage
+      const storagePaths: string[] = [];
+      photosToDelete.forEach(photo => {
+        const watermarkPath = photo.watermark_url.split("/photos/")[1];
+        const originalPath = photo.original_url.split("/photos/")[1];
+        if (watermarkPath) storagePaths.push(watermarkPath);
+        if (originalPath) storagePaths.push(originalPath);
+      });
+
+      if (storagePaths.length > 0) {
+        await supabase.storage.from("photos").remove(storagePaths);
+      }
+
+      // Optimistic update - remove from local state immediately
+      setPhotos(photos.filter(p => !selectedPhotos.has(p.id)));
+      setSelectedPhotos(new Set());
+
+      setModalState({
+        isOpen: true,
+        title: "Gelöscht",
+        message: `${photoIds.length} Foto(s) erfolgreich gelöscht.`,
+        type: "success",
+      });
+    } catch (error: any) {
+      console.error("Batch delete error:", error);
+      // Reload on error to restore correct state
+      const { data: photosData } = await supabase
+        .from("photos")
+        .select("*")
+        .eq("event_id", id)
+        .order("created_at", { ascending: false });
+      
+      if (photosData) setPhotos(photosData);
+      
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: error.message || "Fehler beim Löschen der Fotos",
+        type: "error",
+      });
+    } finally {
+      setBatchDeleting(false);
+    }
+  };
+
+  const togglePhotoSelection = (photoId: string) => {
+    setSelectedPhotos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(photoId)) {
+        newSet.delete(photoId);
+      } else {
+        newSet.add(photoId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllPhotos = () => {
+    setSelectedPhotos(new Set(photos.map(p => p.id)));
+  };
+
+  const deselectAllPhotos = () => {
+    setSelectedPhotos(new Set());
+  };
+
+  const handleRotatePhoto = async (photoId: string, direction: 'left' | 'right') => {
+    setRotatingPhoto(photoId);
+
+    try {
+      const photo = photos.find((p) => p.id === photoId);
+      if (!photo) throw new Error("Foto nicht gefunden");
+
+      // Calculate new rotation
+      // Left: -90°, Right: +90°
+      const currentRotation = photo.rotation || 0;
+      const change = direction === 'right' ? 90 : -90;
+      let newRotation = (currentRotation + change) % 360;
+      
+      // Ensure rotation is always 0, 90, 180, or 270
+      if (newRotation < 0) newRotation += 360;
+
+      // Update database
+      const { error } = await supabase
+        .from("photos")
+        .update({ rotation: newRotation })
+        .eq("id", photoId);
+
+      if (error) throw error;
+
+      // Update local state
+      setPhotos(
+        photos.map((p) =>
+          p.id === photoId ? { ...p, rotation: newRotation } : p
+        )
+      );
+    } catch (error: any) {
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: error.message || "Fehler beim Drehen des Fotos",
+        type: "error",
+      });
+    } finally {
+      setRotatingPhoto(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900">
@@ -396,6 +528,228 @@ export default function EventDetailsPage({
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* Photos Grid - Moved to top as most used feature */}
+        <div className="mb-8 rounded-lg bg-white p-6 shadow dark:bg-zinc-800">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Fotos ({photoCount})
+            </h2>
+            <Link
+              href={`/photographer/events/${id}/upload`}
+              className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              📸 Hochladen
+            </Link>
+          </div>
+
+          {!photos || photos.length === 0 ? (
+            <div className="rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
+              <svg
+                className="mx-auto h-12 w-12 text-zinc-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <h3 className="mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                Keine Fotos hochgeladen
+              </h3>
+              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                Lade deine ersten Fotos für dieses Event hoch.
+              </p>
+              <Link
+                href={`/photographer/events/${id}/upload`}
+                className="mt-4 inline-block rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                Fotos hochladen
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Batch Controls - Floating Bottom Right */}
+              {selectedPhotos.size > 0 && (
+                <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-white p-3 shadow-xl ring-1 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-700">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                      {selectedPhotos.size} ausgewählt
+                    </span>
+                    <button
+                      onClick={deselectAllPhotos}
+                      className="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-600" />
+                  <button
+                    onClick={handleBatchDeletePhotos}
+                    disabled={batchDeleting}
+                    className="flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {batchDeleting ? (
+                      <>
+                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <span>Lösche...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="h-3.5 w-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                        <span>Löschen</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                {photos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="group relative overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-700"
+                  >
+
+                    <div 
+                      className="aspect-square cursor-zoom-in overflow-hidden"
+                      onClick={() => {
+                        setLightboxPhoto(photo);
+                        setLightboxOpen(true);
+                      }}
+                    >
+                      <img
+                        src={photo.watermark_url}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        style={{
+                          transform: `rotate(${photo.rotation || 0}deg)`,
+                        }}
+                      />
+                      
+                      {/* Zoom icon hint */}
+                      <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/20 group-hover:opacity-100">
+                        <svg
+                          className="h-8 w-8 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Bib Number */}
+                    <div className="pointer-events-none absolute bottom-2 left-2 z-10 rounded bg-black/70 px-2 py-1 text-xs font-medium text-white">
+                      {photo.bib_number ? `#${photo.bib_number}` : "Keine Startnummer"}
+                    </div>
+
+                    {/* Checkbox - Bottom Right */}
+                    <label className="absolute bottom-2 right-2 z-20 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedPhotos.has(photo.id)}
+                        onChange={() => togglePhotoSelection(photo.id)}
+                        className="h-5 w-5 cursor-pointer rounded border-2 border-white bg-white/80 text-blue-600 transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                      />
+                    </label>
+
+                    {/* Action Buttons */}
+                    <div className="absolute right-2 top-2 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        onClick={() => handleRotatePhoto(photo.id, 'left')}
+                        disabled={rotatingPhoto === photo.id}
+                        className="rounded-full bg-purple-600 p-2 text-white shadow-lg transition-transform hover:scale-110 disabled:opacity-50"
+                        title="Nach links drehen"
+                      >
+                        {rotatingPhoto === photo.id ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        ) : (
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleRotatePhoto(photo.id, 'right')}
+                        disabled={rotatingPhoto === photo.id}
+                        className="rounded-full bg-indigo-600 p-2 text-white shadow-lg transition-transform hover:scale-110 disabled:opacity-50"
+                        title="Nach rechts drehen"
+                      >
+                        {rotatingPhoto === photo.id ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        ) : (
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingPhoto(photo);
+                          setEditBibNumber(photo.bib_number || "");
+                        }}
+                        className="rounded-full bg-blue-600 p-2 text-white shadow-lg transition-transform hover:scale-110"
+                        title="Startnummer bearbeiten"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeletePhoto(photo.id)}
+                        disabled={deletingPhoto === photo.id}
+                        className="rounded-full bg-red-600 p-2 text-white shadow-lg transition-transform hover:scale-110 disabled:opacity-50"
+                        title="Foto löschen"
+                      >
+                        {deletingPhoto === photo.id ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        ) : (
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Additional Upload Button at bottom */}
+              <div className="mt-6 text-center">
+                <Link
+                  href={`/photographer/events/${id}/upload`}
+                  className="inline-flex items-center gap-2 rounded-md border-2 border-dashed border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:bg-zinc-700"
+                >
+                  📸 Weitere Fotos hochladen
+                </Link>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -659,94 +1013,6 @@ export default function EventDetailsPage({
           />
         )}
 
-        {/* Photos Grid */}
-        <div className="rounded-lg bg-white p-6 shadow dark:bg-zinc-800">
-          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Fotos ({photoCount})
-          </h2>
-
-          {!photos || photos.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
-              <svg
-                className="mx-auto h-12 w-12 text-zinc-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <h3 className="mt-4 text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                Keine Fotos hochgeladen
-              </h3>
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                Lade deine ersten Fotos für dieses Event hoch.
-              </p>
-              <Link
-                href={`/photographer/events/${id}/upload`}
-                className="mt-4 inline-block rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
-                Fotos hochladen
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="group relative overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-700"
-                >
-                  <div className="aspect-square">
-                    <img
-                      src={photo.watermark_url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  {/* Bib Number */}
-                  <div className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-xs font-medium text-white">
-                    {photo.bib_number ? `#${photo.bib_number}` : "Keine Startnummer"}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="absolute right-2 top-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={() => {
-                        setEditingPhoto(photo);
-                        setEditBibNumber(photo.bib_number || "");
-                      }}
-                      className="rounded-full bg-blue-600 p-2 text-white shadow-lg transition-transform hover:scale-110"
-                      title="Startnummer bearbeiten"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeletePhoto(photo.id)}
-                      disabled={deletingPhoto === photo.id}
-                      className="rounded-full bg-red-600 p-2 text-white shadow-lg transition-transform hover:scale-110 disabled:opacity-50"
-                      title="Foto löschen"
-                    >
-                      {deletingPhoto === photo.id ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      ) : (
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Edit Bib Number Modal */}
@@ -851,6 +1117,24 @@ export default function EventDetailsPage({
         title={modalState.title}
         message={modalState.message}
         type={modalState.type}
+      />
+
+      {/* Lightbox for photographer - shows original without watermark */}
+      <Lightbox
+        isOpen={lightboxOpen}
+        onClose={() => {
+          setLightboxOpen(false);
+          setLightboxPhoto(null);
+        }}
+        imageUrl={lightboxPhoto?.original_url || ""}
+        alt="Foto Original"
+        photoId={lightboxPhoto?.id}
+        bibNumber={lightboxPhoto?.bib_number}
+        price={lightboxPhoto?.price}
+        takenAt={lightboxPhoto?.taken_at}
+        cameraMake={lightboxPhoto?.camera_make}
+        cameraModel={lightboxPhoto?.camera_model}
+        rotation={lightboxPhoto?.rotation || 0}
       />
     </div>
   );
