@@ -71,7 +71,7 @@ export function Lightbox({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex touch-none items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/95 backdrop-blur-sm"

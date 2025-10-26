@@ -489,50 +489,38 @@ export default function PublicEventPage({
           )}
         </div>
 
-        {/* Selected Photos Bar - Mobile Optimized with Safe Area */}
+        {/* Selected Photos Bar - Ultra Compact Mobile */}
         {selectedPhotos.size > 0 && (
           <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-white/20 bg-zinc-900 shadow-2xl dark:border-zinc-800 dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:border-0 sm:p-6 sm:shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}>
-            <div className="mx-auto flex max-w-7xl flex-col gap-2 px-3 py-2.5 sm:gap-4 sm:px-0 sm:py-0">
-              {/* Compact Summary Row */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-white dark:text-zinc-900 sm:text-base">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold dark:bg-zinc-900/20 sm:h-8 sm:w-8">
-                    {selectedPhotos.size}
+            <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-3 py-2 sm:gap-4 sm:px-0 sm:py-0">
+              {/* Ultra Compact Row - Email + Price + Button on Mobile */}
+              {!isAuthenticated ? (
+                <>
+                  {/* Top row: Counter + Price */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white dark:bg-zinc-900/20 dark:text-zinc-900 sm:h-8 sm:w-8">
+                      {selectedPhotos.size}
+                    </div>
+                    <span className="text-base font-bold text-white dark:text-zinc-900 sm:text-2xl">
+                      {calculateTotal().toFixed(2)} €
+                    </span>
                   </div>
-                  <span className="font-semibold">
-                    <span className="hidden xs:inline">Fotos</span>
-                    <span className="xs:hidden">Fotos</span>
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-base font-bold text-white dark:text-zinc-900 sm:text-2xl">
-                    {calculateTotal().toFixed(2)} €
-                  </span>
-                </div>
-              </div>
-              
-              {/* Email input for guests - Ultra compact on mobile */}
-              {!isAuthenticated && (
-                <div className="flex flex-col gap-1 sm:gap-2">
-                  <label className="text-[10px] font-medium text-white/80 dark:text-zinc-700 sm:text-sm">
-                    📧 E-Mail für Download-Link:
-                  </label>
-                  <input
-                    type="email"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    placeholder="deine@email.de"
-                    className="w-full rounded-lg border-2 border-white/20 bg-white px-2.5 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3"
-                    required
-                    autoComplete="email"
-                    inputMode="email"
-                  />
-                </div>
-              )}
-
-              <button
-                className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
-                disabled={isCheckingOut}
+                  
+                  {/* Email + Button Row */}
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="E-Mail"
+                      className="flex-1 rounded-lg border-2 border-white/20 bg-white px-2.5 py-1.5 text-xs text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3 sm:text-sm"
+                      required
+                      autoComplete="email"
+                      inputMode="email"
+                    />
+                    <button
+                      className="flex-shrink-0 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-1.5 text-xs font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
+                      disabled={isCheckingOut}
                 onClick={async () => {
                   // Validate guest email
                   if (!isAuthenticated && !guestEmail) {
@@ -611,9 +599,87 @@ export default function PublicEventPage({
                     <span>Wird geladen...</span>
                   </span>
                 ) : (
-                  "Zur Kasse"
+                  <>
+                    <span className="hidden sm:inline">Zur Kasse</span>
+                    <span className="sm:hidden">Kaufen</span>
+                  </>
                 )}
-              </button>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Authenticated users - simpler layout */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-white dark:text-zinc-900">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold dark:bg-zinc-900/20 sm:h-8 sm:w-8">
+                        {selectedPhotos.size}
+                      </div>
+                      <span className="text-sm font-medium sm:text-base">Fotos</span>
+                    </div>
+                    <span className="text-base font-bold text-white dark:text-zinc-900 sm:text-2xl">
+                      {calculateTotal().toFixed(2)} €
+                    </span>
+                  </div>
+                  
+                  <button
+                    className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
+                    disabled={isCheckingOut}
+                    onClick={async () => {
+                      setIsCheckingOut(true);
+
+                      try {
+                        const response = await fetch("/api/stripe/checkout", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            photoIds: Array.from(selectedPhotos),
+                            eventId: event.id,
+                          }),
+                        });
+
+                        const data = await response.json();
+
+                        if (data.error) {
+                          setModalState({
+                            isOpen: true,
+                            title: "Fehler",
+                            message: data.error,
+                            type: "error",
+                          });
+                          setIsCheckingOut(false);
+                          return;
+                        }
+
+                        if (data.url) {
+                          window.location.href = data.url;
+                        }
+                      } catch (error) {
+                        console.error("Checkout error:", error);
+                        setModalState({
+                          isOpen: true,
+                          title: "Fehler",
+                          message: "Ein Fehler ist beim Checkout aufgetreten.",
+                          type: "error",
+                        });
+                        setIsCheckingOut(false);
+                      }
+                    }}
+                  >
+                    {isCheckingOut ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="h-4 w-4 animate-spin sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Lädt...</span>
+                      </span>
+                    ) : (
+                      "Zur Kasse"
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -690,11 +756,24 @@ export default function PublicEventPage({
                   </div>
                 </div>
 
-                {photo.bib_number && (
-                  <div className="absolute left-2 top-2 rounded bg-black/70 px-2 py-1 text-xs font-medium text-white">
-                    #{photo.bib_number}
-                  </div>
-                )}
+                {/* Top left badges */}
+                <div className="absolute left-2 top-2 flex flex-col gap-1">
+                  {photo.bib_number && (
+                    <div className="rounded bg-black/70 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                      #{photo.bib_number}
+                    </div>
+                  )}
+                  
+                  {/* Cart indicator badge */}
+                  {selectedPhotos.has(photo.id) && (
+                    <div className="flex items-center gap-1 rounded-full bg-green-600 px-2 py-1 text-xs font-bold text-white shadow-lg">
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>{Array.from(selectedPhotos).indexOf(photo.id) + 1}</span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Selection checkbox */}
                 <button

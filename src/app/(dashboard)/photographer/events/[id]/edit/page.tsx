@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Modal } from "@/components/ui/modal";
+import { slugify, generateUniqueSlug } from "@/lib/utils/slugify";
 
 const eventTypes = [
   { value: "running", label: "Laufen" },
@@ -26,6 +27,8 @@ export default function EditEventPage({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
+  const [originalTitle, setOriginalTitle] = useState("");
+  const [currentSlug, setCurrentSlug] = useState("");
   const [description, setDescription] = useState("");
   const [eventType, setEventType] = useState("running");
   const [location, setLocation] = useState("");
@@ -77,6 +80,8 @@ export default function EditEventPage({
 
       // Populate form with existing data
       setTitle(eventData.title);
+      setOriginalTitle(eventData.title);
+      setCurrentSlug(eventData.slug);
       setDescription(eventData.description || "");
       setEventType(eventData.event_type);
       setLocation(eventData.location);
@@ -95,7 +100,7 @@ export default function EditEventPage({
     setSaving(true);
 
     try {
-      const updateData = {
+      const updateData: any = {
         title,
         description: description || null,
         event_type: eventType,
@@ -107,6 +112,19 @@ export default function EditEventPage({
           ? parseInt(packagePhotoCount)
           : null,
       };
+
+      // Update slug if title has changed
+      if (title !== originalTitle) {
+        // Get all existing slugs except the current one
+        const { data: existingEvents } = await supabase
+          .from("events")
+          .select("slug")
+          .neq("id", id);
+
+        const existingSlugs = existingEvents?.map((e) => e.slug) || [];
+        const newSlug = generateUniqueSlug(title, existingSlugs);
+        updateData.slug = newSlug;
+      }
 
       const { error } = await supabase
         .from("events")
