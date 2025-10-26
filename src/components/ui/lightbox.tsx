@@ -44,11 +44,12 @@ export function Lightbox({
 }: LightboxProps) {
   useEffect(() => {
     if (isOpen) {
-      // Prevent scrolling and touch behaviors
-      document.body.style.overflow = "hidden";
+      // Prevent page scrolling but allow pinch-zoom on image
+      const scrollY = window.scrollY;
       document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
       document.body.style.width = "100%";
-      document.body.style.touchAction = "none";
+      document.body.style.overflow = "hidden";
       
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
@@ -59,10 +60,12 @@ export function Lightbox({
       document.addEventListener("keydown", handleEscape);
       
       return () => {
-        document.body.style.overflow = "";
+        const scrollY = document.body.style.top;
         document.body.style.position = "";
+        document.body.style.top = "";
         document.body.style.width = "";
-        document.body.style.touchAction = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
         document.removeEventListener("keydown", handleEscape);
       };
     }
@@ -71,7 +74,7 @@ export function Lightbox({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 z-50 flex touch-auto items-center justify-center overflow-hidden">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/95 backdrop-blur-sm"
@@ -128,14 +131,15 @@ export function Lightbox({
         </button>
       </div>
 
-      {/* Image - Mobile optimized */}
-      <div className="relative z-10 flex h-[75vh] w-full max-w-[95vw] items-center justify-center sm:h-[85vh] sm:max-w-[90vw]">
+      {/* Image - Mobile optimized with pinch-zoom enabled */}
+      <div className="relative z-10 flex h-[70vh] w-full max-w-[95vw] touch-auto items-center justify-center overflow-auto sm:h-[85vh] sm:max-w-[90vw]">
         <img
           src={imageUrl}
           alt={alt}
-          className="max-h-full max-w-full object-contain transition-transform duration-300"
+          className="max-h-full max-w-full touch-auto object-contain transition-transform duration-300"
           style={{
             transform: `rotate(${rotation}deg)`,
+            touchAction: 'pinch-zoom',
           }}
           onClick={(e) => e.stopPropagation()}
         />
@@ -182,7 +186,7 @@ export function Lightbox({
 
       {/* Add to cart button - Centered at bottom on mobile */}
       {photoId && (onAddToCart || onRemoveFromCart) && (
-        <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 sm:bottom-4 sm:left-auto sm:right-4 sm:translate-x-0">
+        <div className="absolute bottom-4 left-1/2 z-30 -translate-x-1/2 sm:bottom-4 sm:left-auto sm:right-4 sm:translate-x-0">
           {isInCart ? (
             <button
               onClick={(e) => {

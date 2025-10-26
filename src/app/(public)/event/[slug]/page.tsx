@@ -218,7 +218,7 @@ export default function PublicEventPage({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+    <div className="min-h-screen overflow-x-hidden bg-zinc-50 dark:bg-zinc-900">
       {/* Event Header */}
       <div className="bg-white shadow-sm dark:bg-zinc-800">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -362,7 +362,8 @@ export default function PublicEventPage({
                     value={bibNumberFilter}
                     onChange={(e) => setBibNumberFilter(e.target.value)}
                     placeholder="z.B. 243"
-                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                    className="w-full max-w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-base text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
                 
@@ -491,8 +492,8 @@ export default function PublicEventPage({
 
         {/* Selected Photos Bar - Ultra Compact Mobile */}
         {selectedPhotos.size > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-white/20 bg-zinc-900 shadow-2xl dark:border-zinc-800 dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:border-0 sm:p-6 sm:shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}>
-            <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-3 py-2 sm:gap-4 sm:px-0 sm:py-0">
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-white/20 bg-zinc-900 shadow-2xl dark:border-zinc-800 dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:border-0 sm:p-6 sm:shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)', maxWidth: '100vw' }}>
+            <div className="mx-auto flex max-w-7xl flex-col gap-1.5 overflow-hidden px-3 py-2 sm:gap-4 sm:px-0 sm:py-0">
               {/* Ultra Compact Row - Email + Price + Button on Mobile */}
               {!isAuthenticated ? (
                 <>
@@ -513,7 +514,8 @@ export default function PublicEventPage({
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
                       placeholder="E-Mail"
-                      className="flex-1 rounded-lg border-2 border-white/20 bg-white px-2.5 py-1.5 text-xs text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3 sm:text-sm"
+                      className="flex-1 rounded-lg border-2 border-white/20 bg-white px-2.5 py-1.5 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3"
+                      style={{ fontSize: '16px' }}
                       required
                       autoComplete="email"
                       inputMode="email"
