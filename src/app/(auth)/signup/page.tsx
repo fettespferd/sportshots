@@ -23,11 +23,13 @@ export default function SignUpPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [acceptedAGB, setAcceptedAGB] = useState(false);
   const [acceptedDatenschutz, setAcceptedDatenschutz] = useState(false);
+  const [usernameManuallyEdited, setUsernameManuallyEdited] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
   // Auto-generate username from full name
   const generateUsername = (name: string) => {
+    if (!name) return "";
     return name
       .toLowerCase()
       .replace(/\s+/g, "-") // Replace spaces with hyphens
@@ -81,6 +83,7 @@ export default function SignUpPage() {
   const handleUsernameChange = (value: string) => {
     const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
     setUsername(cleaned);
+    setUsernameManuallyEdited(true); // Mark as manually edited
     
     if (cleaned.length >= 3) {
       checkUsernameAvailability(cleaned);
@@ -266,19 +269,15 @@ export default function SignUpPage() {
                 onChange={(e) => {
                   const newName = e.target.value;
                   setFullName(newName);
-                  // Auto-generate username if it hasn't been manually edited
-                  if (newName && username === generateUsername(fullName)) {
+                  
+                  // Only auto-generate username if user hasn't manually edited it
+                  if (!usernameManuallyEdited) {
                     const newUsername = generateUsername(newName);
                     setUsername(newUsername);
                     if (newUsername.length >= 3) {
                       checkUsernameAvailability(newUsername);
-                    }
-                  } else if (!username || fullName === "") {
-                    // Initialize username on first input
-                    const newUsername = generateUsername(newName);
-                    setUsername(newUsername);
-                    if (newUsername.length >= 3) {
-                      checkUsernameAvailability(newUsername);
+                    } else {
+                      setUsernameAvailable(null);
                     }
                   }
                 }}
