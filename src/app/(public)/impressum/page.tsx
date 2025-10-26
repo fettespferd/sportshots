@@ -15,10 +15,9 @@ export default function ImpressumPage() {
               Angaben gemäß § 5 TMG
             </h2>
             <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
-              <p className="font-semibold">Brainmotion</p>
-              <p>Julius Faubel</p>
-              <p>[Ihre Straße und Hausnummer]</p>
-              <p>[PLZ] [Stadt]</p>
+              <p className="font-semibold">Julius Faubel</p>
+              <p>Roswitha-von-Gandersheim Weg 15</p>
+              <p>42897 Remscheid</p>
               <p>Deutschland</p>
             </div>
           </section>
@@ -29,6 +28,15 @@ export default function ImpressumPage() {
               Kontakt
             </h2>
             <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
+              <p>
+                <span className="font-semibold">Telefon:</span>{" "}
+                <a
+                  href="tel:+4915222633984"
+                  className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  +49 152 22633984
+                </a>
+              </p>
               <p>
                 <span className="font-semibold">E-Mail:</span>{" "}
                 <a
@@ -41,6 +49,44 @@ export default function ImpressumPage() {
             </div>
           </section>
 
+          {/* Vertreten durch */}
+          <section>
+            <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+              Vertreten durch
+            </h2>
+            <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
+              <p>Julius Faubel</p>
+              <p className="text-sm">Freelancer / Softwareentwickler</p>
+            </div>
+          </section>
+
+          {/* Steuerliche Erfassung */}
+          <section>
+            <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+              Steuerliche Erfassung
+            </h2>
+            <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
+              <p>
+                <span className="font-semibold">Zuständiges Finanzamt:</span> Finanzamt Remscheid
+              </p>
+            </div>
+          </section>
+
+          {/* Berufsbezeichnung */}
+          <section>
+            <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+              Berufsbezeichnung und berufsrechtliche Regelungen
+            </h2>
+            <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
+              <p>
+                <span className="font-semibold">Berufsbezeichnung:</span> Freelancer / Softwareentwickler
+              </p>
+              <p>
+                <span className="font-semibold">Verliehen in:</span> Deutschland
+              </p>
+            </div>
+          </section>
+
           {/* Verantwortlich für den Inhalt */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
@@ -48,38 +94,33 @@ export default function ImpressumPage() {
             </h2>
             <div className="space-y-2 text-zinc-700 dark:text-zinc-300">
               <p>Julius Faubel</p>
-              <p>[Ihre Adresse]</p>
+              <p>Roswitha-von-Gandersheim Weg 15</p>
+              <p>42897 Remscheid</p>
             </div>
           </section>
 
-          {/* EU-Streitschlichtung */}
+          {/* Streitschlichtung */}
           <section>
             <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              EU-Streitschlichtung
+              Streitschlichtung
             </h2>
             <p className="text-zinc-700 dark:text-zinc-300">
               Die Europäische Kommission stellt eine Plattform zur
               Online-Streitbeilegung (OS) bereit:{" "}
               <a
-                href="https://ec.europa.eu/consumers/odr/"
+                href="https://ec.europa.eu/consumers/odr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline dark:text-blue-400"
               >
-                https://ec.europa.eu/consumers/odr/
+                https://ec.europa.eu/consumers/odr
               </a>
-              <br />
-              Unsere E-Mail-Adresse finden Sie oben im Impressum.
             </p>
-          </section>
-
-          {/* Verbraucherstreitbeilegung */}
-          <section>
-            <h2 className="mb-4 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Verbraucherstreitbeilegung / Universalschlichtungsstelle
-            </h2>
-            <p className="text-zinc-700 dark:text-zinc-300">
-              Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren
+            <p className="mt-4 text-zinc-700 dark:text-zinc-300">
+              Meine E-Mail-Adresse finden Sie oben im Impressum.
+            </p>
+            <p className="mt-4 text-zinc-700 dark:text-zinc-300">
+              Ich bin nicht bereit oder verpflichtet, an Streitbeilegungsverfahren
               vor einer Verbraucherschlichtungsstelle teilzunehmen.
             </p>
           </section>
