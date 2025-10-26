@@ -26,6 +26,16 @@ export default function SignUpPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  // Auto-generate username from full name
+  const generateUsername = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/[äöü]/g, (match) => ({ ä: "ae", ö: "oe", ü: "ue" }[match] || match)) // Replace umlauts
+      .replace(/[^a-z0-9-]/g, "") // Remove invalid characters
+      .slice(0, 30); // Limit to 30 characters
+  };
+
   // Username validation
   const validateUsername = (name: string) => {
     return /^[a-z0-9-]+$/.test(name) && name.length >= 3 && name.length <= 30;
@@ -190,7 +200,7 @@ export default function SignUpPage() {
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             {accountType === "team" 
-              ? "Erstelle einen Team-Account für deine Surf-/Skischule" 
+              ? "Erstelle einen Team-Account für deine Surf-/Skischule oder ein anderes Team" 
               : "Erstelle einen Account und verkaufe deine Sportfotos"}
           </p>
         </div>
@@ -237,7 +247,7 @@ export default function SignUpPage() {
                   }`}
                 >
                   <div className="text-2xl mb-1">🏢</div>
-                  <div className="text-zinc-900 dark:text-zinc-100">Surf-/Skischule</div>
+                  <div className="text-zinc-900 dark:text-zinc-100">Surf/Ski oder anderes Team</div>
                 </button>
               </div>
             </div>
@@ -253,7 +263,25 @@ export default function SignUpPage() {
                 id="fullName"
                 type="text"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(e) => {
+                  const newName = e.target.value;
+                  setFullName(newName);
+                  // Auto-generate username if it hasn't been manually edited
+                  if (newName && username === generateUsername(fullName)) {
+                    const newUsername = generateUsername(newName);
+                    setUsername(newUsername);
+                    if (newUsername.length >= 3) {
+                      checkUsernameAvailability(newUsername);
+                    }
+                  } else if (!username || fullName === "") {
+                    // Initialize username on first input
+                    const newUsername = generateUsername(newName);
+                    setUsername(newUsername);
+                    if (newUsername.length >= 3) {
+                      checkUsernameAvailability(newUsername);
+                    }
+                  }
+                }}
                 required
                 className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
                 placeholder={accountType === "team" ? "Surf Academy Mallorca" : "Max Mustermann"}
@@ -360,7 +388,7 @@ export default function SignUpPage() {
                     rel="noopener noreferrer"
                     className="font-medium text-zinc-900 underline hover:text-zinc-700 dark:text-zinc-50 dark:hover:text-zinc-300"
                   >
-                    Allgemeinen Geschäftsbedingungen (Version {AGB_VERSION})
+                    Allgemeinen Geschäftsbedingungen
                   </Link>
                   <span className="text-red-600 dark:text-red-400"> *</span>
                 </label>
@@ -386,7 +414,7 @@ export default function SignUpPage() {
                     rel="noopener noreferrer"
                     className="font-medium text-zinc-900 underline hover:text-zinc-700 dark:text-zinc-50 dark:hover:text-zinc-300"
                   >
-                    Datenschutzerklärung (Version {DATENSCHUTZ_VERSION})
+                    Datenschutzerklärung
                   </Link>
                   <span className="text-red-600 dark:text-red-400"> *</span>
                 </label>
