@@ -299,6 +299,8 @@ const link = {
 const downloadLink = {
   margin: "8px 0",
   padding: "0 40px",
+  wordBreak: "break-all" as const,
+  overflowWrap: "break-word" as const,
 };
 
 const downloadLinkNote = {

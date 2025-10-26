@@ -183,13 +183,15 @@ export default function DownloadsPage({
                   </p>
                   <a
                     href={photo.original_url}
-                    download
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
                   >
-                    Herunterladen
+                    📥 Herunterladen
                   </a>
+                  <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                    Tippe lang drücken → In Fotos speichern
+                  </p>
                 </div>
               </div>
             ))}
