@@ -1,7 +1,7 @@
 /**
  * Maps Supabase auth error codes to translation keys
  */
-export function getAuthErrorKey(error: any): string {
+export function getAuthErrorKey(error: any) {
   const message = error?.message?.toLowerCase() || "";
   const code = error?.code || "";
 
@@ -11,7 +11,7 @@ export function getAuthErrorKey(error: any): string {
     message.includes("invalid email or password") ||
     code === "invalid_credentials"
   ) {
-    return "auth.error.invalidCredentials";
+    return "auth.error.invalidCredentials" as const;
   }
 
   // Email already exists
@@ -20,7 +20,7 @@ export function getAuthErrorKey(error: any): string {
     message.includes("email already exists") ||
     code === "user_already_exists"
   ) {
-    return "auth.error.emailExists";
+    return "auth.error.emailExists" as const;
   }
 
   // Weak password
@@ -28,7 +28,7 @@ export function getAuthErrorKey(error: any): string {
     message.includes("password") && message.includes("6 characters") ||
     code === "weak_password"
   ) {
-    return "auth.error.weakPassword";
+    return "auth.error.weakPassword" as const;
   }
 
   // Invalid email
@@ -36,7 +36,7 @@ export function getAuthErrorKey(error: any): string {
     message.includes("invalid email") ||
     code === "invalid_email"
   ) {
-    return "auth.error.invalidEmail";
+    return "auth.error.invalidEmail" as const;
   }
 
   // User not found
@@ -44,7 +44,7 @@ export function getAuthErrorKey(error: any): string {
     message.includes("user not found") ||
     code === "user_not_found"
   ) {
-    return "auth.error.userNotFound";
+    return "auth.error.userNotFound" as const;
   }
 
   // Too many requests
@@ -53,7 +53,7 @@ export function getAuthErrorKey(error: any): string {
     message.includes("rate limit") ||
     code === "over_request_rate_limit"
   ) {
-    return "auth.error.tooManyRequests";
+    return "auth.error.tooManyRequests" as const;
   }
 
   // Network error
@@ -62,10 +62,10 @@ export function getAuthErrorKey(error: any): string {
     message.includes("fetch") ||
     code === "network_error"
   ) {
-    return "auth.error.networkError";
+    return "auth.error.networkError" as const;
   }
 
   // Default unknown error
-  return "auth.error.unknownError";
+  return "auth.error.unknownError" as const;
 }
 
