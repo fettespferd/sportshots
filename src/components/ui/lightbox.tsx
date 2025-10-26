@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { ShareButton } from "./share-button";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface LightboxProps {
   isOpen: boolean;
@@ -40,8 +41,9 @@ export function Lightbox({
   onRemoveFromCart,
   showShare = false,
   shareUrl = "",
-  shareTitle = "Foto teilen"
+  shareTitle
 }: LightboxProps) {
+  const { t } = useLanguage();
   useEffect(() => {
     if (isOpen) {
       // Prevent page scrolling but allow pinch-zoom on image
@@ -88,10 +90,11 @@ export function Lightbox({
             onClick={(e) => {
               e.stopPropagation();
               // Trigger share
+              const title = shareTitle || t("lightbox.sharePhoto");
               if (navigator.share) {
                 navigator.share({
-                  title: shareTitle,
-                  text: shareTitle,
+                  title: title,
+                  text: title,
                   url: shareUrl,
                 }).catch(() => {
                   // Fallback to clipboard
@@ -102,18 +105,18 @@ export function Lightbox({
               }
             }}
             className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:bg-blue-700 active:scale-95 sm:px-3 sm:py-3"
-            aria-label="Teilen"
+            aria-label={t("lightbox.share")}
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
-            <span className="sm:hidden">Teilen</span>
+            <span className="sm:hidden">{t("lightbox.share")}</span>
           </button>
         )}
         <button
           onClick={onClose}
           className="flex items-center justify-center rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition-colors hover:bg-white/20 active:scale-95"
-          aria-label="Schließen"
+          aria-label={t("lightbox.close")}
         >
           <svg
             className="h-6 w-6"
@@ -132,7 +135,7 @@ export function Lightbox({
       </div>
 
       {/* Image - Mobile optimized with pinch-zoom enabled */}
-      <div className="relative z-10 flex h-[70vh] w-full max-w-[95vw] touch-auto items-center justify-center overflow-auto sm:h-[85vh] sm:max-w-[90vw]">
+      <div className="relative z-10 flex h-[60vh] w-full max-w-[95vw] touch-auto items-center justify-center overflow-auto sm:h-[85vh] sm:max-w-[90vw]">
         <img
           src={imageUrl}
           alt={alt}
@@ -184,21 +187,24 @@ export function Lightbox({
         )}
       </div>
 
-      {/* Add to cart button - Centered at bottom on mobile */}
+      {/* Add to cart button - Fixed at bottom with safe area */}
       {photoId && (onAddToCart || onRemoveFromCart) && (
-        <div className="absolute bottom-4 left-1/2 z-30 -translate-x-1/2 sm:bottom-4 sm:left-auto sm:right-4 sm:translate-x-0">
+        <div 
+          className="absolute bottom-20 left-1/2 z-40 -translate-x-1/2 sm:bottom-4 sm:left-auto sm:right-4 sm:translate-x-0"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
           {isInCart ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onRemoveFromCart?.(photoId);
               }}
-              className="flex items-center gap-2 rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-red-700 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
+              className="flex items-center gap-2 rounded-full bg-red-600 px-8 py-4 text-base font-bold text-white shadow-2xl transition-all hover:scale-105 hover:bg-red-700 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-6 w-6 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-              <span>Entfernen</span>
+              <span>{t("lightbox.removeFromCart")}</span>
             </button>
           ) : (
             <button
@@ -206,12 +212,12 @@ export function Lightbox({
                 e.stopPropagation();
                 onAddToCart?.(photoId);
               }}
-              className="flex items-center gap-2 rounded-full bg-green-600 px-6 py-3 text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-green-700 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
+              className="flex items-center gap-2 rounded-full bg-green-600 px-8 py-4 text-base font-bold text-white shadow-2xl transition-all hover:scale-105 hover:bg-green-700 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-6 w-6 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span>Hinzufügen</span>
+              <span>{t("lightbox.addToCart")}</span>
             </button>
           )}
         </div>
@@ -219,7 +225,7 @@ export function Lightbox({
 
       {/* Instructions - Hidden on mobile */}
       <div className="absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 text-sm text-white/70 sm:block">
-        Klicke außerhalb oder drücke ESC zum Schließen
+        {t("lightbox.clickOutside")}
       </div>
     </div>
   );

@@ -47,19 +47,19 @@ export default function SearchPage() {
   const supabase = createClient();
 
   const eventTypes = [
-    { value: "", label: "Alle Sportarten" },
-    { value: "running", label: "Laufen" },
-    { value: "cycling", label: "Radfahren" },
-    { value: "skiing", label: "Skifahren" },
-    { value: "surfing", label: "Surfen" },
-    { value: "triathlon", label: "Triathlon" },
-    { value: "other", label: "Sonstiges" },
+    { value: "", label: t("search.allSports") },
+    { value: "running", label: t("search.eventTypes.running") },
+    { value: "cycling", label: t("search.eventTypes.cycling") },
+    { value: "skiing", label: t("search.eventTypes.skiing") },
+    { value: "surfing", label: t("search.eventTypes.surfing") },
+    { value: "triathlon", label: t("search.eventTypes.triathlon") },
+    { value: "other", label: t("search.eventTypes.other") },
   ];
 
   const accountTypes = [
-    { value: "", label: "Alle" },
-    { value: "individual", label: "Einzelne Fotografen" },
-    { value: "team", label: "Teams" },
+    { value: "", label: t("search.allTypes") },
+    { value: "individual", label: t("search.individualPhotographers") },
+    { value: "team", label: t("search.teams") },
   ];
 
   useEffect(() => {
@@ -168,10 +168,10 @@ export default function SearchPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-            Suche
+            {t("search.title")}
           </h1>
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            Finde Events oder entdecke Fotografen und Teams
+            {t("search.subtitle")}
           </p>
         </div>
 
@@ -186,7 +186,7 @@ export default function SearchPage() {
                   : "border-transparent text-zinc-600 hover:border-zinc-300 hover:text-zinc-900 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-50"
               }`}
             >
-              📅 Events ({filteredEvents.length})
+              📅 {t("search.eventsTab")} ({filteredEvents.length})
             </button>
             <button
               onClick={() => setActiveTab("photographers")}
@@ -196,7 +196,7 @@ export default function SearchPage() {
                   : "border-transparent text-zinc-600 hover:border-zinc-300 hover:text-zinc-900 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-50"
               }`}
             >
-              📸 Fotografen & Teams ({filteredPhotographers.length})
+              📸 {t("search.photographersTab")} ({filteredPhotographers.length})
             </button>
           </div>
         </div>
@@ -209,7 +209,7 @@ export default function SearchPage() {
                 htmlFor="search"
                 className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                {activeTab === "events" ? "Event oder Ort suchen" : "Name oder Ort suchen"}
+                {activeTab === "events" ? t("search.searchEventOrLocation") : t("search.searchNameOrLocation")}
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -234,8 +234,8 @@ export default function SearchPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={
                     activeTab === "events"
-                      ? "z.B. Berlin Marathon oder München"
-                      : "z.B. Max Mustermann oder Berlin"
+                      ? t("search.eventPlaceholder")
+                      : t("search.photographerPlaceholder")
                   }
                   className="block w-full rounded-md border border-zinc-300 bg-white py-2 pl-10 pr-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
                 />
@@ -249,7 +249,7 @@ export default function SearchPage() {
                     htmlFor="eventType"
                     className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
                   >
-                    Sportart
+                    {t("search.eventType")}
                   </label>
                   <select
                     id="eventType"
@@ -270,7 +270,7 @@ export default function SearchPage() {
                     htmlFor="accountType"
                     className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
                   >
-                    Account-Typ
+                    {t("search.accountType")}
                   </label>
                   <select
                     id="accountType"
@@ -316,10 +316,10 @@ export default function SearchPage() {
                 />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-50">
-                Keine Events gefunden
+                {t("search.noEvents")}
               </h3>
               <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                Versuche eine andere Suche oder filtere nach einer anderen Sportart
+                {t("search.tryDifferentEventType")}
               </p>
             </div>
           ) : (
@@ -437,10 +437,10 @@ export default function SearchPage() {
                 />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-50">
-                Keine Fotografen gefunden
+                {t("search.noPhotographers")}
               </h3>
               <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                Versuche eine andere Suche oder filtere nach einem anderen Account-Typ
+                {t("search.tryDifferentAccountType")}
               </p>
             </div>
           ) : (

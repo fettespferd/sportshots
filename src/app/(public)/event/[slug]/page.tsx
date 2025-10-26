@@ -7,6 +7,7 @@ import { FaceSearch } from "@/components/search/face-search";
 import { Modal } from "@/components/ui/modal";
 import { Lightbox } from "@/components/ui/lightbox";
 import { ShareButton } from "@/components/ui/share-button";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface Event {
   id: string;
@@ -38,6 +39,7 @@ export default function PublicEventPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
+  const { t } = useLanguage();
   const [event, setEvent] = useState<Event | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]);
@@ -284,7 +286,7 @@ export default function PublicEventPage({
             <div className="overflow-hidden rounded-lg bg-gradient-to-br from-zinc-50 to-zinc-100 p-6 shadow-sm dark:from-zinc-800 dark:to-zinc-700">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
                 <span className="text-xl">💰</span>
-                Preise
+                {t("event.pricing")}
               </h2>
               <div className="space-y-3">
                 {/* Single Photo Price */}
@@ -295,7 +297,7 @@ export default function PublicEventPage({
                         <span className="text-lg">📸</span>
                       </div>
                       <span className="font-medium text-zinc-900 dark:text-zinc-50">
-                        Einzelnes Foto
+                        {t("event.singlePhoto")}
                       </span>
                     </div>
                     <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -316,10 +318,10 @@ export default function PublicEventPage({
                         </div>
                         <div className="text-white">
                           <div className="text-xs font-medium uppercase tracking-wide opacity-90">
-                            Sparpaket
+                            {t("event.package")}
                           </div>
                           <div className="font-semibold">
-                            {event.package_photo_count} Fotos
+                            {t("event.photosInPackage", { count: event.package_photo_count })}
                           </div>
                         </div>
                       </div>
@@ -328,7 +330,7 @@ export default function PublicEventPage({
                           {event.package_price.toFixed(2)} €
                         </div>
                         <div className="text-xs text-white/80">
-                          {(event.package_price / event.package_photo_count).toFixed(2)} € pro Foto
+                          {(event.package_price / event.package_photo_count).toFixed(2)} € {t("event.perPhoto")}
                         </div>
                       </div>
                     </div>
@@ -347,43 +349,46 @@ export default function PublicEventPage({
           {/* Filter Section */}
           <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
             <div className="space-y-4">
-              {/* Startnummer & Datum nebeneinander */}
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                <div className="flex-1">
-                  <label
-                    htmlFor="bibNumber"
-                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    Nach Startnummer filtern
-                  </label>
-                  <input
-                    id="bibNumber"
-                    type="text"
-                    value={bibNumberFilter}
-                    onChange={(e) => setBibNumberFilter(e.target.value)}
-                    placeholder="z.B. 243"
-                    className="w-full max-w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-base text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-                    style={{ fontSize: '16px' }}
-                  />
+              {/* Startnummer & Datum - Responsive Layout */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="bibNumber"
+                      className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      Nach Startnummer filtern
+                    </label>
+                    <input
+                      id="bibNumber"
+                      type="text"
+                      value={bibNumberFilter}
+                      onChange={(e) => setBibNumberFilter(e.target.value)}
+                      placeholder="z.B. 243"
+                      className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                      style={{ fontSize: '16px' }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label
+                      htmlFor="dateFilter"
+                      className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      📅 Nach Datum
+                    </label>
+                    <input
+                      id="dateFilter"
+                      type="date"
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      style={{ fontSize: '16px' }}
+                    />
+                  </div>
                 </div>
                 
-                <div className="flex-1">
-                  <label
-                    htmlFor="dateFilter"
-                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    📅 Nach Datum
-                  </label>
-                  <input
-                    id="dateFilter"
-                    type="date"
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                  />
-                </div>
-                
-                <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:min-w-[140px] sm:text-right">
+                <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:text-right">
                   {filteredPhotos.length} von {photos.length} Fotos
                 </div>
               </div>
@@ -458,10 +463,10 @@ export default function PublicEventPage({
                 </svg>
                 <div>
                   <p className="text-sm font-medium text-yellow-900 dark:text-yellow-400">
-                    Keine Fotos gefunden
+                    {t("event.noPhotos")}
                   </p>
                   <p className="text-xs text-yellow-700 dark:text-yellow-500">
-                    Keine Fotos entsprechen deinem Filter
+                    {t("search.noResults")}
                   </p>
                 </div>
               </div>
@@ -469,7 +474,7 @@ export default function PublicEventPage({
                 onClick={resetFilters}
                 className="rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600"
               >
-                ✕ Filter zurücksetzen
+                ✕ {t("event.resetFilter")}
               </button>
             </div>
           )}
@@ -478,58 +483,59 @@ export default function PublicEventPage({
           {(bibNumberFilter || dateFilter || timeRangeStart || timeRangeEnd || filteredPhotos.length !== photos.length) && filteredPhotos.length > 0 && (
             <div className="mt-4 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
               <span>
-                {filteredPhotos.length} von {photos.length} Fotos werden angezeigt
+                {t("event.resultsCount", { filtered: filteredPhotos.length, total: photos.length })}
               </span>
               <button
                 onClick={resetFilters}
                 className="text-zinc-700 underline transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
               >
-                Filter zurücksetzen
+                {t("event.resetFilter")}
               </button>
             </div>
           )}
         </div>
 
-        {/* Selected Photos Bar - Ultra Compact Mobile */}
+        {/* Selected Photos Bar - Two Row Layout */}
         {selectedPhotos.size > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-white/20 bg-zinc-900 shadow-2xl dark:border-zinc-800 dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:border-0 sm:p-6 sm:shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)', maxWidth: '100vw' }}>
-            <div className="mx-auto flex max-w-7xl flex-col gap-1.5 overflow-hidden px-3 py-2 sm:gap-4 sm:px-0 sm:py-0">
-              {/* Ultra Compact Row - Email + Price + Button on Mobile */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-white/20 bg-zinc-900 shadow-2xl dark:border-zinc-800 dark:bg-zinc-50 sm:sticky sm:top-4 sm:mb-6 sm:rounded-lg sm:border-0 sm:p-6 sm:shadow-lg" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.75rem)', maxWidth: '100vw' }}>
+            <div className="mx-auto flex max-w-7xl flex-col gap-2.5 overflow-hidden px-3 py-3 sm:gap-4 sm:px-0 sm:py-0">
+              {/* Two Row Layout for Guest Checkout */}
               {!isAuthenticated ? (
                 <>
                   {/* Top row: Counter + Price */}
                   <div className="flex items-center justify-between">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white dark:bg-zinc-900/20 dark:text-zinc-900 sm:h-8 sm:w-8">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white dark:bg-zinc-900/20 dark:text-zinc-900 sm:h-8 sm:w-8">
                       {selectedPhotos.size}
                     </div>
-                    <span className="text-base font-bold text-white dark:text-zinc-900 sm:text-2xl">
+                    <span className="text-lg font-bold text-white dark:text-zinc-900 sm:text-2xl">
                       {calculateTotal().toFixed(2)} €
                     </span>
                   </div>
                   
-                  {/* Email + Button Row */}
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      value={guestEmail}
-                      onChange={(e) => setGuestEmail(e.target.value)}
-                      placeholder="E-Mail"
-                      className="flex-1 rounded-lg border-2 border-white/20 bg-white px-2.5 py-1.5 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3"
-                      style={{ fontSize: '16px' }}
-                      required
-                      autoComplete="email"
-                      inputMode="email"
-                    />
-                    <button
-                      className="flex-shrink-0 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-1.5 text-xs font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
-                      disabled={isCheckingOut}
+                  {/* Email Row (Full Width) */}
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    placeholder={t("event.emailForDownload")}
+                    className="w-full rounded-lg border-2 border-white/20 bg-white px-3.5 py-2.5 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:border-zinc-300 dark:bg-zinc-50 sm:px-4 sm:py-3"
+                    style={{ fontSize: '16px' }}
+                    required
+                    autoComplete="email"
+                    inputMode="email"
+                  />
+                  
+                  {/* Button Row (Full Width) */}
+                  <button
+                    className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:py-3.5"
+                    disabled={isCheckingOut}
                 onClick={async () => {
                   // Validate guest email
                   if (!isAuthenticated && !guestEmail) {
                     setModalState({
                       isOpen: true,
-                      title: "E-Mail erforderlich",
-                      message: "Bitte gib deine E-Mail-Adresse ein, um die Fotos nach dem Kauf zu erhalten.",
+                      title: t("common.error"),
+                      message: t("event.guestEmail"),
                       type: "warning",
                     });
                     return;
@@ -541,8 +547,8 @@ export default function PublicEventPage({
                     if (!emailRegex.test(guestEmail)) {
                       setModalState({
                         isOpen: true,
-                        title: "Ungültige E-Mail",
-                        message: "Bitte gib eine gültige E-Mail-Adresse ein.",
+                        title: t("common.error"),
+                        message: t("common.email"),
                         type: "error",
                       });
                       return;
@@ -567,7 +573,7 @@ export default function PublicEventPage({
                     if (data.error) {
                       setModalState({
                         isOpen: true,
-                        title: "Fehler",
+                        title: t("common.error"),
                         message: data.error,
                         type: "error",
                       });
@@ -584,8 +590,8 @@ export default function PublicEventPage({
                     console.error("Checkout error:", error);
                     setModalState({
                       isOpen: true,
-                      title: "Fehler",
-                      message: "Ein Fehler ist beim Checkout aufgetreten. Bitte versuche es erneut.",
+                      title: t("common.error"),
+                      message: t("common.error"),
                       type: "error",
                     });
                     setIsCheckingOut(false);
@@ -598,34 +604,30 @@ export default function PublicEventPage({
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Wird geladen...</span>
+                    <span>{t("common.loadingFull")}</span>
                   </span>
                 ) : (
-                  <>
-                    <span className="hidden sm:inline">Zur Kasse</span>
-                    <span className="sm:hidden">Kaufen</span>
-                  </>
+                  t("event.buy")
                 )}
-                    </button>
-                  </div>
+                  </button>
                 </>
               ) : (
                 <>
-                  {/* Authenticated users - simpler layout */}
-                  <div className="flex items-center justify-between gap-3">
+                  {/* Authenticated users - Two Row Layout */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-white dark:text-zinc-900">
                       <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold dark:bg-zinc-900/20 sm:h-8 sm:w-8">
                         {selectedPhotos.size}
                       </div>
-                      <span className="text-sm font-medium sm:text-base">Fotos</span>
+                      <span className="text-sm font-medium sm:text-base">{t("common.photos")}</span>
                     </div>
-                    <span className="text-base font-bold text-white dark:text-zinc-900 sm:text-2xl">
+                    <span className="text-lg font-bold text-white dark:text-zinc-900 sm:text-2xl">
                       {calculateTotal().toFixed(2)} €
                     </span>
                   </div>
                   
                   <button
-                    className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-3.5 sm:text-base"
+                    className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-base font-bold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:py-3.5"
                     disabled={isCheckingOut}
                     onClick={async () => {
                       setIsCheckingOut(true);
@@ -645,7 +647,7 @@ export default function PublicEventPage({
                         if (data.error) {
                           setModalState({
                             isOpen: true,
-                            title: "Fehler",
+                            title: t("common.error"),
                             message: data.error,
                             type: "error",
                           });
@@ -660,8 +662,8 @@ export default function PublicEventPage({
                         console.error("Checkout error:", error);
                         setModalState({
                           isOpen: true,
-                          title: "Fehler",
-                          message: "Ein Fehler ist beim Checkout aufgetreten.",
+                          title: t("common.error"),
+                          message: t("common.error"),
                           type: "error",
                         });
                         setIsCheckingOut(false);
@@ -674,10 +676,10 @@ export default function PublicEventPage({
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span>Lädt...</span>
+                        <span>{t("common.loading")}</span>
                       </span>
                     ) : (
-                      "Zur Kasse"
+                      t("event.checkout")
                     )}
                   </button>
                 </>
