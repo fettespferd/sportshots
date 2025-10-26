@@ -7,6 +7,7 @@ import { FaceSearch } from "@/components/search/face-search";
 import { Modal } from "@/components/ui/modal";
 import { Lightbox } from "@/components/ui/lightbox";
 import { ShareButton } from "@/components/ui/share-button";
+import { CartModal } from "@/components/ui/cart-modal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface Event {
@@ -54,6 +55,7 @@ export default function PublicEventPage({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState("");
   const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
+  const [cartModalOpen, setCartModalOpen] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -348,48 +350,48 @@ export default function PublicEventPage({
         <div className="mb-6 space-y-4">
           {/* Filter Section */}
           <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-hidden">
               {/* Startnummer & Datum - Responsive Layout */}
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
+                  <div className="min-w-0">
                     <label
                       htmlFor="bibNumber"
                       className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
                     >
-                      Nach Startnummer filtern
+                      {t("event.filterByBibNumber")}
                     </label>
                     <input
                       id="bibNumber"
                       type="text"
                       value={bibNumberFilter}
                       onChange={(e) => setBibNumberFilter(e.target.value)}
-                      placeholder="z.B. 243"
-                      className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-                      style={{ fontSize: '16px' }}
+                      placeholder={t("event.bibPlaceholder")}
+                      className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                      style={{ fontSize: '16px', maxWidth: '100%' }}
                     />
                   </div>
                   
-                  <div>
+                  <div className="min-w-0">
                     <label
                       htmlFor="dateFilter"
                       className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
                     >
-                      📅 Nach Datum
+                      📅 {t("event.filterByDate")}
                     </label>
                     <input
                       id="dateFilter"
                       type="date"
                       value={dateFilter}
                       onChange={(e) => setDateFilter(e.target.value)}
-                      className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                      style={{ fontSize: '16px' }}
+                      className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      style={{ fontSize: '16px', maxWidth: '100%' }}
                     />
                   </div>
                 </div>
                 
                 <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:text-right">
-                  {filteredPhotos.length} von {photos.length} Fotos
+                  {t("event.resultsCount", { filtered: filteredPhotos.length, total: photos.length })}
                 </div>
               </div>
 
@@ -865,9 +867,102 @@ export default function PublicEventPage({
             return newSet;
           });
         }}
+        onViewCart={() => {
+          setLightboxOpen(false);
+          setCartModalOpen(true);
+        }}
         showShare={true}
         shareUrl={typeof window !== "undefined" && lightboxPhoto ? `${window.location.origin}/event/${slug}?photo=${lightboxPhoto.id}` : ""}
         shareTitle={`${event.title}${lightboxPhoto?.bib_number ? ` - #${lightboxPhoto.bib_number}` : ""}`}
+      />
+
+      {/* Cart Modal */}
+      <CartModal
+        isOpen={cartModalOpen}
+        onClose={() => setCartModalOpen(false)}
+        photos={photos.filter(p => selectedPhotos.has(p.id))}
+        onRemovePhoto={(photoId) => {
+          setSelectedPhotos(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(photoId);
+            return newSet;
+          });
+        }}
+        isAuthenticated={isAuthenticated}
+        guestEmail={guestEmail}
+        onGuestEmailChange={setGuestEmail}
+        onCheckout={async () => {
+          // Validate guest email if not authenticated
+          if (!isAuthenticated && !guestEmail) {
+            setCartModalOpen(false);
+            setModalState({
+              isOpen: true,
+              title: t("common.error"),
+              message: t("event.guestEmail"),
+              type: "warning",
+            });
+            return;
+          }
+
+          // Validate email format
+          if (!isAuthenticated && guestEmail) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(guestEmail)) {
+              setCartModalOpen(false);
+              setModalState({
+                isOpen: true,
+                title: t("common.error"),
+                message: t("common.email"),
+                type: "error",
+              });
+              return;
+            }
+          }
+
+          setIsCheckingOut(true);
+
+          try {
+            const response = await fetch("/api/stripe/checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                photoIds: Array.from(selectedPhotos),
+                eventId: event.id,
+                guestEmail: !isAuthenticated ? guestEmail : undefined,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+              setModalState({
+                isOpen: true,
+                title: t("common.error"),
+                message: data.error,
+                type: "error",
+              });
+              setIsCheckingOut(false);
+              return;
+            }
+
+            // Redirect to Stripe Checkout
+            if (data.url) {
+              window.location.href = data.url;
+              // Keep loading state active during redirect
+            }
+          } catch (error) {
+            console.error("Checkout error:", error);
+            setModalState({
+              isOpen: true,
+              title: t("common.error"),
+              message: t("common.error"),
+              type: "error",
+            });
+            setIsCheckingOut(false);
+          }
+        }}
+        totalPrice={calculateTotal()}
+        isCheckingOut={isCheckingOut}
       />
     </div>
   );

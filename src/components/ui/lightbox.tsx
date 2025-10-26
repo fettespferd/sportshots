@@ -19,6 +19,7 @@ interface LightboxProps {
   isInCart?: boolean;
   onAddToCart?: (photoId: string) => void;
   onRemoveFromCart?: (photoId: string) => void;
+  onViewCart?: () => void;
   showShare?: boolean;
   shareUrl?: string;
   shareTitle?: string;
@@ -39,6 +40,7 @@ export function Lightbox({
   isInCart = false,
   onAddToCart,
   onRemoveFromCart,
+  onViewCart,
   showShare = false,
   shareUrl = "",
   shareTitle
@@ -187,10 +189,31 @@ export function Lightbox({
         )}
       </div>
 
+      {/* Cart status indicator - Top left corner, clickable */}
+      {photoId && isInCart && onViewCart && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewCart();
+          }}
+          className="absolute left-3 top-3 z-30 flex items-center gap-2 rounded-full bg-green-600 px-3 py-2 text-sm font-bold text-white shadow-xl transition-all hover:scale-105 hover:bg-green-700 active:scale-95 sm:left-4 sm:top-4 sm:px-4"
+          aria-label="Warenkorb ansehen"
+        >
+          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.6 7.4M17 13l1.6 7.4M9 21a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM17 21a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+            <circle cx="9" cy="19.5" r="1.5" fill="white"/>
+            <circle cx="17" cy="19.5" r="1.5" fill="white"/>
+          </svg>
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+      )}
+
       {/* Add to cart button - Fixed at bottom with safe area */}
       {photoId && (onAddToCart || onRemoveFromCart) && (
         <div 
-          className="absolute bottom-20 left-1/2 z-40 -translate-x-1/2 sm:bottom-4 sm:left-auto sm:right-4 sm:translate-x-0"
+          className="absolute bottom-24 left-1/2 z-50 -translate-x-1/2 sm:bottom-6 sm:left-auto sm:right-6 sm:translate-x-0"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           {isInCart ? (
@@ -199,10 +222,11 @@ export function Lightbox({
                 e.stopPropagation();
                 onRemoveFromCart?.(photoId);
               }}
-              className="flex items-center gap-2 rounded-full bg-red-600 px-8 py-4 text-base font-bold text-white shadow-2xl transition-all hover:scale-105 hover:bg-red-700 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
+              className="flex items-center gap-2.5 rounded-full bg-red-600 px-8 py-4 text-base font-bold text-white shadow-[0_8px_30px_rgb(220,38,38,0.5)] ring-2 ring-red-400 transition-all hover:scale-105 hover:bg-red-700 hover:ring-red-300 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
             >
               <svg className="h-6 w-6 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6" />
               </svg>
               <span>{t("lightbox.removeFromCart")}</span>
             </button>
@@ -212,10 +236,10 @@ export function Lightbox({
                 e.stopPropagation();
                 onAddToCart?.(photoId);
               }}
-              className="flex items-center gap-2 rounded-full bg-green-600 px-8 py-4 text-base font-bold text-white shadow-2xl transition-all hover:scale-105 hover:bg-green-700 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
+              className="flex items-center gap-2.5 rounded-full bg-green-600 px-8 py-4 text-base font-bold text-white shadow-[0_8px_30px_rgb(22,163,74,0.5)] ring-2 ring-green-400 transition-all hover:scale-105 hover:bg-green-700 hover:ring-green-300 active:scale-95 sm:rounded-lg sm:px-6 sm:py-3 sm:text-base"
             >
               <svg className="h-6 w-6 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               <span>{t("lightbox.addToCart")}</span>
             </button>
