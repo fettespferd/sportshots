@@ -29,6 +29,7 @@ interface Photo {
   taken_at: string | null;
   camera_make: string | null;
   camera_model: string | null;
+  rotation?: number;
 }
 
 export default function PublicEventPage({
