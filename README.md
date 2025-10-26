@@ -1,54 +1,218 @@
-# SportShots - Plattform für Sportfotografen & Athleten
+# SportShots - Professionelle Plattform für Sportfotografie
 
-Eine Multi-Rollen-Plattform, auf der Fotografen Sportevents erstellen, Fotos hochladen und verkaufen können. Athleten können ihre Fotos über Startnummer-Suche oder Event-Filter finden und kaufen.
+Eine moderne, Multi-Rollen-Plattform für Sportfotografen, Event-Veranstalter und Athleten. Fotografen können Events erstellen, Fotos hochladen und verkaufen. Athleten finden ihre Fotos über intelligente Suchfunktionen und kaufen sie direkt über die Plattform.
+
+---
+
+## 🎯 Zielgruppen & Anwendungsfälle
+
+### 👥 Primäre Zielgruppen
+
+#### 1. **Professionelle Sportfotografen**
+- Fotografen, die regelmäßig bei Sportevents fotografieren
+- Freiberufler, die ihr Portfolio präsentieren und Fotos verkaufen möchten
+- Agenturen mit mehreren Fotografen im Team
+- **Nutzen**: Automatisierte Verkaufsprozesse, professionelles Portfolio, direkte Auszahlungen
+
+#### 2. **Surf- & Ski-Schulen**
+- Schulen, die Event-Fotos für ihre Teilnehmer anbieten
+- Branding-Möglichkeiten durch individuelle Profile
+- Einfache QR-Code-Verlinkung für schnellen Zugang
+- **Nutzen**: Zusätzliche Einnahmequelle, Marketing-Tool, Kundenbindung
+
+#### 3. **Event-Veranstalter**
+- Marathon-, Triathlon- und Lauf-Veranstalter
+- CrossFit- und Hyrox-Events
+- Radsport-Veranstaltungen
+- Ski- und Wintersport-Events
+- **Nutzen**: Foto-Service für Teilnehmer, zusätzliche Revenue-Quelle
+
+#### 4. **Athleten & Sportbegeisterte**
+- Teilnehmer an Sportevents (Läufer, Triathleten, etc.)
+- Hobby-Sportler, die professionelle Fotos ihrer Leistung suchen
+- Eltern von jungen Athleten
+- **Nutzen**: Einfache Foto-Suche, sichere Bezahlung, sofortiger Download
+
+#### 5. **Team-Accounts & Organisationen**
+- Sportvereine mit mehreren Fotografen
+- Foto-Agenturen mit Team-Struktur
+- Große Event-Veranstalter mit eigenem Branding
+- **Nutzen**: Zentrale Verwaltung, einheitliches Branding, Team-Kollaboration
+
+### 💼 Business Cases
+
+#### **B2C: Direktverkauf an Athleten**
+- Einzelpersonen kaufen ihre Sportfotos direkt
+- Durchschnittspreis: 5-15€ pro Foto
+- Paketangebote für Mehrfach-Käufe
+
+#### **B2B: Event-Fotografie-Service**
+- Fotografen bieten ihre Services über die Plattform an
+- Event-Veranstalter engagieren Fotografen
+- White-Label-Möglichkeiten für große Events
+
+#### **B2B2C: Schulen & Vereine**
+- Surf-/Ski-Schulen bieten Fotos als Zusatzservice
+- Vereine dokumentieren ihre Events
+- Automatische Vermarktung über QR-Codes und Links
+
+---
 
 ## 🎯 Features
 
-### Für Athleten
-- **Event-Suche**: Finde Events nach Datum, Ort oder Name
-- **Startnummer-Filterung**: Filtere Fotos nach deiner Startnummer
-- **Gesichtserkennung**: Lade ein Selfie hoch und finde automatisch deine Fotos
-- **Wasserzeichen-Vorschau**: Sieh dir Fotos mit Wasserzeichen an, bevor du kaufst
-- **Foto-Kauf**: Kaufe einzelne Fotos via Stripe Checkout
-- **Bestellverwaltung**: Überblick über alle gekauften Fotos mit Download-Links
+### Für Athleten & Endkunden
 
-### Für Fotografen
-- **Event-Management**: Erstelle und verwalte deine Events
-- **Foto-Upload**: Lade Fotos hoch mit automatischer Wasserzeichen-Generierung
-- **Automatische OCR**: Startnummern werden automatisch erkannt
+#### 🔍 **Intelligente Foto-Suche**
+- **Event-Suche**: Finde Events nach Datum, Ort, Name oder Fotograf
+- **Startnummer-Filterung**: Filtere sofort nach deiner Startnummer
+- **Datum/Zeit-Filter**: Finde Fotos nach Aufnahmezeitpunkt
+- **Gesichtserkennung (Selfie-Suche)**: Lade ein Selfie hoch und finde automatisch alle deine Fotos
+- **Fotografen-Suche**: Durchsuche Profile von Fotografen und Teams
+
+#### 📸 **Moderne Foto-Galerie**
+- Wasserzeichen-Vorschau zum Schutz der Fotografen
+- Lightbox-Ansicht mit Zoom-Funktionalität (auch auf Mobile)
+- Bild-Rotation für optimal gedrehte Fotos
+- Warenkorb-System mit visueller Nummerierung
+- Responsive Design für alle Geräte
+
+#### 💳 **Sicherer Kaufprozess**
+- Stripe Checkout Integration
+- Einzelfoto-Kauf oder Pakete
+- Gastkauf ohne Registrierung (nur E-Mail)
+- Sofortiger Download nach Zahlung
+- E-Mail mit Download-Link
+- Bestellverwaltung für registrierte Nutzer
+
+#### 📱 **Sharing & Social**
+- Web Share API Integration
+- Event-Links teilen
+- Einzelne Fotos teilen
+- QR-Code Zugang zu Events
+- Mobile-optimierte Erfahrung
+
+---
+
+### Für Fotografen & Content Creator
+
+#### 📊 **Event-Management**
+- Erstelle und verwalte unbegrenzt viele Events
+- Verschiedene Event-Typen (Running, Cycling, Skiing, Surfing, Triathlon, CrossFit, Hyrox, uvm.)
+- Flexible Preisgestaltung (Einzelpreise + Paketangebote)
+- Cover-Bilder für professionelle Präsentation
+- Automatische URL-Generierung (SEO-optimiert)
+
+#### 🖼️ **Professionelle Bildverwaltung**
+- **Multi-Upload**: Lade mehrere Fotos gleichzeitig hoch
+- **Automatische Wasserzeichen-Generierung**: Schutz deiner Arbeit
+- **OCR-Erkennung**: Startnummern werden automatisch erkannt
+- **Bild-Rotation**: Drehe Fotos links/rechts direkt in der Plattform
+- **Batch-Operationen**: Mehrere Fotos gleichzeitig löschen
+- **Drag & Drop**: Bilder per Drag & Drop neu sortieren
+- **Lazy Loading**: Optimierte Performance für große Galerien
+
+#### 👤 **Öffentliches Profil & Portfolio**
+- Eigene URL: `sportshots.com/dein-name`
+- QR-Code für einfachen Zugang
+- Portfolio-Galerie (bis zu 10 Beispielbilder)
+- Professionelles Branding mit Logo
+- Event-Übersicht auf Profilseite
+- Shareable Links für Social Media
+
+#### 💰 **Verkauf & Auszahlung**
+- **Stripe Connect Integration**: Verknüpfe dein Bankkonto
+- **Automatische Auszahlungen**: Geld geht direkt auf dein Konto
 - **Verkaufsstatistiken**: Dashboard mit Umsatz und Verkaufszahlen
-- **Analytics Dashboard**: Detaillierte Charts und Verkaufs-Insights
-- **Stripe Connect**: Verknüpfe dein Bankkonto für automatische Auszahlungen
-- **E-Mail-Benachrichtigungen**: Erhalte Benachrichtigungen bei Verkäufen
-- **Flexible Preisgestaltung**: Einzelpreise und Paketangebote
+- **Analytics**: Detaillierte Charts (Recharts) mit Insights
+- **Sales-Übersicht**: Siehe alle Verkäufe mit Käufer-E-Mail
+- **Transparente Provisionen**: Plattform-Fee wird automatisch abgezogen
 
-### Für Admins
-- **Fotografen-Freischaltung**: Review und Genehmigung von Fotografen-Anfragen
-- **Plattform-Analytics**: Umfassende Übersicht über alle Aktivitäten
-- **Umsatz-Übersicht**: Plattform-Einnahmen und Fotografen-Auszahlungen
-- **Fotografen-Verwaltung**: Aktivieren/Sperren von Accounts
-- **E-Mail-Benachrichtigungen**: Automatische E-Mails bei Freischaltungen
+#### 📧 **Automatisierung & Benachrichtigungen**
+- E-Mail bei Verkäufen
+- Download-Links automatisch an Käufer
+- Stripe Connect Onboarding-Erinnerungen
+
+---
+
+### Für Teams & Organisationen
+
+#### 👥 **Team-Accounts**
+- Erstelle ein Team-Profil
+- Lade mehrere Fotografen ein (Sub-Accounts)
+- Alle Events erscheinen automatisch auf Team-Seite
+- Einheitliches Branding (Team-Logo)
+- Zentrale Team-Verwaltung
+
+#### 🎨 **Custom Branding**
+- Team-Logo Upload
+- Individuelle Profilseiten
+- QR-Codes für Events
+- Professional Appearance
+
+#### 🔗 **Team-Collaboration**
+- Fotografen-Einladungen per E-Mail
+- Team-Member können akzeptieren/ablehnen
+- Jeder Fotograf behält seine eigenen Events
+- Shared Visibility auf Team-Seite
+
+---
+
+### Für Admins & Plattform-Betreiber
+
+#### 🛡️ **Plattform-Verwaltung**
+- Fotografen-Freischaltung & Genehmigung
+- Account-Aktivierung/Sperrung
+- Plattform-weite Analytics
+- Umsatz-Übersicht
+
+#### 📈 **Revenue Management**
+- Provisionsverwaltung (Standard: 15%)
+- Plattform-Einnahmen Dashboard
+- Fotografen-Auszahlungen Übersicht
+- Transaktions-Historie
+
+#### 📧 **Kommunikation**
+- Automatische E-Mail-Benachrichtigungen
+- Account-Status Updates
+- Fotografen-Freischaltungen
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 16 (App Router) + React 19
+### Frontend
+- **Framework**: Next.js 16 (App Router) mit React 19
 - **Styling**: Tailwind CSS 4
-- **Backend**: Supabase (Auth, Database, Storage)
-- **Payments**: Stripe Connect (vollständig integriert)
-- **AI/ML**: AWS Rekognition (OCR & Gesichtserkennung)
-- **Bildverarbeitung**: Sharp (Wasserzeichen-Generierung)
-- **E-Mail**: Resend (E-Mail-Benachrichtigungen)
-- **Analytics**: Recharts (Verkaufs-Charts)
-- **i18n**: next-intl (Deutsch & Englisch)
 - **TypeScript**: Vollständig typsicher
+- **Komponenten**: Custom UI Components + Radix UI
+- **Drag & Drop**: @dnd-kit
+- **Charts**: Recharts
+
+### Backend & Services
+- **Backend**: Supabase (Auth, Database, Storage, RLS)
+- **Payments**: Stripe Connect (Fotografen-Auszahlungen)
+- **AI/ML**: AWS Rekognition (OCR & Gesichtserkennung)
+- **Bildverarbeitung**: Sharp (Wasserzeichen, Thumbnails)
+- **E-Mail**: Resend (Transaktions-E-Mails)
+
+### Security & Performance
+- Row Level Security (RLS) auf allen Tabellen
+- JWT-basierte Authentifizierung
+- Image Optimization
+- Lazy Loading
+- CDN via Supabase Storage
+
+---
 
 ## 📋 Voraussetzungen
 
-- Node.js 20+ und npm
-- Supabase Account (kostenlos)
-- Stripe Account (für Zahlungen & Fotografen-Auszahlungen)
-- AWS Account (für OCR & Gesichtserkennung)
-- Resend Account (für E-Mail-Benachrichtigungen)
+- **Node.js** 20+ und npm
+- **Supabase Account** (kostenlos verfügbar)
+- **Stripe Account** (für Zahlungen & Fotografen-Auszahlungen)
+- **AWS Account** (für OCR & Gesichtserkennung)
+- **Resend Account** (für E-Mail-Benachrichtigungen)
+
+---
 
 ## 🚀 Installation & Setup
 
@@ -93,7 +257,7 @@ AWS_REGION=eu-central-1
 
 # Resend (Required for email)
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=onboarding@resend.dev
+RESEND_FROM_EMAIL=noreply@yourdomain.com
 ```
 
 ### 4. Datenbank-Migrationen ausführen
@@ -103,7 +267,7 @@ RESEND_FROM_EMAIL=onboarding@resend.dev
 3. Erstelle ein neues Query
 4. Kopiere den Inhalt von `src/supabase/migrations/20250101000000_initial_schema.sql`
 5. Führe die Migration aus
-6. Wiederhole für `src/supabase/migrations/20250101000001_storage_setup.sql`
+6. Wiederhole für alle weiteren Migrations-Dateien in chronologischer Reihenfolge
 
 ### 5. Ersten Admin-User erstellen
 
@@ -122,104 +286,258 @@ npm run dev
 
 Öffne [http://localhost:3000](http://localhost:3000) im Browser.
 
+---
+
 ## 📁 Projektstruktur
 
 ```
 src/
 ├── app/
-│   ├── (auth)/           # Auth-Seiten (Login, Signup)
-│   ├── (dashboard)/      # Geschützte Dashboard-Seiten
-│   │   ├── photographer/ # Fotografen-Dashboard
-│   │   ├── admin/        # Admin-Dashboard
-│   │   └── orders/       # User-Bestellungen
-│   ├── (public)/         # Öffentliche Seiten
-│   │   ├── event/        # Event-Galerie-Seiten
-│   │   └── search/       # Event-Suche
-│   └── api/              # API Routes
+│   ├── (auth)/              # Auth-Seiten (Login, Signup, Callback)
+│   ├── (dashboard)/         # Geschützte Dashboard-Seiten
+│   │   ├── photographer/    # Fotografen-Dashboard
+│   │   │   ├── events/      # Event-Management
+│   │   │   ├── sales/       # Verkaufs-Übersicht
+│   │   │   ├── settings/    # Profil & Team-Einstellungen
+│   │   │   └── team/        # Team-Verwaltung
+│   │   ├── admin/           # Admin-Dashboard
+│   │   │   ├── photographers/ # Fotografen-Freischaltung
+│   │   │   └── revenue/     # Umsatz-Übersicht
+│   │   └── orders/          # User-Bestellungen
+│   ├── (public)/            # Öffentliche Seiten
+│   │   ├── event/[slug]/    # Event-Galerie-Seiten
+│   │   ├── downloads/[token]/ # Download-Seiten
+│   │   └── search/          # Event & Fotografen-Suche
+│   ├── [username]/          # Öffentliche Fotografen-Profile
+│   └── api/                 # API Routes
+│       ├── checkout/        # Stripe Checkout
+│       ├── stripe/          # Stripe Webhooks & Connect
+│       ├── photos/          # Foto-Verarbeitung
+│       └── team/            # Team-Verwaltung
 ├── components/
-│   ├── layout/           # Layout-Komponenten (Header, etc.)
-│   ├── ui/               # Basis UI-Komponenten
-│   └── ...               # Feature-spezifische Komponenten
+│   ├── layout/              # Layout-Komponenten (Header, Footer, etc.)
+│   ├── settings/            # Settings-Komponenten
+│   ├── ui/                  # Basis UI-Komponenten
+│   │   ├── lightbox.tsx     # Foto-Detailansicht
+│   │   ├── modal.tsx        # Modal-Dialog
+│   │   └── share-button.tsx # Share-Funktionalität
+│   └── ...                  # Feature-spezifische Komponenten
 ├── lib/
-│   ├── supabase/         # Supabase Client & Middleware
-│   ├── stripe/           # Stripe Integration
-│   └── utils/            # Helper-Funktionen
+│   ├── supabase/            # Supabase Client & Middleware
+│   ├── stripe/              # Stripe Integration
+│   ├── aws/                 # AWS Rekognition
+│   ├── image/               # Bildverarbeitung (Watermark)
+│   └── utils/               # Helper-Funktionen
 └── supabase/
-    └── migrations/       # Datenbank-Migrationen
+    ├── migrations/          # Datenbank-Migrationen
+    └── functions/           # Edge Functions (optional)
 ```
 
-## 🔐 Benutzer-Rollen
+---
 
-### Athlete (Standard)
-- Kann Events suchen und Fotos kaufen
-- Zugriff auf Bestellverwaltung
+## 🔐 Benutzer-Rollen & Permissions
 
-### Photographer
-- Muss sich als Fotograf registrieren und von Admin freischalten lassen
-- Kann Events erstellen und Fotos hochladen
-- Sieht Verkaufsstatistiken
+### **Athlete (Standard User)**
+- Registrierung ohne Freischaltung
+- Event-Suche & Foto-Kauf
+- Bestellverwaltung
+- Selfie-Upload für Gesichtserkennung
 
-### Admin
-- Muss manuell in der Datenbank gesetzt werden
-- Kann Fotografen freischalten/sperren
-- Sieht Plattform-Umsätze
+### **Photographer (Individual)**
+- Registrierung mit automatischer Freischaltung
+- Event-Management (unbegrenzt)
+- Foto-Upload & Verkauf
+- Stripe Connect Anbindung
+- Verkaufsstatistiken & Analytics
+- Öffentliches Profil mit Portfolio
+
+### **Team Account**
+- Alle Photographer-Features
+- Team-Mitglieder einladen
+- Zentrales Team-Profil
+- Einheitliches Branding
+- Gemeinsame Event-Übersicht
+
+### **Admin**
+- Voller Plattform-Zugriff
+- Fotografen-Verwaltung
+- Plattform-Analytics
+- Revenue-Übersicht
+- Account-Aktivierung/Sperrung
+
+---
 
 ## 🗂️ Datenbank-Schema
 
 ### Haupttabellen
-- `profiles` - Erweiterte User-Profile mit Rollen
-- `photographer_requests` - Fotografen-Registrierungsanfragen
-- `events` - Sportevents
-- `photos` - Hochgeladene Fotos
-- `purchases` - Käufe/Transaktionen
-- `purchase_photos` - Verknüpfung Käufe ↔ Fotos
 
-## 🚧 Roadmap / Status
+#### `profiles`
+Erweiterte User-Profile mit Rollen, Branding und Team-Informationen
 
-### Phase 1: ✅ Foundation
+#### `events`
+Sportevents mit Cover-Image, Preisen, Slug und Metadaten
+
+#### `photos`
+Hochgeladene Fotos mit Wasserzeichen-URL, Original-URL, Startnummer, EXIF-Daten und Rotation
+
+#### `purchases`
+Käufe/Transaktionen mit Stripe-IDs, Status und Download-Tokens
+
+#### `purchase_photos`
+Verknüpfung zwischen Käufen und Fotos
+
+#### `gallery_images`
+Portfolio-Bilder für Fotografen-Profile (max. 10 pro Fotograf)
+
+#### `team_invitations`
+Einladungen für Team-Mitglieder mit Status-Tracking
+
+### Storage Buckets
+
+- **photos**: Event-Fotos (Original + Wasserzeichen)
+- **event-covers**: Event-Cover-Bilder
+- **avatars**: Profilbilder
+- **team-logos**: Team-Logos
+
+---
+
+## 🎨 Key Features im Detail
+
+### 🤖 Automatische Startnummer-Erkennung (OCR)
+- AWS Rekognition Integration
+- Automatische Extraktion von Zahlen aus Fotos
+- Manuelle Korrektur vor Upload möglich
+- Unterstützt alle gängigen Startnummern-Formate
+
+### 😊 Gesichtserkennung (Face Search)
+- Upload eines Selfies
+- Vergleich mit allen Event-Fotos
+- AWS Rekognition Face Matching
+- Privacy-First: Selfies werden nicht gespeichert
+
+### 🎨 Dynamische Wasserzeichen
+- Automatische Generierung mit Sharp
+- Diagonales Muster für Schutz
+- Benutzerdefinierter Text (z.B. Fotografenname)
+- Optimale Balance zwischen Schutz und Sichtbarkeit
+
+### 📱 Mobile-First Design
+- Touch-optimierte UI
+- Pinch-to-Zoom in Lightbox
+- Safe-Area Support (iOS)
+- Responsive Checkout
+- Optimierte Input-Felder (16px für iOS)
+
+### 🔄 Bildverwaltung
+- Batch-Upload mehrerer Fotos
+- Batch-Delete mit Bestätigung
+- Drag & Drop Sortierung
+- Bild-Rotation (links/rechts)
+- Lazy Loading für Performance
+
+### 🔗 QR-Codes & Sharing
+- Automatische QR-Code-Generierung für Events
+- Web Share API Integration
+- Event-Links teilen
+- Einzelne Fotos teilen
+- Link-Kopie als Fallback
+
+---
+
+## 📊 Analytics & Reporting
+
+### Für Fotografen
+- Verkaufsstatistiken mit Charts
+- Umsatz-Übersicht
+- Verkaufte Fotos pro Event
+- Zeitlicher Verlauf
+- Bestseller-Events
+
+### Für Admins
+- Plattform-weite Analytics
+- Gesamtumsatz
+- Fotografen-Performance
+- Transaktions-Historie
+- Provisionsverwaltung
+
+---
+
+## 💰 Monetarisierung & Business Model
+
+### Revenue Streams
+
+#### 1. **Plattform-Provision**
+- Standard: 15% auf jeden Verkauf
+- Transparent im Dashboard sichtbar
+- Automatische Abrechnung via Stripe
+
+#### 2. **Premium-Accounts** (Zukünftig)
+- Team-Accounts mit erweiterten Features
+- Priority Support
+- Custom Branding
+- Higher Storage Limits
+
+#### 3. **B2B-Lizenzen** (Zukünftig)
+- White-Label-Lösungen für große Events
+- Custom Domains
+- Enterprise-Support
+
+### Pricing-Beispiele
+
+**Einzelfoto-Verkauf:**
+- Fotograf setzt Preis: 10€
+- Plattform-Fee: 1,50€ (15%)
+- Stripe-Fee: ~0,30€
+- Netto an Fotografen: 8,20€
+
+**Paket (3 Fotos):**
+- Fotograf setzt Preis: 25€
+- Plattform-Fee: 3,75€ (15%)
+- Stripe-Fee: ~0,50€
+- Netto an Fotografen: 20,75€
+
+---
+
+## 🚧 Roadmap
+
+### ✅ **Phase 1-7: Foundation & Core Features** (Abgeschlossen)
 - [x] Datenbank-Schema & Migrations
-- [x] Auth-System (Signup, Login, Callback)
-- [x] Role-based Route Protection
+- [x] Auth-System mit Rollen
+- [x] Fotografen-Dashboard
+- [x] Öffentliche Event-Seiten
+- [x] Admin-Dashboard
+- [x] Stripe Integration
+- [x] AWS Rekognition (OCR & Face Search)
+- [x] Wasserzeichen-Generierung
+- [x] E-Mail-Benachrichtigungen
+- [x] Analytics Dashboard
+- [x] Team-Accounts
+- [x] Fotografen-Profile
+- [x] Mobile-Optimierung
+- [x] Share-Funktionalität
+- [x] Bildverwaltung (Rotation, Batch-Upload/Delete)
 
-### Phase 2: ✅ Fotografen-Dashboard
-- [x] Event-Management (CRUD)
-- [x] Foto-Upload mit Supabase Storage
-- [x] Event-Details & Statistiken
-
-### Phase 3: ✅ Öffentliche Seiten
-- [x] Landing Page
-- [x] Event-Suche
-- [x] Event-Galerie mit Startnummer-Filter
-- [x] Foto-Auswahl (Warenkorb)
-
-### Phase 4: ✅ Admin-Dashboard
-- [x] Fotografen-Freischaltung
-- [x] Umsatz-Übersicht
-
-### Phase 5: ✅ Stripe Integration
-- [x] Stripe Connect Onboarding für Fotografen
-- [x] Checkout-Flow
-- [x] Webhook-Handler
-- [x] Plattform-Provision (15%)
-
-### Phase 6: ✅ AWS Rekognition
-- [x] OCR für automatische Startnummer-Erkennung
-- [x] Gesichtserkennung mit Selfie-Upload
-
-### Phase 7: ✅ Erweiterte Features
-- [x] Wasserzeichen-Generierung (Sharp)
-- [x] E-Mail-Benachrichtigungen (Resend)
-- [x] Analytics Dashboard (Recharts)
-- [x] Mehrsprachigkeit (next-intl: Deutsch & Englisch)
-
-### Phase 8: 🔜 Zukünftige Features
-- [ ] Event-Branding & Custom Domains
-- [ ] Mobile App (React Native)
-- [ ] Social Sharing
+### 🚀 **Phase 8: Erweiterungen** (In Arbeit)
 - [ ] Event-Kalender-Integration
+- [ ] Social Sharing Optimization
+- [ ] SEO-Optimierung
+- [ ] Performance-Monitoring
+
+### 🔮 **Phase 9: Premium-Features** (Geplant)
+- [ ] Custom Domains für Teams
+- [ ] White-Label-Lösungen
+- [ ] Video-Support
+- [ ] Live-Event-Updates
+- [ ] Mobile App (React Native)
 - [ ] Automatische Foto-Tagging mit AI
+- [ ] Multi-Currency Support
+- [ ] Subscription-Model für Fotografen
+
+---
 
 ## 🤝 Entwicklung
+
+### Development Commands
 
 ```bash
 # Development Server
@@ -231,10 +549,65 @@ npm run build
 # Production Server starten
 npm start
 
+# Type Checking
+npm run type-check
+
 # Linting
 npm run lint
 ```
 
+### Empfohlene Tools
+- **VS Code** mit TypeScript/React Extensions
+- **Supabase CLI** für lokale Entwicklung
+- **Stripe CLI** für Webhook-Testing
+
+---
+
+## 📄 Weitere Dokumentation
+
+- **[SETUP-GUIDE.md](./SETUP-GUIDE.md)**: Detaillierte Setup-Anleitung
+- **[AWS_SETUP.md](./AWS_SETUP.md)**: AWS Rekognition Konfiguration
+- **Supabase Migrations**: `src/supabase/migrations/`
+
+---
+
+## 🔒 Security & Compliance
+
+- **HTTPS-only** in Production
+- **Row Level Security (RLS)** auf allen Tabellen
+- **JWT-basierte Authentifizierung**
+- **Stripe PCI-Compliant Checkout**
+- **DSGVO-konform**: Siehe `/datenschutz` und `/impressum`
+- **Secure Image Storage** mit Supabase
+- **Input Validation** auf allen Forms
+- **SQL Injection Prevention** via Supabase Client
+
+---
+
+## 📞 Support & Community
+
+Für Fragen, Bug-Reports oder Feature-Requests, bitte ein Issue erstellen oder Kontakt aufnehmen.
+
+---
+
 ## 📝 Lizenz
 
-Dieses Projekt ist privat und nicht für die Öffentlichkeit bestimmt.
+Dieses Projekt ist privat und proprietär. Alle Rechte vorbehalten.
+
+---
+
+## 🎉 Credits
+
+**Entwickelt mit:**
+- [Next.js](https://nextjs.org/)
+- [Supabase](https://supabase.com/)
+- [Stripe](https://stripe.com/)
+- [AWS Rekognition](https://aws.amazon.com/rekognition/)
+- [Sharp](https://sharp.pixelplumbing.com/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Resend](https://resend.com/)
+
+---
+
+**Version**: 1.0.0  
+**Letztes Update**: Januar 2025
