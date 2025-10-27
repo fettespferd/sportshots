@@ -180,22 +180,26 @@ export default function SignUpPage() {
           // Don't block signup, but log the error
         }
 
-        // Trigger email queue processing (don't block on this)
-        console.log("Triggering email queue processor for user:", data.user.id);
-        fetch("/api/cron/process-email-queue", {
-          method: "GET",
-        })
-          .then(res => {
-            console.log("Email queue processor response status:", res.status);
-            return res.json();
+        // Send welcome email with delay to ensure profile is created (don't block on this)
+        setTimeout(() => {
+          console.log("Sending welcome email to user:", data.user.id);
+          fetch("/api/auth/send-welcome-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: data.user.id }),
           })
-          .then(data => {
-            console.log("Email queue processor result:", data);
-          })
-          .catch(err => {
-            console.error("Failed to trigger email queue processor:", err);
-            // Don't block signup if email fails
-          });
+            .then(res => {
+              console.log("Welcome email response status:", res.status);
+              return res.json();
+            })
+            .then(emailData => {
+              console.log("Welcome email result:", emailData);
+            })
+            .catch(err => {
+              console.error("Failed to send welcome email:", err);
+              // Don't block signup if email fails
+            });
+        }, 2000); // Wait 2 seconds to ensure profile is created
 
         setMessage(
           `Registrierung erfolgreich! 🎉 Dein ${accountType === "team" ? "Team-" : ""}Account ist sofort aktiv und bereit! 🚀 Deine öffentliche Seite: sportshots.brainmotion.ai/${username}`
