@@ -13,6 +13,99 @@ import {
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+// Template: Welcome Email (sent immediately after signup)
+export function WelcomeEmail({
+  userName,
+  username,
+  accountType,
+}: {
+  userName: string;
+  username: string;
+  accountType: string;
+}) {
+  const isTeam = accountType === "team";
+  const profileUrl = `${baseUrl}/${username}`;
+  
+  return (
+    <Html>
+      <Head />
+      <Body style={main}>
+        <Container style={container}>
+          <Heading style={h1}>🎉 Willkommen bei SportShots!</Heading>
+          <Text style={text}>
+            Hallo {userName},
+          </Text>
+          <Text style={text}>
+            Herzlich willkommen bei SportShots! Dein {isTeam ? "Team-" : ""}Account wurde erfolgreich erstellt und ist sofort aktiv. 🚀
+          </Text>
+          
+          <Section style={buttonContainer}>
+            <Button style={button} href={`${baseUrl}/photographer/events`}>
+              Jetzt loslegen
+            </Button>
+          </Section>
+
+          <Hr style={hr} />
+          
+          <Text style={text}>
+            <strong>Deine öffentliche Profilseite:</strong>
+            <br />
+            <Link href={profileUrl} style={link}>
+              {profileUrl}
+            </Link>
+          </Text>
+
+          <Hr style={hr} />
+
+          <Text style={footer}>
+            <strong>📋 Nächste Schritte:</strong>
+            <br />
+            <br />
+            <strong>1. Stripe Connect einrichten</strong>
+            <br />
+            → Verbinde dein Stripe-Konto, um Auszahlungen zu erhalten (85% des Umsatzes bleiben bei dir!)
+            <br />
+            <br />
+            <strong>2. Erstes Event erstellen</strong>
+            <br />
+            → Lege ein Event an (z.B. "Surfkurs August 2025")
+            <br />
+            <br />
+            <strong>3. Fotos hochladen</strong>
+            <br />
+            → Lade deine Sportfotos hoch - unsere KI erkennt automatisch Gesichter
+            <br />
+            <br />
+            <strong>4. Event veröffentlichen</strong>
+            <br />
+            → Teile den Link mit deinen Teilnehmern und starte den Verkauf!
+          </Text>
+
+          <Hr style={hr} />
+
+          <Text style={footer}>
+            <strong>💡 Tipp:</strong> Teilnehmer können ihre eigenen Fotos per Gesichtserkennung oder Startnummer finden.
+          </Text>
+
+          <Hr style={hr} />
+
+          <Text style={footer}>
+            Bei Fragen helfen wir dir gerne weiter!
+            <br />
+            E-Mail: <Link href="mailto:julius.faubel@brainmotion.ai" style={link}>julius.faubel@brainmotion.ai</Link>
+          </Text>
+
+          <Text style={footer}>
+            Viel Erfolg mit SportShots!
+            <br />
+            Dein SportShots Team
+          </Text>
+        </Container>
+      </Body>
+    </Html>
+  );
+}
+
 // Template 1: Photographer Approval
 export function PhotographerApprovedEmail({
   photographerName,

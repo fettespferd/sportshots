@@ -180,6 +180,16 @@ export default function SignUpPage() {
           // Don't block signup, but log the error
         }
 
+        // Send welcome email (don't block on this)
+        fetch("/api/auth/send-welcome-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: data.user.id }),
+        }).catch(err => {
+          console.error("Failed to send welcome email:", err);
+          // Don't block signup if email fails
+        });
+
         setMessage(
           `Registrierung erfolgreich! 🎉 Dein ${accountType === "team" ? "Team-" : ""}Account ist sofort aktiv und bereit! 🚀 Deine öffentliche Seite: sportshots.brainmotion.ai/${username}`
         );
