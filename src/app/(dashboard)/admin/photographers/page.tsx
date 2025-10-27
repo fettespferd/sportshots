@@ -266,6 +266,53 @@ export default function AdminPhotographersPage() {
     }
   };
 
+  const handleDelete = async (userId: string, userName: string) => {
+    const confirmed = confirm(
+      `Account "${userName}" wirklich PERMANENT löschen?\n\n⚠️ WARNUNG: Diese Aktion kann NICHT rückgängig gemacht werden!\n\n` +
+      `Folgendes wird gelöscht:\n` +
+      `• Account & Profil\n` +
+      `• Alle Events\n` +
+      `• Alle hochgeladenen Fotos\n` +
+      `• Alle Verkäufe & Bestellungen\n\n` +
+      `Bist du dir absolut sicher?`
+    );
+
+    if (!confirmed) return;
+
+    // Double confirmation
+    const doubleConfirm = confirm(
+      `Letzte Bestätigung!\n\nAccount "${userName}" wird jetzt PERMANENT gelöscht.`
+    );
+
+    if (!doubleConfirm) return;
+
+    try {
+      // Delete profile (CASCADE should handle related data)
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      setModalState({
+        isOpen: true,
+        title: "Erfolg",
+        message: "Account wurde permanent gelöscht.",
+        type: "success",
+      });
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      console.error("Delete error:", error);
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Löschen fehlgeschlagen. Bitte versuche es erneut.",
+        type: "error",
+      });
+    }
+  };
+
   // Filter photographers based on search term
   const filteredPhotographers = photographers.filter((photographer) => {
     const searchLower = searchTerm.toLowerCase();
@@ -577,7 +624,7 @@ export default function AdminPhotographersPage() {
                           {photographer.photographer_status === "approved" ? (
                             <button
                               onClick={() => handleSuspend(photographer.id)}
-                              className="text-sm text-red-600 hover:underline dark:text-red-400"
+                              className="text-sm text-orange-600 hover:underline dark:text-orange-400"
                             >
                               Sperren
                             </button>
@@ -589,6 +636,12 @@ export default function AdminPhotographersPage() {
                               Aktivieren
                             </button>
                           )}
+                          <button
+                            onClick={() => handleDelete(photographer.id, photographer.full_name || photographer.email)}
+                            className="text-sm text-red-600 hover:underline dark:text-red-400"
+                          >
+                            Löschen
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -739,7 +792,7 @@ export default function AdminPhotographersPage() {
                     handleSuspend(selectedPhotographer.id);
                     setShowDetailModal(false);
                   }}
-                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
                 >
                   🚫 Fotograf sperren
                 </button>
@@ -754,6 +807,15 @@ export default function AdminPhotographersPage() {
                   ✓ Fotograf aktivieren
                 </button>
               )}
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  handleDelete(selectedPhotographer.id, selectedPhotographer.full_name || selectedPhotographer.email);
+                }}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                🗑️ Account löschen
+              </button>
               <button
                 onClick={() => setShowDetailModal(false)}
                 className="flex-1 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
