@@ -55,6 +55,8 @@ export default function LeadsPage() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  const [openStatusDropdown, setOpenStatusDropdown] = useState<string | null>(null);
+  const [showBulkStatusDropdown, setShowBulkStatusDropdown] = useState(false);
   const [notification, setNotification] = useState<{
     type: "success" | "error";
     message: string;
@@ -221,9 +223,44 @@ export default function LeadsPage() {
         .eq("id", leadId);
 
       if (error) throw error;
-      loadLeads();
+      
+      // Update local state for immediate feedback
+      setLeads(prevLeads => 
+        prevLeads.map(lead => 
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
+      
+      // Update selected lead if open in detail modal
+      if (selectedLead?.id === leadId) {
+        setSelectedLead({ ...selectedLead, status: newStatus });
+      }
+      
+      setOpenStatusDropdown(null);
+      showNotificationMessage("success", "✅ Status aktualisiert");
     } catch (error) {
       console.error("Error updating status:", error);
+      showNotificationMessage("error", "❌ Fehler beim Aktualisieren");
+    }
+  };
+
+  const updateBulkStatus = async (newStatus: string) => {
+    if (selectedLeads.size === 0) return;
+    
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .update({ status: newStatus })
+        .in("id", Array.from(selectedLeads));
+
+      if (error) throw error;
+      
+      showNotificationMessage("success", `✅ ${selectedLeads.size} Lead(s) aktualisiert`);
+      setSelectedLeads(new Set());
+      loadLeads();
+    } catch (error) {
+      console.error("Error updating bulk status:", error);
+      showNotificationMessage("error", "❌ Fehler beim Aktualisieren");
     }
   };
 
@@ -423,6 +460,46 @@ export default function LeadsPage() {
           >
             📧 E-Mail senden ({selectedLeads.size})
           </button>
+          
+          {/* Bulk Status Update */}
+          {selectedLeads.size > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowBulkStatusDropdown(!showBulkStatusDropdown)}
+                className="rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+              >
+                🏷️ Status ändern ({selectedLeads.size})
+              </button>
+              
+              {showBulkStatusDropdown && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setShowBulkStatusDropdown(false)}
+                  />
+                  <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-zinc-800 dark:ring-zinc-700">
+                    <div className="py-1">
+                      {Object.entries(statusLabels).map(([key, { label, color }]) => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            updateBulkStatus(key);
+                            setShowBulkStatusDropdown(false);
+                          }}
+                          className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                        >
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${color}`}>
+                            {label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          
           <button
             onClick={exportLeadsToCSV}
             disabled={filteredLeads.length === 0}
@@ -532,9 +609,49 @@ export default function LeadsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${statusLabels[lead.status]?.color}`}>
-                        {statusLabels[lead.status]?.label}
-                      </span>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenStatusDropdown(openStatusDropdown === lead.id ? null : lead.id);
+                          }}
+                          className={`inline-flex cursor-pointer items-center gap-1 rounded-full px-2 text-xs font-semibold leading-5 transition-all hover:opacity-80 ${statusLabels[lead.status]?.color}`}
+                        >
+                          {statusLabels[lead.status]?.label}
+                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        
+                        {openStatusDropdown === lead.id && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-10" 
+                              onClick={() => setOpenStatusDropdown(null)}
+                            />
+                            <div className="absolute left-0 top-full z-20 mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-zinc-800 dark:ring-zinc-700">
+                              <div className="py-1">
+                                {Object.entries(statusLabels).map(([key, { label, color }]) => (
+                                  <button
+                                    key={key}
+                                    onClick={() => updateLeadStatus(lead.id, key)}
+                                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                                  >
+                                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${color}`}>
+                                      {label}
+                                    </span>
+                                    {lead.status === key && (
+                                      <svg className="ml-auto h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
                       {new Date(lead.created_at).toLocaleDateString("de-DE")}
