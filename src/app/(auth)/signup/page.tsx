@@ -181,25 +181,28 @@ export default function SignUpPage() {
         }
 
         // Send welcome email with delay to ensure profile is created (don't block on this)
-        setTimeout(() => {
-          console.log("Sending welcome email to user:", data.user.id);
-          fetch("/api/auth/send-welcome-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: data.user.id }),
-          })
-            .then(res => {
-              console.log("Welcome email response status:", res.status);
-              return res.json();
+        if (data.user) {
+          const userId = data.user.id;
+          setTimeout(() => {
+            console.log("Sending welcome email to user:", userId);
+            fetch("/api/auth/send-welcome-email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId }),
             })
-            .then(emailData => {
-              console.log("Welcome email result:", emailData);
-            })
-            .catch(err => {
-              console.error("Failed to send welcome email:", err);
-              // Don't block signup if email fails
-            });
-        }, 2000); // Wait 2 seconds to ensure profile is created
+              .then(res => {
+                console.log("Welcome email response status:", res.status);
+                return res.json();
+              })
+              .then(emailData => {
+                console.log("Welcome email result:", emailData);
+              })
+              .catch(err => {
+                console.error("Failed to send welcome email:", err);
+                // Don't block signup if email fails
+              });
+          }, 2000); // Wait 2 seconds to ensure profile is created
+        }
 
         setMessage(
           `Registrierung erfolgreich! 🎉 Dein ${accountType === "team" ? "Team-" : ""}Account ist sofort aktiv und bereit! 🚀 Deine öffentliche Seite: sportshots.brainmotion.ai/${username}`
