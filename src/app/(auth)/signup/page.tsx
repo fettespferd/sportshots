@@ -181,10 +181,10 @@ export default function SignUpPage() {
         }
 
         setMessage(
-          `Registrierung erfolgreich! 🎉 Dein ${accountType === "team" ? "Team-" : ""}Account ist sofort aktiv! Deine öffentliche Seite: sportshots.brainmotion.ai/${username}`
+          `Registrierung erfolgreich! 🎉 Dein ${accountType === "team" ? "Team-" : ""}Account ist sofort aktiv und bereit! 🚀 Deine öffentliche Seite: sportshots.brainmotion.ai/${username}`
         );
         // Redirect to dashboard after a delay
-        setTimeout(() => router.push("/photographer/events"), 3000);
+        setTimeout(() => router.push("/photographer/events"), 2500);
       }
     } catch (err: any) {
       console.error("Signup failed:", err);
