@@ -49,28 +49,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Leads not found" }, { status: 404 });
     }
 
-    // Send emails to all leads
-    const results = await Promise.all(
-      leads.map(async (lead) => {
-        try {
-          // Replace placeholders in template
-          const personalizedBody = template.body
-            .replace(/\{\{name\}\}/g, lead.name)
-            .replace(/\{\{email\}\}/g, lead.email)
-            .replace(/\{\{location\}\}/g, lead.location || "");
+    // Helper function to delay execution
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-          const personalizedSubject = template.subject
-            .replace(/\{\{name\}\}/g, lead.name);
+    // Send emails with rate limiting (2 per second for Resend)
+    const results = [];
+    const RATE_LIMIT_DELAY = 550; // 550ms between emails = ~1.8 emails/second (safe buffer)
 
-          // Send the email
-          await sendEmail({
-            to: lead.email,
-            subject: personalizedSubject,
-            html: personalizedBody.replace(/\n/g, "<br>"),
-            replyTo: "julius.faubel@brainmotion.ai",
-          });
+    for (let i = 0; i < leads.length; i++) {
+      const lead = leads[i];
+      
+      try {
+        // Replace placeholders in template
+        const personalizedBody = template.body
+          .replace(/\{\{name\}\}/g, lead.name)
+          .replace(/\{\{email\}\}/g, lead.email)
+          .replace(/\{\{location\}\}/g, lead.location || "")
+          .replace(/\{\{company_name\}\}/g, lead.name);
 
-          // Log the email in database
+        const personalizedSubject = template.subject
+          .replace(/\{\{name\}\}/g, lead.name)
+          .replace(/\{\{company_name\}\}/g, lead.name);
+
+        // Send the email
+        const emailResult = await sendEmail({
+          to: lead.email,
+          subject: personalizedSubject,
+          html: personalizedBody.replace(/\n/g, "<br>"),
+          replyTo: "julius.faubel@brainmotion.ai",
+        });
+
+        // Check if email was sent successfully
+        if (emailResult.success) {
+          // Log successful email in database
           await supabase.from("lead_emails").insert({
             lead_id: lead.id,
             template_name: templateName,
@@ -88,23 +99,41 @@ export async function POST(request: Request) {
             })
             .eq("id", lead.id);
 
-          return { success: true, leadId: lead.id };
-        } catch (error) {
-          console.error(`Failed to send email to ${lead.email}:`, error);
-          
-          // Log failed email
-          await supabase.from("lead_emails").insert({
-            lead_id: lead.id,
-            template_name: templateName,
-            subject: template.subject,
-            created_by: user.id,
-            status: "failed",
-          });
-
-          return { success: false, leadId: lead.id, error: String(error) };
+          results.push({ success: true, leadId: lead.id, email: lead.email });
+        } else {
+          throw new Error(emailResult.error as string || "Unknown error");
         }
-      })
-    );
+
+        // Rate limiting: wait between emails (except for the last one)
+        if (i < leads.length - 1) {
+          await delay(RATE_LIMIT_DELAY);
+        }
+      } catch (error: any) {
+        console.error(`Failed to send email to ${lead.email}:`, error);
+        
+        // Determine error status
+        const errorStatus = error.message?.includes("rate") || error.statusCode === 429 
+          ? "rate_limited" 
+          : "failed";
+        
+        // Log failed email
+        await supabase.from("lead_emails").insert({
+          lead_id: lead.id,
+          template_name: templateName,
+          subject: template.subject,
+          created_by: user.id,
+          status: errorStatus,
+        });
+
+        results.push({ 
+          success: false, 
+          leadId: lead.id, 
+          email: lead.email,
+          error: error.message || String(error),
+          status: errorStatus
+        });
+      }
+    }
 
     const successful = results.filter((r) => r.success).length;
     const failed = results.filter((r) => !r.success).length;

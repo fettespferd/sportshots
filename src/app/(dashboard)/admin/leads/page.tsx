@@ -81,10 +81,10 @@ export default function LeadsPage() {
   });
   const supabase = createClient();
 
-  const showNotificationMessage = (type: "success" | "error", message: string) => {
+  const showNotificationMessage = (type: "success" | "error", message: string, duration = 5000) => {
     setNotification({ type, message });
     setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 5000);
+    setTimeout(() => setShowNotification(false), duration);
   };
 
   const businessTypeLabels: Record<string, string> = {
@@ -263,6 +263,12 @@ export default function LeadsPage() {
     if (!selectedTemplate || selectedLeads.size === 0) return;
 
     setSendingEmail(true);
+    const totalEmails = selectedLeads.size;
+    const estimatedTime = Math.ceil(totalEmails * 0.55); // 550ms per email
+    
+    // Show progress notification (longer duration for more emails)
+    showNotificationMessage("success", `📧 Versende ${totalEmails} E-Mail(s)... (ca. ${estimatedTime}s)`, Math.max(3000, estimatedTime * 1000));
+    
     try {
       const response = await fetch("/api/admin/send-lead-emails", {
         method: "POST",
@@ -277,7 +283,15 @@ export default function LeadsPage() {
 
       const result = await response.json();
       
-      showNotificationMessage("success", `📧 E-Mails erfolgreich an ${selectedLeads.size} Lead(s) versendet!`);
+      const successCount = result.results?.filter((r: any) => r.success).length || 0;
+      const failedCount = result.results?.filter((r: any) => !r.success).length || 0;
+      
+      if (failedCount > 0) {
+        showNotificationMessage("error", `⚠️ ${successCount} erfolgreich, ${failedCount} fehlgeschlagen (Rate Limit?)`);
+      } else {
+        showNotificationMessage("success", `✅ Alle ${successCount} E-Mail(s) erfolgreich versendet!`);
+      }
+      
       setShowEmailModal(false);
       setSelectedLeads(new Set());
       setSelectedTemplate("");
@@ -834,11 +848,24 @@ export default function LeadsPage() {
                     ) : (
                       leadEmails.map((email) => (
                         <div key={email.id} className="rounded border border-zinc-200 bg-white p-2 text-xs dark:border-zinc-600 dark:bg-zinc-800">
-                          <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                            {email.subject}
-                          </div>
-                          <div className="mt-1 text-zinc-500 dark:text-zinc-400">
-                            {new Date(email.sent_at).toLocaleString("de-DE")}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                                {email.subject}
+                              </div>
+                              <div className="mt-1 text-zinc-500 dark:text-zinc-400">
+                                {new Date(email.sent_at).toLocaleString("de-DE")}
+                              </div>
+                            </div>
+                            <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                              email.status === "sent" 
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400" 
+                                : email.status === "rate_limited"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                                : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                            }`}>
+                              {email.status === "sent" ? "✓ Sent" : email.status === "rate_limited" ? "⏱ Rate Limit" : "✗ Failed"}
+                            </span>
                           </div>
                         </div>
                       ))
