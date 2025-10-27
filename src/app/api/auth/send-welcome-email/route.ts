@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Render email template
-    const emailHtml = render(
+    const emailHtml = await render(
       WelcomeEmail({
         userName: profile.full_name || "Fotograf",
         username: profile.username || "",
