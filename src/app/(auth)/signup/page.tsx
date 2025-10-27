@@ -181,14 +181,23 @@ export default function SignUpPage() {
         }
 
         // Send welcome email (don't block on this)
+        console.log("Sending welcome email to user:", data.user.id);
         fetch("/api/auth/send-welcome-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: data.user.id }),
-        }).catch(err => {
-          console.error("Failed to send welcome email:", err);
-          // Don't block signup if email fails
-        });
+        })
+          .then(res => {
+            console.log("Welcome email response status:", res.status);
+            return res.json();
+          })
+          .then(data => {
+            console.log("Welcome email result:", data);
+          })
+          .catch(err => {
+            console.error("Failed to send welcome email:", err);
+            // Don't block signup if email fails
+          });
 
         setMessage(
           `Registrierung erfolgreich! 🎉 Dein ${accountType === "team" ? "Team-" : ""}Account ist sofort aktiv und bereit! 🚀 Deine öffentliche Seite: sportshots.brainmotion.ai/${username}`
