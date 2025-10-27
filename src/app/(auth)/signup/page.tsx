@@ -180,22 +180,20 @@ export default function SignUpPage() {
           // Don't block signup, but log the error
         }
 
-        // Send welcome email (don't block on this)
-        console.log("Sending welcome email to user:", data.user.id);
-        fetch("/api/auth/send-welcome-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: data.user.id }),
+        // Trigger email queue processing (don't block on this)
+        console.log("Triggering email queue processor for user:", data.user.id);
+        fetch("/api/cron/process-email-queue", {
+          method: "GET",
         })
           .then(res => {
-            console.log("Welcome email response status:", res.status);
+            console.log("Email queue processor response status:", res.status);
             return res.json();
           })
           .then(data => {
-            console.log("Welcome email result:", data);
+            console.log("Email queue processor result:", data);
           })
           .catch(err => {
-            console.error("Failed to send welcome email:", err);
+            console.error("Failed to trigger email queue processor:", err);
             // Don't block signup if email fails
           });
 

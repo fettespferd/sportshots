@@ -4,6 +4,32 @@ import { sendEmail } from "@/lib/email/send";
 import { render } from "@react-email/render";
 import { WelcomeEmail } from "@/lib/email/templates";
 
+// Helper function to wait
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper function to retry fetching profile
+async function fetchProfileWithRetry(supabase: any, userId: string, maxRetries = 5) {
+  for (let i = 0; i < maxRetries; i++) {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("email, full_name, username, account_type")
+      .eq("id", userId)
+      .single();
+
+    if (profile && !error) {
+      console.log(`Profile found on attempt ${i + 1}`);
+      return { profile, error: null };
+    }
+
+    console.log(`Profile not found, retry ${i + 1}/${maxRetries}`);
+    if (i < maxRetries - 1) {
+      await delay(1000); // Wait 1 second before retry
+    }
+  }
+
+  return { profile: null, error: "Profile not found after retries" };
+}
+
 export async function POST(request: Request) {
   try {
     console.log("Welcome email API called");
@@ -18,13 +44,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get user profile
+    // Get user profile with retry logic
     const supabase = await createClient();
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("email, full_name, username, account_type")
-      .eq("id", userId)
-      .single();
+    const { profile, error: profileError } = await fetchProfileWithRetry(supabase, userId);
 
     console.log("Profile fetched:", profile ? "success" : "failed", profileError);
 
