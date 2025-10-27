@@ -113,15 +113,6 @@ export function Header() {
                 </>
               )}
 
-              {profile?.role === "admin" && (
-                <Link
-                  href="/admin/photographers"
-                  className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
-                >
-                  Admin
-                </Link>
-              )}
-
               {user && profile?.role === "athlete" && (
                 <Link
                   href="/orders"
@@ -237,43 +228,6 @@ export function Header() {
                     >
                       <span>⚙️</span>
                       <span>Einstellungen</span>
-                    </Link>
-                  </div>
-                </>
-              )}
-
-              {/* Admin Navigation */}
-              {profile?.role === "admin" && (
-                <>
-                  <div className="border-t border-zinc-200 dark:border-zinc-800 mt-2 pt-2">
-                    <div className="px-4 pb-2">
-                      <p className="text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
-                        Admin
-                      </p>
-                    </div>
-                    <Link
-                      href="/admin/photographers"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                    >
-                      <span>👥</span>
-                      <span>{t("nav.photographers")}</span>
-                    </Link>
-                    <Link
-                      href="/admin/revenue"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                    >
-                      <span>💰</span>
-                      <span>{t("nav.revenue")}</span>
-                    </Link>
-                    <Link
-                      href="/admin/analytics"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                    >
-                      <span>📈</span>
-                      <span>Admin Analytics</span>
                     </Link>
                   </div>
                 </>

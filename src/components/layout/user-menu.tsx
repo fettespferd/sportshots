@@ -174,6 +174,14 @@ export function UserMenu({ profile, user, onSignOut }: UserMenuProps) {
                   </p>
                 </div>
                 <Link
+                  href="/admin/photographers"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-purple-50 hover:text-purple-700 dark:text-zinc-300 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                >
+                  <span className="text-base">👥</span>
+                  <span>Fotografen</span>
+                </Link>
+                <Link
                   href="/admin/revenue"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-purple-50 hover:text-purple-700 dark:text-zinc-300 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
@@ -188,6 +196,14 @@ export function UserMenu({ profile, user, onSignOut }: UserMenuProps) {
                 >
                   <span className="text-base">📈</span>
                   <span>Admin Analytics</span>
+                </Link>
+                <Link
+                  href="/admin/leads"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-purple-50 hover:text-purple-700 dark:text-zinc-300 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                >
+                  <span className="text-base">📧</span>
+                  <span>Leads & CRM</span>
                 </Link>
               </>
             )}
