@@ -38,6 +38,17 @@ export default function AdminPhotographersPage() {
     message: "",
     type: "info",
   });
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
+    isOpen: boolean;
+    userId: string | null;
+    userName: string;
+    step: 1 | 2;
+  }>({
+    isOpen: false,
+    userId: null,
+    userName: "",
+    step: 1,
+  });
   const router = useRouter();
   const supabase = createClient();
 
@@ -266,34 +277,41 @@ export default function AdminPhotographersPage() {
     }
   };
 
-  const handleDelete = async (userId: string, userName: string) => {
-    const confirmed = confirm(
-      `Account "${userName}" wirklich PERMANENT löschen?\n\n⚠️ WARNUNG: Diese Aktion kann NICHT rückgängig gemacht werden!\n\n` +
-      `Folgendes wird gelöscht:\n` +
-      `• Account & Profil\n` +
-      `• Alle Events\n` +
-      `• Alle hochgeladenen Fotos\n` +
-      `• Alle Verkäufe & Bestellungen\n\n` +
-      `Bist du dir absolut sicher?`
-    );
+  const handleDelete = (userId: string, userName: string) => {
+    setDeleteConfirmModal({
+      isOpen: true,
+      userId,
+      userName,
+      step: 1,
+    });
+  };
 
-    if (!confirmed) return;
+  const proceedToDeleteStep2 = () => {
+    setDeleteConfirmModal((prev) => ({ ...prev, step: 2 }));
+  };
 
-    // Double confirmation
-    const doubleConfirm = confirm(
-      `Letzte Bestätigung!\n\nAccount "${userName}" wird jetzt PERMANENT gelöscht.`
-    );
-
-    if (!doubleConfirm) return;
+  const confirmDelete = async () => {
+    if (!deleteConfirmModal.userId) return;
 
     try {
-      // Delete profile (CASCADE should handle related data)
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", userId);
+      // Delete user via admin API (will CASCADE to profiles and related data)
+      const response = await fetch("/api/admin/delete-user", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: deleteConfirmModal.userId }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete user");
+      }
+
+      setDeleteConfirmModal({
+        isOpen: false,
+        userId: null,
+        userName: "",
+        step: 1,
+      });
 
       setModalState({
         isOpen: true,
@@ -302,15 +320,30 @@ export default function AdminPhotographersPage() {
         type: "success",
       });
       setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Delete error:", error);
+      setDeleteConfirmModal({
+        isOpen: false,
+        userId: null,
+        userName: "",
+        step: 1,
+      });
       setModalState({
         isOpen: true,
         title: "Fehler",
-        message: "Löschen fehlgeschlagen. Bitte versuche es erneut.",
+        message: error.message || "Löschen fehlgeschlagen. Bitte versuche es erneut.",
         type: "error",
       });
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmModal({
+      isOpen: false,
+      userId: null,
+      userName: "",
+      step: 1,
+    });
   };
 
   // Filter photographers based on search term
@@ -550,7 +583,7 @@ export default function AdminPhotographersPage() {
                       <td className="py-3">
                         <div>
                           <div className="font-medium text-zinc-900 dark:text-zinc-50">
-                            {photographer.full_name || "-"}
+                        {photographer.full_name || "-"}
                           </div>
                           <div className="text-xs text-zinc-500 dark:text-zinc-400">
                             {photographer.email}
@@ -627,15 +660,15 @@ export default function AdminPhotographersPage() {
                               className="text-sm text-orange-600 hover:underline dark:text-orange-400"
                             >
                               Sperren
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleActivate(photographer.id)}
-                              className="text-sm text-green-600 hover:underline dark:text-green-400"
-                            >
-                              Aktivieren
-                            </button>
-                          )}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleActivate(photographer.id)}
+                            className="text-sm text-green-600 hover:underline dark:text-green-400"
+                          >
+                            Aktivieren
+                          </button>
+                        )}
                           <button
                             onClick={() => handleDelete(photographer.id, photographer.full_name || photographer.email)}
                             className="text-sm text-red-600 hover:underline dark:text-red-400"
@@ -823,6 +856,85 @@ export default function AdminPhotographersPage() {
                 Schließen
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-800">
+            {deleteConfirmModal.step === 1 ? (
+              <>
+                <div className="mb-4">
+                  <h3 className="text-xl font-bold text-red-600 dark:text-red-400">
+                    ⚠️ Account permanent löschen?
+                  </h3>
+                </div>
+                <p className="mb-4 text-sm text-zinc-700 dark:text-zinc-300">
+                  Account <strong>"{deleteConfirmModal.userName}"</strong> wirklich PERMANENT löschen?
+                </p>
+                <div className="mb-6 rounded-md bg-red-50 p-4 dark:bg-red-900/20">
+                  <p className="mb-2 text-sm font-semibold text-red-800 dark:text-red-300">
+                    ⚠️ WARNUNG: Diese Aktion kann NICHT rückgängig gemacht werden!
+                  </p>
+                  <p className="mb-2 text-sm font-medium text-red-700 dark:text-red-400">
+                    Folgendes wird gelöscht:
+                  </p>
+                  <ul className="list-inside list-disc space-y-1 text-sm text-red-700 dark:text-red-400">
+                    <li>Account & Profil</li>
+                    <li>Alle Events</li>
+                    <li>Alle hochgeladenen Fotos</li>
+                    <li>Alle Verkäufe & Bestellungen</li>
+                  </ul>
+                </div>
+                <p className="mb-6 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  Bist du dir absolut sicher?
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelDelete}
+                    className="flex-1 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    onClick={proceedToDeleteStep2}
+                    className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  >
+                    Weiter →
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <h3 className="text-xl font-bold text-red-600 dark:text-red-400">
+                    🚨 Letzte Bestätigung!
+                  </h3>
+                </div>
+                <p className="mb-6 text-sm text-zinc-700 dark:text-zinc-300">
+                  Account <strong>"{deleteConfirmModal.userName}"</strong> wird jetzt PERMANENT gelöscht.
+                </p>
+                <p className="mb-6 text-sm font-semibold text-red-600 dark:text-red-400">
+                  Dies ist deine letzte Chance zum Abbrechen!
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelDelete}
+                    className="flex-1 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                  >
+                    Doch nicht löschen
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  >
+                    Jetzt PERMANENT löschen
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
