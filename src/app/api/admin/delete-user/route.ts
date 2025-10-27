@@ -12,7 +12,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Verify admin role
     const {
