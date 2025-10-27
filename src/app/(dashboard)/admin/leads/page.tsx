@@ -57,6 +57,8 @@ export default function LeadsPage() {
   const [showNotification, setShowNotification] = useState(false);
   const [openStatusDropdown, setOpenStatusDropdown] = useState<string | null>(null);
   const [showBulkStatusDropdown, setShowBulkStatusDropdown] = useState(false);
+  const [isEditingLead, setIsEditingLead] = useState(false);
+  const [editLeadForm, setEditLeadForm] = useState<Partial<Lead>>({});
   const [notification, setNotification] = useState<{
     type: "success" | "error";
     message: string;
@@ -264,6 +266,88 @@ export default function LeadsPage() {
     }
   };
 
+  const deleteLead = async (leadId: string) => {
+    if (!confirm("Lead wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) return;
+    
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .eq("id", leadId);
+
+      if (error) throw error;
+      
+      showNotificationMessage("success", "🗑️ Lead gelöscht");
+      setShowDetailModal(false);
+      loadLeads();
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      showNotificationMessage("error", "❌ Fehler beim Löschen");
+    }
+  };
+
+  const deleteBulkLeads = async () => {
+    if (selectedLeads.size === 0) return;
+    if (!confirm(`${selectedLeads.size} Lead(s) wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
+    
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .in("id", Array.from(selectedLeads));
+
+      if (error) throw error;
+      
+      showNotificationMessage("success", `🗑️ ${selectedLeads.size} Lead(s) gelöscht`);
+      setSelectedLeads(new Set());
+      loadLeads();
+    } catch (error) {
+      console.error("Error deleting leads:", error);
+      showNotificationMessage("error", "❌ Fehler beim Löschen");
+    }
+  };
+
+  const startEditingLead = () => {
+    if (!selectedLead) return;
+    setEditLeadForm({
+      name: selectedLead.name,
+      business_type: selectedLead.business_type,
+      email: selectedLead.email,
+      phone: selectedLead.phone || "",
+      website: selectedLead.website || "",
+      location: selectedLead.location || "",
+      notes: selectedLead.notes || "",
+      contact_person: selectedLead.contact_person || "",
+    });
+    setIsEditingLead(true);
+  };
+
+  const cancelEditingLead = () => {
+    setIsEditingLead(false);
+    setEditLeadForm({});
+  };
+
+  const saveLeadEdits = async () => {
+    if (!selectedLead) return;
+    
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .update(editLeadForm)
+        .eq("id", selectedLead.id);
+
+      if (error) throw error;
+      
+      showNotificationMessage("success", "✅ Lead aktualisiert");
+      setIsEditingLead(false);
+      setSelectedLead({ ...selectedLead, ...editLeadForm } as Lead);
+      loadLeads();
+    } catch (error) {
+      console.error("Error updating lead:", error);
+      showNotificationMessage("error", "❌ Fehler beim Aktualisieren");
+    }
+  };
+
   const addLead = async () => {
     setAddingLead(true);
     try {
@@ -461,43 +545,52 @@ export default function LeadsPage() {
             📧 E-Mail senden ({selectedLeads.size})
           </button>
           
-          {/* Bulk Status Update */}
+          {/* Bulk Actions */}
           {selectedLeads.size > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => setShowBulkStatusDropdown(!showBulkStatusDropdown)}
-                className="rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
-              >
-                🏷️ Status ändern ({selectedLeads.size})
-              </button>
-              
-              {showBulkStatusDropdown && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-10" 
-                    onClick={() => setShowBulkStatusDropdown(false)}
-                  />
-                  <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-zinc-800 dark:ring-zinc-700">
-                    <div className="py-1">
-                      {Object.entries(statusLabels).map(([key, { label, color }]) => (
-                        <button
-                          key={key}
-                          onClick={() => {
-                            updateBulkStatus(key);
-                            setShowBulkStatusDropdown(false);
-                          }}
-                          className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                        >
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${color}`}>
-                            {label}
-                          </span>
-                        </button>
-                      ))}
+            <>
+              <div className="relative">
+                <button
+                  onClick={() => setShowBulkStatusDropdown(!showBulkStatusDropdown)}
+                  className="rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+                >
+                  🏷️ Status ändern ({selectedLeads.size})
+                </button>
+                
+                {showBulkStatusDropdown && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setShowBulkStatusDropdown(false)}
+                    />
+                    <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-zinc-800 dark:ring-zinc-700">
+                      <div className="py-1">
+                        {Object.entries(statusLabels).map(([key, { label, color }]) => (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              updateBulkStatus(key);
+                              setShowBulkStatusDropdown(false);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                          >
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${color}`}>
+                              {label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+              
+              <button
+                onClick={deleteBulkLeads}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                🗑️ Löschen ({selectedLeads.size})
+              </button>
+            </>
           )}
           
           <button
@@ -834,7 +927,7 @@ export default function LeadsPage() {
           <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-800">
             {/* Header */}
             <div className="mb-6 flex items-start justify-between border-b border-zinc-200 pb-4 dark:border-zinc-700">
-              <div>
+              <div className="flex-1">
                 <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                   {selectedLead.name}
                 </h2>
@@ -842,9 +935,30 @@ export default function LeadsPage() {
                   {selectedLead.contact_person && `${selectedLead.contact_person} • `}
                   {businessTypeLabels[selectedLead.business_type] || selectedLead.business_type}
                 </p>
+                
+                {/* Action Buttons */}
+                {!isEditingLead && (
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={startEditingLead}
+                      className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                    >
+                      ✏️ Bearbeiten
+                    </button>
+                    <button
+                      onClick={() => deleteLead(selectedLead.id)}
+                      className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
+                    >
+                      🗑️ Löschen
+                    </button>
+                  </div>
+                )}
               </div>
               <button
-                onClick={() => setShowDetailModal(false)}
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setIsEditingLead(false);
+                }}
                 className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
               >
                 ✕
@@ -859,95 +973,201 @@ export default function LeadsPage() {
                   <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                     📞 Kontaktinformationen
                   </h3>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium text-zinc-700 dark:text-zinc-300">Email:</span>
-                      <a href={`mailto:${selectedLead.email}`} className="ml-2 text-blue-600 hover:underline dark:text-blue-400">
-                        {selectedLead.email}
-                      </a>
+                  {isEditingLead ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Name *</label>
+                        <input
+                          type="text"
+                          value={editLeadForm.name || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, name: e.target.value })}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Email *</label>
+                        <input
+                          type="email"
+                          value={editLeadForm.email || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, email: e.target.value })}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Telefon</label>
+                        <input
+                          type="tel"
+                          value={editLeadForm.phone || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, phone: e.target.value })}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Website</label>
+                        <input
+                          type="url"
+                          value={editLeadForm.website || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, website: e.target.value })}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Standort</label>
+                        <input
+                          type="text"
+                          value={editLeadForm.location || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, location: e.target.value })}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Kontaktperson</label>
+                        <input
+                          type="text"
+                          value={editLeadForm.contact_person || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, contact_person: e.target.value })}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Business Type</label>
+                        <select
+                          value={editLeadForm.business_type || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, business_type: e.target.value })}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        >
+                          {Object.entries(businessTypeLabels).map(([key, label]) => (
+                            <option key={key} value={key}>{label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Notizen</label>
+                        <textarea
+                          value={editLeadForm.notes || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, notes: e.target.value })}
+                          rows={3}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                      
+                      {/* Save/Cancel Buttons */}
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={saveLeadEdits}
+                          className="flex-1 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+                        >
+                          ✓ Speichern
+                        </button>
+                        <button
+                          onClick={cancelEditingLead}
+                          className="flex-1 rounded-md bg-zinc-200 px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-600"
+                        >
+                          ✕ Abbrechen
+                        </button>
+                      </div>
                     </div>
-                    {selectedLead.phone && (
+                  ) : (
+                    <div className="space-y-2 text-sm">
                       <div>
-                        <span className="font-medium text-zinc-700 dark:text-zinc-300">Telefon:</span>
-                        <a href={`tel:${selectedLead.phone}`} className="ml-2 text-blue-600 hover:underline dark:text-blue-400">
-                          {selectedLead.phone}
+                        <span className="font-medium text-zinc-700 dark:text-zinc-300">Email:</span>
+                        <a href={`mailto:${selectedLead.email}`} className="ml-2 text-blue-600 hover:underline dark:text-blue-400">
+                          {selectedLead.email}
                         </a>
                       </div>
-                    )}
-                    {selectedLead.website && (
-                      <div>
-                        <span className="font-medium text-zinc-700 dark:text-zinc-300">Website:</span>
-                        <a href={selectedLead.website} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-600 hover:underline dark:text-blue-400">
-                          {selectedLead.website}
+                      {selectedLead.phone && (
+                        <div>
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300">Telefon:</span>
+                          <a href={`tel:${selectedLead.phone}`} className="ml-2 text-blue-600 hover:underline dark:text-blue-400">
+                            {selectedLead.phone}
+                          </a>
+                        </div>
+                      )}
+                      {selectedLead.website && (
+                        <div>
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300">Website:</span>
+                          <a href={selectedLead.website} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-600 hover:underline dark:text-blue-400">
+                            {selectedLead.website}
+                          </a>
+                        </div>
+                      )}
+                      {selectedLead.location && (
+                        <div>
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300">Standort:</span>
+                          <span className="ml-2 text-zinc-900 dark:text-zinc-100">{selectedLead.location}</span>
+                        </div>
+                      )}
+                      {selectedLead.contact_person && (
+                        <div>
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300">Kontaktperson:</span>
+                          <span className="ml-2 text-zinc-900 dark:text-zinc-100">{selectedLead.contact_person}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {!isEditingLead && (
+                  <>
+                    {/* Status Update */}
+                    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
+                      <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                        📊 Status
+                      </h3>
+                      <select
+                        value={selectedLead.status}
+                        onChange={(e) => {
+                          updateLeadStatus(selectedLead.id, e.target.value);
+                          setSelectedLead({ ...selectedLead, status: e.target.value });
+                        }}
+                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      >
+                        <option value="new">🆕 Neu</option>
+                        <option value="contacted">📧 Kontaktiert</option>
+                        <option value="interested">💡 Interessiert</option>
+                        <option value="negotiation">🤝 Verhandlung</option>
+                        <option value="customer">✅ Kunde</option>
+                        <option value="not_interested">❌ Nicht interessiert</option>
+                      </select>
+                      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                        Erstellt: {new Date(selectedLead.created_at).toLocaleDateString("de-DE")}
+                      </p>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
+                      <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                        ⚡ Quick Actions
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        <a
+                          href={`mailto:${selectedLead.email}`}
+                          className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                        >
+                          📧 E-Mail senden
                         </a>
+                        {selectedLead.phone && (
+                          <a
+                            href={`tel:${selectedLead.phone}`}
+                            className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                          >
+                            📞 Anrufen
+                          </a>
+                        )}
+                        {selectedLead.website && (
+                          <a
+                            href={selectedLead.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-md bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700"
+                          >
+                            🌐 Website
+                          </a>
+                        )}
                       </div>
-                    )}
-                    {selectedLead.location && (
-                      <div>
-                        <span className="font-medium text-zinc-700 dark:text-zinc-300">Standort:</span>
-                        <span className="ml-2 text-zinc-900 dark:text-zinc-100">{selectedLead.location}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Status Update */}
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
-                  <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                    📊 Status
-                  </h3>
-                  <select
-                    value={selectedLead.status}
-                    onChange={(e) => {
-                      updateLeadStatus(selectedLead.id, e.target.value);
-                      setSelectedLead({ ...selectedLead, status: e.target.value });
-                    }}
-                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                  >
-                    <option value="new">🆕 Neu</option>
-                    <option value="contacted">📧 Kontaktiert</option>
-                    <option value="interested">💡 Interessiert</option>
-                    <option value="negotiation">🤝 Verhandlung</option>
-                    <option value="customer">✅ Kunde</option>
-                    <option value="not_interested">❌ Nicht interessiert</option>
-                  </select>
-                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    Erstellt: {new Date(selectedLead.created_at).toLocaleDateString("de-DE")}
-                  </p>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
-                  <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                    ⚡ Quick Actions
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    <a
-                      href={`mailto:${selectedLead.email}`}
-                      className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-                    >
-                      📧 E-Mail senden
-                    </a>
-                    {selectedLead.phone && (
-                      <a
-                        href={`tel:${selectedLead.phone}`}
-                        className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
-                      >
-                        📞 Anrufen
-                      </a>
-                    )}
-                    {selectedLead.website && (
-                      <a
-                        href={selectedLead.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-md bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700"
-                      >
-                        🌐 Website
-                      </a>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Right Column - Activity */}
