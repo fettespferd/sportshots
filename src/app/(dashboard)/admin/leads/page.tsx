@@ -16,6 +16,7 @@ interface Lead {
   source?: string;
   contact_person?: string;
   last_contacted_at?: string;
+  instagram?: string;
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +72,7 @@ export default function LeadsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterBusinessType, setFilterBusinessType] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [copiedInstagramText, setCopiedInstagramText] = useState(false);
   const [newLeadForm, setNewLeadForm] = useState({
     name: "",
     business_type: "surf_school",
@@ -82,6 +84,7 @@ export default function LeadsPage() {
     status: "new",
     source: "manual",
     contact_person: "",
+    instagram: "",
   });
   const supabase = createClient();
 
@@ -318,6 +321,7 @@ export default function LeadsPage() {
       location: selectedLead.location || "",
       notes: selectedLead.notes || "",
       contact_person: selectedLead.contact_person || "",
+      instagram: selectedLead.instagram || "",
     });
     setIsEditingLead(true);
   };
@@ -370,6 +374,7 @@ export default function LeadsPage() {
         status: "new",
         source: "manual",
         contact_person: "",
+        instagram: "",
       });
       loadLeads();
     } catch (error: any) {
@@ -452,6 +457,40 @@ export default function LeadsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const getInstagramUrl = (lead: Lead) => {
+    if (lead.instagram) {
+      // Remove @ if present
+      const handle = lead.instagram.replace(/^@/, "");
+      return `https://www.instagram.com/${handle}/`;
+    }
+    // Fallback: try to search on Instagram (requires login)
+    const searchQuery = encodeURIComponent(lead.name);
+    return `https://www.instagram.com/explore/search/keyword/?q=${searchQuery}`;
+  };
+
+  const getInstagramMessage = (lead: Lead) => {
+    return `Hallo ${lead.name}! 👋
+
+Ich habe Sie über SportShots gefunden - die Plattform für Sportfotografie. Wir helfen Surf-Schulen, Ski-Schulen, Sportvereinen und Event-Veranstaltern dabei, ihre Teilnehmer mit professionellen Fotos zu begeistern.
+
+Würden Sie sich vorstellen können, SportShots für Ihre Events zu nutzen? Gerne können wir telefonisch oder per E-Mail mehr Details besprechen.
+
+Viele Grüße
+SportShots Team`;
+  };
+
+  const copyInstagramText = async (lead: Lead) => {
+    const text = getInstagramMessage(lead);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedInstagramText(true);
+      showNotificationMessage("success", "📋 Instagram-Text kopiert!");
+      setTimeout(() => setCopiedInstagramText(false), 2000);
+    } catch (error) {
+      showNotificationMessage("error", "❌ Fehler beim Kopieren");
+    }
   };
 
   const filteredLeads = leads.filter(lead => {
@@ -864,17 +903,31 @@ export default function LeadsPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Kontaktperson
-                  </label>
-                  <input
-                    type="text"
-                    value={newLeadForm.contact_person}
-                    onChange={(e) => setNewLeadForm({ ...newLeadForm, contact_person: e.target.value })}
-                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 dark:border-zinc-600 dark:bg-zinc-700"
-                    placeholder="Max Mustermann"
-                  />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                      Kontaktperson
+                    </label>
+                    <input
+                      type="text"
+                      value={newLeadForm.contact_person}
+                      onChange={(e) => setNewLeadForm({ ...newLeadForm, contact_person: e.target.value })}
+                      className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 dark:border-zinc-600 dark:bg-zinc-700"
+                      placeholder="Max Mustermann"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                      Instagram (ohne @)
+                    </label>
+                    <input
+                      type="text"
+                      value={newLeadForm.instagram}
+                      onChange={(e) => setNewLeadForm({ ...newLeadForm, instagram: e.target.value.replace(/^@/, "") })}
+                      className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 dark:border-zinc-600 dark:bg-zinc-700"
+                      placeholder="z.B. surfschool_fuerte"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -1030,6 +1083,16 @@ export default function LeadsPage() {
                         />
                       </div>
                       <div>
+                        <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Instagram (ohne @)</label>
+                        <input
+                          type="text"
+                          value={editLeadForm.instagram || ""}
+                          onChange={(e) => setEditLeadForm({ ...editLeadForm, instagram: e.target.value.replace(/^@/, "") })}
+                          placeholder="z.B. surfschool_fuerte"
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                      <div>
                         <label className="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">Business Type</label>
                         <select
                           value={editLeadForm.business_type || ""}
@@ -1103,6 +1166,19 @@ export default function LeadsPage() {
                           <span className="ml-2 text-zinc-900 dark:text-zinc-100">{selectedLead.contact_person}</span>
                         </div>
                       )}
+                      {selectedLead.instagram && (
+                        <div>
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300">Instagram:</span>
+                          <a 
+                            href={getInstagramUrl(selectedLead)} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="ml-2 text-pink-600 hover:underline dark:text-pink-400"
+                          >
+                            @{selectedLead.instagram.replace(/^@/, "")}
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1164,7 +1240,33 @@ export default function LeadsPage() {
                             🌐 Website
                           </a>
                         )}
+                        <a
+                          href={getInstagramUrl(selectedLead)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-md bg-pink-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-pink-700"
+                        >
+                          {selectedLead.instagram ? `📷 @${selectedLead.instagram.replace(/^@/, "")}` : "📷 Instagram finden"}
+                        </a>
                       </div>
+                    </div>
+
+                    {/* Instagram Text Template */}
+                    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
+                      <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                        💬 Instagram Nachricht
+                      </h3>
+                      <div className="rounded-md border border-zinc-300 bg-white p-3 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100">
+                        <pre className="whitespace-pre-wrap font-sans text-xs">
+{getInstagramMessage(selectedLead)}
+                        </pre>
+                      </div>
+                      <button
+                        onClick={() => copyInstagramText(selectedLead)}
+                        className="mt-3 w-full rounded-md bg-pink-600 px-3 py-2 text-sm font-medium text-white hover:bg-pink-700"
+                      >
+                        {copiedInstagramText ? "✓ Kopiert!" : "📋 Text kopieren"}
+                      </button>
                     </div>
                   </>
                 )}
