@@ -88,7 +88,15 @@ export default function QRCodeLandingPage({
             return;
           }
 
-          setEvent(eventData as Event);
+          // Convert photographer array to object if needed
+          const event: Event = {
+            ...eventData,
+            photographer: Array.isArray(eventData.photographer) 
+              ? eventData.photographer[0] 
+              : eventData.photographer,
+          };
+
+          setEvent(event);
         }
       } catch (err: any) {
         console.error("Error loading QR code:", err);
