@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Modal } from "@/components/ui/modal";
+import { Toast } from "@/components/ui/toast";
 import { slugify, generateUniqueSlug } from "@/lib/utils/slugify";
 
 const eventTypes = [
@@ -36,17 +36,19 @@ export default function EditEventPage({
   const [pricePerPhoto, setPricePerPhoto] = useState("8.00");
   const [packagePrice, setPackagePrice] = useState("");
   const [packagePhotoCount, setPackagePhotoCount] = useState("");
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    title: string;
+  const [toast, setToast] = useState<{
+    show: boolean;
     message: string;
-    type: "info" | "success" | "error" | "warning";
+    type: "success" | "error" | "info" | "warning";
   }>({
-    isOpen: false,
-    title: "",
+    show: false,
     message: "",
     type: "info",
   });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "info") => {
+    setToast({ show: true, message, type });
+  };
 
   useEffect(() => {
     const loadEvent = async () => {
@@ -68,12 +70,7 @@ export default function EditEventPage({
         .single();
 
       if (error || !eventData) {
-        setModalState({
-          isOpen: true,
-          title: "Fehler",
-          message: "Event konnte nicht geladen werden",
-          type: "error",
-        });
+        showToast("Event konnte nicht geladen werden", "error");
         router.push("/photographer/events");
         return;
       }
@@ -133,24 +130,14 @@ export default function EditEventPage({
 
       if (error) throw error;
 
-      setModalState({
-        isOpen: true,
-        title: "Erfolg",
-        message: "Event wurde erfolgreich aktualisiert!",
-        type: "success",
-      });
+      showToast("Event wurde erfolgreich aktualisiert!", "success");
 
       // Redirect after short delay
       setTimeout(() => {
         router.push(`/photographer/events/${id}`);
       }, 1500);
     } catch (err: any) {
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: err.message || "Event konnte nicht aktualisiert werden",
-        type: "error",
-      });
+      showToast(err.message || "Event konnte nicht aktualisiert werden", "error");
       setSaving(false);
     }
   };
@@ -368,13 +355,12 @@ export default function EditEventPage({
         </form>
       </div>
 
-      {/* Modal */}
-      <Modal
-        isOpen={modalState.isOpen}
-        onClose={() => setModalState({ ...modalState, isOpen: false })}
-        title={modalState.title}
-        message={modalState.message}
-        type={modalState.type}
+      {/* Toast Notification */}
+      <Toast
+        show={toast.show}
+        type={toast.type}
+        message={toast.message}
+        onClose={() => setToast({ ...toast, show: false })}
       />
     </div>
   );
