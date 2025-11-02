@@ -222,6 +222,14 @@ export function Header() {
                       <span>Analytics</span>
                     </Link>
                     <Link
+                      href="/photographer/qr-codes"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      <span>📱</span>
+                      <span>QR-Code</span>
+                    </Link>
+                    <Link
                       href="/photographer/settings"
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"

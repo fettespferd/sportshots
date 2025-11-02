@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Modal } from "@/components/ui/modal";
+import { Toast } from "@/components/ui/toast";
 import { extractExifData, formatMetadataForDB } from "@/lib/utils/exif";
 import { supportsStations, supportsHeats, supportsCategories } from "@/lib/utils/event-config";
 
@@ -42,17 +42,19 @@ export default function UploadPhotosPage({
   const [event, setEvent] = useState<EventData | null>(null);
   const [runningOCR, setRunningOCR] = useState(false);
   const [ocrProgress, setOcrProgress] = useState({ current: 0, total: 0 });
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    title: string;
+  const [toast, setToast] = useState<{
+    show: boolean;
     message: string;
-    type: "info" | "success" | "error" | "warning";
+    type: "success" | "error" | "info" | "warning";
   }>({
-    isOpen: false,
-    title: "",
+    show: false,
     message: "",
     type: "info",
   });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "info") => {
+    setToast({ show: true, message, type });
+  };
   const router = useRouter();
   const supabase = createClient();
 
@@ -112,12 +114,7 @@ export default function UploadPhotosPage({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: "Nicht angemeldet",
-        type: "error",
-      });
+      showToast("Nicht angemeldet", "error");
       setUploading(false);
       return;
     }
@@ -130,12 +127,7 @@ export default function UploadPhotosPage({
       .single();
 
     if (!eventPricing) {
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: "Event nicht gefunden",
-        type: "error",
-      });
+      showToast("Event nicht gefunden", "error");
       setUploading(false);
       return;
     }
@@ -301,12 +293,8 @@ export default function UploadPhotosPage({
       const pendingFiles = files.filter(f => f.status === "pending");
       
       if (pendingFiles.length === 0) {
-        setModalState({
-          isOpen: true,
-          title: "Keine Fotos",
-          message: "Bitte wähle zuerst Fotos aus",
-          type: "warning",
-        });
+        showToast("Bitte wähle zuerst Fotos aus", "warning");
+        setRunningOCR(false);
         return;
       }
 
@@ -393,21 +381,11 @@ export default function UploadPhotosPage({
         }
       }
 
-      setModalState({
-        isOpen: true,
-        title: "Startnummererkennung abgeschlossen",
-        message: `${recognizedCount} von ${pendingFiles.length} Startnummern erkannt.\n\nBitte überprüfe die Nummern und korrigiere sie bei Bedarf, bevor du die Fotos hochlädst.`,
-        type: "success",
-      });
+      showToast(`${recognizedCount} von ${pendingFiles.length} Startnummern erkannt. Bitte überprüfe die Nummern.`, "success");
       
     } catch (error: any) {
       console.error("Batch OCR error:", error);
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: "Fehler bei der Startnummererkennung: " + error.message,
-        type: "error",
-      });
+      showToast("Fehler bei der Startnummererkennung: " + error.message, "error");
     } finally {
       setRunningOCR(false);
       setOcrProgress({ current: 0, total: 0 });
@@ -763,13 +741,12 @@ export default function UploadPhotosPage({
         )}
       </div>
 
-      {/* Modal */}
-      <Modal
-        isOpen={modalState.isOpen}
-        onClose={() => setModalState({ ...modalState, isOpen: false })}
-        title={modalState.title}
-        message={modalState.message}
-        type={modalState.type}
+      {/* Toast Notification */}
+      <Toast
+        show={toast.show}
+        type={toast.type}
+        message={toast.message}
+        onClose={() => setToast({ ...toast, show: false })}
       />
     </div>
   );

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, use } from "react";
-import { Modal } from "@/components/ui/modal";
+import { Toast } from "@/components/ui/toast";
 import { EventQRCode } from "@/components/event/event-qr-code";
 import { Lightbox } from "@/components/ui/lightbox";
 
@@ -31,17 +31,19 @@ export default function EventDetailsPage({
   const [lightboxPhoto, setLightboxPhoto] = useState<any>(null);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [batchDeleting, setBatchDeleting] = useState(false);
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    title: string;
+  const [toast, setToast] = useState<{
+    show: boolean;
     message: string;
-    type: "info" | "success" | "error" | "warning";
+    type: "success" | "error" | "info" | "warning";
   }>({
-    isOpen: false,
-    title: "",
+    show: false,
     message: "",
     type: "info",
   });
+
+  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "info") => {
+    setToast({ show: true, message, type });
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -99,12 +101,7 @@ export default function EventDetailsPage({
 
       if (error) {
         console.error("Publish error:", error);
-        setModalState({
-          isOpen: true,
-          title: "Fehler",
-          message: "Fehler beim Veröffentlichen: " + error.message,
-          type: "error",
-        });
+        showToast("Fehler beim Veröffentlichen: " + error.message, "error");
         return;
       }
 
@@ -113,20 +110,10 @@ export default function EventDetailsPage({
       setEvent({ ...event, is_published: !event.is_published });
       
       // Show success message
-      setModalState({
-        isOpen: true,
-        title: "Erfolg",
-        message: wasPublished ? "Event wurde verborgen" : "Event wurde veröffentlicht!",
-        type: "success",
-      });
+      showToast(wasPublished ? "Event wurde verborgen" : "Event wurde veröffentlicht!", "success");
     } catch (error) {
       console.error("Publish error:", error);
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
-        type: "error",
-      });
+      showToast("Ein Fehler ist aufgetreten. Bitte versuche es erneut.", "error");
     }
   };
 
@@ -174,20 +161,10 @@ export default function EventDetailsPage({
       setEvent({ ...event, cover_image_url: publicUrl });
       setCoverImage(null);
 
-      setModalState({
-        isOpen: true,
-        title: "Erfolg",
-        message: "Cover-Bild wurde erfolgreich aktualisiert!",
-        type: "success",
-      });
+      showToast("Cover-Bild wurde erfolgreich aktualisiert!", "success");
     } catch (error: any) {
       console.error("Cover upload error:", error);
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: error.message || "Fehler beim Hochladen des Cover-Bildes",
-        type: "error",
-      });
+      showToast(error.message || "Fehler beim Hochladen des Cover-Bildes", "error");
     } finally {
       setUploadingCover(false);
     }
@@ -215,19 +192,9 @@ export default function EventDetailsPage({
       setEditingPhoto(null);
       setEditBibNumber("");
 
-      setModalState({
-        isOpen: true,
-        title: "Erfolg",
-        message: "Startnummer wurde aktualisiert!",
-        type: "success",
-      });
+      showToast("Startnummer wurde aktualisiert!", "success");
     } catch (error: any) {
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: error.message || "Fehler beim Aktualisieren der Startnummer",
-        type: "error",
-      });
+      showToast(error.message || "Fehler beim Aktualisieren der Startnummer", "error");
     }
   };
 
@@ -248,19 +215,9 @@ export default function EventDetailsPage({
         )
       );
 
-      setModalState({
-        isOpen: true,
-        title: "Erfolg",
-        message: "Startnummer wurde gelöscht!",
-        type: "success",
-      });
+      showToast("Startnummer wurde gelöscht!", "success");
     } catch (error: any) {
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: error.message || "Fehler beim Löschen der Startnummer",
-        type: "error",
-      });
+      showToast(error.message || "Fehler beim Löschen der Startnummer", "error");
     }
   };
 
@@ -289,19 +246,9 @@ export default function EventDetailsPage({
       // Update local state
       setPhotos(photos.filter((p) => p.id !== photoId));
 
-      setModalState({
-        isOpen: true,
-        title: "Gelöscht",
-        message: "Das Foto wurde erfolgreich gelöscht.",
-        type: "success",
-      });
+      showToast("Das Foto wurde erfolgreich gelöscht.", "success");
     } catch (error: any) {
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: error.message || "Fehler beim Löschen des Fotos",
-        type: "error",
-      });
+      showToast(error.message || "Fehler beim Löschen des Fotos", "error");
     } finally {
       setDeletingPhoto(null);
     }
@@ -343,12 +290,7 @@ export default function EventDetailsPage({
       setPhotos(photos.filter(p => !selectedPhotos.has(p.id)));
       setSelectedPhotos(new Set());
 
-      setModalState({
-        isOpen: true,
-        title: "Gelöscht",
-        message: `${photoIds.length} Foto(s) erfolgreich gelöscht.`,
-        type: "success",
-      });
+      showToast(`${photoIds.length} Foto(s) erfolgreich gelöscht.`, "success");
     } catch (error: any) {
       console.error("Batch delete error:", error);
       // Reload on error to restore correct state
@@ -360,12 +302,7 @@ export default function EventDetailsPage({
       
       if (photosData) setPhotos(photosData);
       
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: error.message || "Fehler beim Löschen der Fotos",
-        type: "error",
-      });
+      showToast(error.message || "Fehler beim Löschen der Fotos", "error");
     } finally {
       setBatchDeleting(false);
     }
@@ -422,12 +359,7 @@ export default function EventDetailsPage({
         )
       );
     } catch (error: any) {
-      setModalState({
-        isOpen: true,
-        title: "Fehler",
-        message: error.message || "Fehler beim Drehen des Fotos",
-        type: "error",
-      });
+      showToast(error.message || "Fehler beim Drehen des Fotos", "error");
     } finally {
       setRotatingPhoto(null);
     }
@@ -1110,13 +1042,12 @@ export default function EventDetailsPage({
         </div>
       )}
 
-      {/* Standard Modal for notifications */}
-      <Modal
-        isOpen={modalState.isOpen}
-        onClose={() => setModalState({ ...modalState, isOpen: false })}
-        title={modalState.title}
-        message={modalState.message}
-        type={modalState.type}
+      {/* Toast Notification */}
+      <Toast
+        show={toast.show}
+        type={toast.type}
+        message={toast.message}
+        onClose={() => setToast({ ...toast, show: false })}
       />
 
       {/* Lightbox for photographer - shows original without watermark */}

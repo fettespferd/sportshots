@@ -153,6 +153,14 @@ export function UserMenu({ profile, user, onSignOut }: UserMenuProps) {
                   <span>Analytics</span>
                 </Link>
                 <Link
+                  href="/photographer/qr-codes"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-blue-50 hover:text-blue-700 dark:text-zinc-300 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                >
+                  <span className="text-base">📱</span>
+                  <span>QR-Code</span>
+                </Link>
+                <Link
                   href="/photographer/settings"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-blue-50 hover:text-blue-700 dark:text-zinc-300 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
