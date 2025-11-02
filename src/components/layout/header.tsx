@@ -233,6 +233,52 @@ export function Header() {
                 </>
               )}
 
+              {/* Admin Navigation */}
+              {profile?.role === "admin" && (
+                <>
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 mt-2 pt-2">
+                    <div className="px-4 pb-2">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase text-purple-600 dark:text-purple-400">
+                        <span>👑</span>
+                        <span>Admin-Bereich</span>
+                      </p>
+                    </div>
+                    <Link
+                      href="/admin/photographers"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-purple-50 hover:text-purple-700 dark:text-zinc-300 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                    >
+                      <span>👥</span>
+                      <span>Fotografen</span>
+                    </Link>
+                    <Link
+                      href="/admin/revenue"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-purple-50 hover:text-purple-700 dark:text-zinc-300 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                    >
+                      <span>💰</span>
+                      <span>Umsatz</span>
+                    </Link>
+                    <Link
+                      href="/admin/analytics"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-purple-50 hover:text-purple-700 dark:text-zinc-300 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                    >
+                      <span>📈</span>
+                      <span>Admin Analytics</span>
+                    </Link>
+                    <Link
+                      href="/admin/leads"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-purple-50 hover:text-purple-700 dark:text-zinc-300 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                    >
+                      <span>📧</span>
+                      <span>Leads & CRM</span>
+                    </Link>
+                  </div>
+                </>
+              )}
+
               {/* Orders for athletes */}
               {user && profile?.role === "athlete" && (
                 <Link
