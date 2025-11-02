@@ -55,51 +55,69 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Image Gallery Showcase */}
+      {/* Image Gallery Showcase - Default Images linking to Events */}
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
+          <Link
+            href="/search"
+            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
+          >
             <Image
               src="/images/jack-delulio-oro0KHgeQ_g-unsplash.jpg"
               alt="Sport Action"
               fill
-              className="object-cover transition-transform hover:scale-110"
+              className="object-cover"
             />
-          </div>
-          <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
+          </Link>
+          <Link
+            href="/search"
+            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
+          >
             <Image
               src="/images/jeremy-bishop-_CFv3bntQlQ-unsplash.jpg"
               alt="Sport Action"
               fill
-              className="object-cover transition-transform hover:scale-110"
+              className="object-cover"
             />
-          </div>
-          <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
+          </Link>
+          <Link
+            href="/search"
+            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
+          >
             <Image
               src="/images/jeremy-bishop-pikyGuAmwpM-unsplash.jpg"
               alt="Sport Action"
               fill
-              className="object-cover transition-transform hover:scale-110"
+              className="object-cover"
             />
-          </div>
-          <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
+          </Link>
+          <Link
+            href="/search"
+            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
+          >
             <Image
               src="/images/oleg-kukharuk-cVeJlVvQ3JI-unsplash.jpg"
               alt="Sport Action"
               fill
-              className="object-cover transition-transform hover:scale-110"
+              className="object-cover"
             />
-          </div>
-          <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg">
+          </Link>
+          <Link
+            href="/search"
+            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
+          >
             <Image
               src="/images/coen-van-de-broek-OFyh9TpMyM8-unsplash.jpg"
               alt="Sport Action"
               fill
-              className="object-cover transition-transform hover:scale-110"
+              className="object-cover"
             />
-          </div>
-          <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg md:col-span-1">
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-8 text-center">
+          </Link>
+          <Link
+            href="/search"
+            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg md:col-span-1"
+          >
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-8 text-center transition-transform hover:scale-110">
               <div>
                 <p className="text-4xl font-bold text-white">10.000+</p>
                 <p className="mt-2 text-sm font-medium text-white/90">
@@ -107,7 +125,7 @@ export function Hero() {
                 </p>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
 
@@ -142,12 +160,20 @@ export function Hero() {
               </div>
             </div>
 
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-blue-500/50"
-            >
-              🚀 Jetzt als Fotograf starten
-            </Link>
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-blue-500/50"
+              >
+                🚀 Jetzt als Fotograf starten
+              </Link>
+              <Link
+                href="/signin"
+                className="inline-flex items-center gap-2 rounded-lg border-2 border-zinc-600 bg-zinc-700/50 px-8 py-4 text-lg font-semibold text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-zinc-700"
+              >
+                🔐 Als Fotograf anmelden
+              </Link>
+            </div>
             
             <p className="mt-4 text-sm text-zinc-400">
               Kostenlos registrieren • Keine Setup-Gebühren • Nur 15% Provision

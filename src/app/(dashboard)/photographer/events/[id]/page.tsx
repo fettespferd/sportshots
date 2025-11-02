@@ -40,6 +40,8 @@ export default function EventDetailsPage({
     message: "",
     type: "info",
   });
+  const [searchConfig, setSearchConfig] = useState<any>(null);
+  const [savingSearchConfig, setSavingSearchConfig] = useState(false);
 
   const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "info") => {
     setToast({ show: true, message, type });
@@ -86,6 +88,18 @@ export default function EventDetailsPage({
       setEvent(eventData);
       setPhotos(photosData || []);
       setPurchases(purchasesData || []);
+      
+      // Load search config or set defaults
+      const defaultConfig = {
+        bib_number: { enabled: true, visible_by_default: true },
+        selfie_search: { enabled: true, visible_by_default: true },
+        date_filter: { enabled: true, visible_by_default: true },
+        time_filter: { enabled: true, visible_by_default: true },
+        show_metadata: { enabled: true, visible_by_default: true },
+        show_exact_time: { enabled: true, visible_by_default: true },
+      };
+      setSearchConfig(eventData.search_config || defaultConfig);
+      
       setLoading(false);
     };
 
@@ -935,6 +949,319 @@ export default function EventDetailsPage({
               </dd>
             </div>
           </dl>
+        </div>
+
+        {/* Search Configuration */}
+        <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
+          <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Suchoptionen & Metadaten konfigurieren
+          </h3>
+          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+            Bestimme, welche Suchoptionen für Endkunden verfügbar sind und ob sie standardmäßig sichtbar sind.
+          </p>
+
+          {searchConfig && (
+            <div className="space-y-4">
+              {/* Bib Number Search */}
+              <div className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      Startnummer-Suche
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={searchConfig.bib_number?.enabled ?? true}
+                      onChange={(e) => {
+                        setSearchConfig({
+                          ...searchConfig,
+                          bib_number: {
+                            ...searchConfig.bib_number,
+                            enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                  {searchConfig.bib_number?.enabled && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={searchConfig.bib_number?.visible_by_default ?? true}
+                        onChange={(e) => {
+                          setSearchConfig({
+                            ...searchConfig,
+                            bib_number: {
+                              ...searchConfig.bib_number,
+                              visible_by_default: e.target.checked,
+                            },
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label className="text-xs text-zinc-600 dark:text-zinc-400">
+                        Standardmäßig sichtbar
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Selfie Search */}
+              <div className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      Selfie-Suche
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={searchConfig.selfie_search?.enabled ?? true}
+                      onChange={(e) => {
+                        setSearchConfig({
+                          ...searchConfig,
+                          selfie_search: {
+                            ...searchConfig.selfie_search,
+                            enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                  {searchConfig.selfie_search?.enabled && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={searchConfig.selfie_search?.visible_by_default ?? true}
+                        onChange={(e) => {
+                          setSearchConfig({
+                            ...searchConfig,
+                            selfie_search: {
+                              ...searchConfig.selfie_search,
+                              visible_by_default: e.target.checked,
+                            },
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label className="text-xs text-zinc-600 dark:text-zinc-400">
+                        Standardmäßig sichtbar
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Date Filter */}
+              <div className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      Datum-Filter
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={searchConfig.date_filter?.enabled ?? true}
+                      onChange={(e) => {
+                        setSearchConfig({
+                          ...searchConfig,
+                          date_filter: {
+                            ...searchConfig.date_filter,
+                            enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                  {searchConfig.date_filter?.enabled && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={searchConfig.date_filter?.visible_by_default ?? true}
+                        onChange={(e) => {
+                          setSearchConfig({
+                            ...searchConfig,
+                            date_filter: {
+                              ...searchConfig.date_filter,
+                              visible_by_default: e.target.checked,
+                            },
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label className="text-xs text-zinc-600 dark:text-zinc-400">
+                        Standardmäßig sichtbar
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Time Filter */}
+              <div className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      Uhrzeit-Filter
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={searchConfig.time_filter?.enabled ?? true}
+                      onChange={(e) => {
+                        setSearchConfig({
+                          ...searchConfig,
+                          time_filter: {
+                            ...searchConfig.time_filter,
+                            enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                  {searchConfig.time_filter?.enabled && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={searchConfig.time_filter?.visible_by_default ?? true}
+                        onChange={(e) => {
+                          setSearchConfig({
+                            ...searchConfig,
+                            time_filter: {
+                              ...searchConfig.time_filter,
+                              visible_by_default: e.target.checked,
+                            },
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label className="text-xs text-zinc-600 dark:text-zinc-400">
+                        Standardmäßig sichtbar
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Show Metadata */}
+              <div className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      Metadaten anzeigen (Kamera, etc.)
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={searchConfig.show_metadata?.enabled ?? true}
+                      onChange={(e) => {
+                        setSearchConfig({
+                          ...searchConfig,
+                          show_metadata: {
+                            ...searchConfig.show_metadata,
+                            enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                  {searchConfig.show_metadata?.enabled && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={searchConfig.show_metadata?.visible_by_default ?? true}
+                        onChange={(e) => {
+                          setSearchConfig({
+                            ...searchConfig,
+                            show_metadata: {
+                              ...searchConfig.show_metadata,
+                              visible_by_default: e.target.checked,
+                            },
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label className="text-xs text-zinc-600 dark:text-zinc-400">
+                        Standardmäßig sichtbar
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Show Exact Time */}
+              <div className="flex items-center justify-between rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      Genaue Uhrzeit anzeigen
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={searchConfig.show_exact_time?.enabled ?? true}
+                      onChange={(e) => {
+                        setSearchConfig({
+                          ...searchConfig,
+                          show_exact_time: {
+                            ...searchConfig.show_exact_time,
+                            enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                  {searchConfig.show_exact_time?.enabled && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={searchConfig.show_exact_time?.visible_by_default ?? true}
+                        onChange={(e) => {
+                          setSearchConfig({
+                            ...searchConfig,
+                            show_exact_time: {
+                              ...searchConfig.show_exact_time,
+                              visible_by_default: e.target.checked,
+                            },
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label className="text-xs text-zinc-600 dark:text-zinc-400">
+                        Standardmäßig sichtbar
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  setSavingSearchConfig(true);
+                  try {
+                    const { error } = await supabase
+                      .from("events")
+                      .update({ search_config: searchConfig })
+                      .eq("id", id);
+
+                    if (error) throw error;
+                    showToast("Suchkonfiguration erfolgreich gespeichert!", "success");
+                  } catch (error: any) {
+                    showToast("Fehler beim Speichern: " + error.message, "error");
+                  } finally {
+                    setSavingSearchConfig(false);
+                  }
+                }}
+                disabled={savingSearchConfig}
+                className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+              >
+                {savingSearchConfig ? "Speichere..." : "Konfiguration speichern"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* QR Code & Marketing */}

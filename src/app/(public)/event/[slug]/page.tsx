@@ -10,6 +10,15 @@ import { ShareButton } from "@/components/ui/share-button";
 import { CartModal } from "@/components/ui/cart-modal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
+interface SearchConfig {
+  bib_number?: { enabled: boolean; visible_by_default: boolean };
+  selfie_search?: { enabled: boolean; visible_by_default: boolean };
+  date_filter?: { enabled: boolean; visible_by_default: boolean };
+  time_filter?: { enabled: boolean; visible_by_default: boolean };
+  show_metadata?: { enabled: boolean; visible_by_default: boolean };
+  show_exact_time?: { enabled: boolean; visible_by_default: boolean };
+}
+
 interface Event {
   id: string;
   title: string;
@@ -21,6 +30,7 @@ interface Event {
   package_price: number | null;
   package_photo_count: number | null;
   cover_image_url: string | null;
+  search_config?: SearchConfig | null;
 }
 
 interface Photo {
@@ -49,6 +59,8 @@ export default function PublicEventPage({
   const [timeRangeStart, setTimeRangeStart] = useState("");
   const [timeRangeEnd, setTimeRangeEnd] = useState("");
   const [loading, setLoading] = useState(true);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [searchConfig, setSearchConfig] = useState<SearchConfig | null>(null);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
@@ -92,6 +104,45 @@ export default function PublicEventPage({
       }
 
       setEvent(eventData);
+
+      // Load search config or set defaults
+      const defaultConfig: SearchConfig = {
+        bib_number: { enabled: true, visible_by_default: true },
+        selfie_search: { enabled: true, visible_by_default: true },
+        date_filter: { enabled: true, visible_by_default: true },
+        time_filter: { enabled: true, visible_by_default: true },
+        show_metadata: { enabled: true, visible_by_default: true },
+        show_exact_time: { enabled: true, visible_by_default: true },
+      };
+      
+      // Parse search_config if it's a string (JSONB can come as string)
+      let config: SearchConfig = defaultConfig;
+      if (eventData.search_config) {
+        try {
+          const parsedConfig = typeof eventData.search_config === 'string' 
+            ? JSON.parse(eventData.search_config) 
+            : eventData.search_config;
+          
+          // Merge with defaults to ensure all fields exist
+          config = {
+            bib_number: parsedConfig.bib_number || defaultConfig.bib_number,
+            selfie_search: parsedConfig.selfie_search || defaultConfig.selfie_search,
+            date_filter: parsedConfig.date_filter || defaultConfig.date_filter,
+            time_filter: parsedConfig.time_filter || defaultConfig.time_filter,
+            show_metadata: parsedConfig.show_metadata || defaultConfig.show_metadata,
+            show_exact_time: parsedConfig.show_exact_time || defaultConfig.show_exact_time,
+          };
+        } catch (e) {
+          console.error("Error parsing search_config:", e);
+          config = defaultConfig;
+        }
+      }
+      
+      setSearchConfig(config);
+
+      // Initialize expanded sections - start empty, sections with visible_by_default: false should be collapsed
+      // Only add to expandedSections when user clicks to expand
+      setExpandedSections(new Set<string>());
 
       // Get photos with metadata
       const { data: photosData } = await supabase
@@ -349,115 +400,295 @@ export default function PublicEventPage({
         {/* Search Bar */}
         <div className="mb-6 space-y-4">
           {/* Filter Section */}
-          <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
-            <div className="space-y-4 overflow-hidden">
-              {/* Startnummer & Datum - Responsive Layout */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="min-w-0">
-                    <label
-                      htmlFor="bibNumber"
-                      className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      {t("event.filterByBibNumber")}
-                    </label>
-                    <input
-                      id="bibNumber"
-                      type="text"
-                      value={bibNumberFilter}
-                      onChange={(e) => setBibNumberFilter(e.target.value)}
-                      placeholder={t("event.bibPlaceholder")}
-                      className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-                      style={{ fontSize: '16px', maxWidth: '100%' }}
-                    />
+          {searchConfig && (
+            <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
+              <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                Filter
+              </h3>
+              <div className="space-y-4 overflow-hidden">
+                {/* Startnummer & Datum - Responsive Layout */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {/* Bib Number Filter */}
+                    {searchConfig.bib_number?.enabled && (
+                      <div className={`min-w-0 ${searchConfig.bib_number?.visible_by_default ? '' : 'hidden'}`}>
+                        <label
+                          htmlFor="bibNumber"
+                          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        >
+                          {t("event.filterByBibNumber")}
+                        </label>
+                        <input
+                          id="bibNumber"
+                          type="text"
+                          value={bibNumberFilter}
+                          onChange={(e) => setBibNumberFilter(e.target.value)}
+                          placeholder={t("event.bibPlaceholder")}
+                          className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                          style={{ fontSize: '16px', maxWidth: '100%' }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Date Filter */}
+                    {searchConfig.date_filter?.enabled && (
+                      <div className={`min-w-0 ${searchConfig.date_filter?.visible_by_default ? '' : 'hidden'}`}>
+                        <label
+                          htmlFor="dateFilter"
+                          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        >
+                          📅 {t("event.filterByDate")}
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="dateFilter"
+                            type="date"
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                            className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 pr-10 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                            style={{ fontSize: '16px', maxWidth: '100%' }}
+                          />
+                          {dateFilter && (
+                            <button
+                              onClick={() => setDateFilter("")}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-zinc-50"
+                              aria-label="Datum zurücksetzen"
+                            >
+                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="min-w-0">
-                    <label
-                      htmlFor="dateFilter"
-                      className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      📅 {t("event.filterByDate")}
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="dateFilter"
-                        type="date"
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
-                        className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 pr-10 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-                        style={{ fontSize: '16px', maxWidth: '100%' }}
-                      />
-                      {dateFilter && (
-                        <button
-                          onClick={() => setDateFilter("")}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-zinc-50"
-                          aria-label="Datum zurücksetzen"
-                        >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
+                  <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:text-right">
+                    {t("event.resultsCount", { filtered: filteredPhotos.length, total: photos.length })}
                   </div>
                 </div>
-                
-                <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:text-right">
-                  {t("event.resultsCount", { filtered: filteredPhotos.length, total: photos.length })}
-                </div>
-              </div>
 
-              {/* Ausgeblendete Zeit-Filter */}
-              <div className="hidden">
-                {/* Zeit-Filter vorübergehend ausgeblendet
-                <div>
-                  <label
-                    htmlFor="timeRangeStart"
-                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    ⏰ Von Uhrzeit
-                  </label>
-                  <input
-                    id="timeRangeStart"
-                    type="time"
-                    value={timeRangeStart}
-                    onChange={(e) => setTimeRangeStart(e.target.value)}
-                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="timeRangeEnd"
-                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    ⏰ Bis Uhrzeit
-                  </label>
-                  <input
-                    id="timeRangeEnd"
-                    type="time"
-                    value={timeRangeEnd}
-                    onChange={(e) => setTimeRangeEnd(e.target.value)}
-                    className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                  />
-                </div>
-                */}
+                {/* Collapsible Sections for Hidden Options */}
+                {/* Bib Number Toggle */}
+                {searchConfig.bib_number?.enabled && !searchConfig.bib_number?.visible_by_default && (
+                  <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+                    <button
+                      onClick={() => {
+                        const newExpanded = new Set(expandedSections);
+                        if (newExpanded.has("bib_number")) {
+                          newExpanded.delete("bib_number");
+                        } else {
+                          newExpanded.add("bib_number");
+                        }
+                        setExpandedSections(newExpanded);
+                      }}
+                      className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      <span>{t("event.filterByBibNumber")}</span>
+                      <svg
+                        className={`h-5 w-5 transition-transform ${expandedSections.has("bib_number") ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {expandedSections.has("bib_number") && (
+                      <div className="mt-3">
+                        <input
+                          type="text"
+                          value={bibNumberFilter}
+                          onChange={(e) => setBibNumberFilter(e.target.value)}
+                          placeholder={t("event.bibPlaceholder")}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Date Filter Toggle */}
+                {searchConfig.date_filter?.enabled && !searchConfig.date_filter?.visible_by_default && (
+                  <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+                    <button
+                      onClick={() => {
+                        const newExpanded = new Set(expandedSections);
+                        if (newExpanded.has("date_filter")) {
+                          newExpanded.delete("date_filter");
+                        } else {
+                          newExpanded.add("date_filter");
+                        }
+                        setExpandedSections(newExpanded);
+                      }}
+                      className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      <span>📅 {t("event.filterByDate")}</span>
+                      <svg
+                        className={`h-5 w-5 transition-transform ${expandedSections.has("date_filter") ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {expandedSections.has("date_filter") && (
+                      <div className="mt-3">
+                        <input
+                          type="date"
+                          value={dateFilter}
+                          onChange={(e) => setDateFilter(e.target.value)}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Time Filter Toggle */}
+                {searchConfig.time_filter?.enabled && (
+                  <div className={`border-t border-zinc-200 pt-4 dark:border-zinc-700 ${searchConfig.time_filter?.visible_by_default ? '' : ''}`}>
+                    {!searchConfig.time_filter?.visible_by_default ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            const newExpanded = new Set(expandedSections);
+                            if (newExpanded.has("time_filter")) {
+                              newExpanded.delete("time_filter");
+                            } else {
+                              newExpanded.add("time_filter");
+                            }
+                            setExpandedSections(newExpanded);
+                          }}
+                          className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        >
+                          <span>⏰ Uhrzeit-Filter</span>
+                          <svg
+                            className={`h-5 w-5 transition-transform ${expandedSections.has("time_filter") ? "rotate-180" : ""}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {expandedSections.has("time_filter") && (
+                          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                              <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                Von Uhrzeit
+                              </label>
+                              <input
+                                type="time"
+                                value={timeRangeStart}
+                                onChange={(e) => setTimeRangeStart(e.target.value)}
+                                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                Bis Uhrzeit
+                              </label>
+                              <input
+                                type="time"
+                                value={timeRangeEnd}
+                                onChange={(e) => setTimeRangeEnd(e.target.value)}
+                                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            ⏰ Von Uhrzeit
+                          </label>
+                          <input
+                            type="time"
+                            value={timeRangeStart}
+                            onChange={(e) => setTimeRangeStart(e.target.value)}
+                            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            ⏰ Bis Uhrzeit
+                          </label>
+                          <input
+                            type="time"
+                            value={timeRangeEnd}
+                            onChange={(e) => setTimeRangeEnd(e.target.value)}
+                            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Face Search */}
-          <FaceSearch
-            eventId={event.id}
-            onResults={(photoIds) => {
-              // Filter photos to show only matched ones
-              const matchedPhotos = photos.filter((p) =>
-                photoIds.includes(p.id)
-              );
-              setFilteredPhotos(matchedPhotos);
-              setBibNumberFilter(""); // Clear bib filter
-            }}
-          />
+          {searchConfig?.selfie_search?.enabled && (
+            <div className={searchConfig.selfie_search?.visible_by_default ? '' : ''}>
+              {!searchConfig.selfie_search?.visible_by_default ? (
+                <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
+                  <button
+                    onClick={() => {
+                      const newExpanded = new Set(expandedSections);
+                      if (newExpanded.has("selfie_search")) {
+                        newExpanded.delete("selfie_search");
+                      } else {
+                        newExpanded.add("selfie_search");
+                      }
+                      setExpandedSections(newExpanded);
+                    }}
+                    className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    <span>😊 Selfie-Suche</span>
+                    <svg
+                      className={`h-5 w-5 transition-transform ${expandedSections.has("selfie_search") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedSections.has("selfie_search") && (
+                    <div className="mt-4">
+                      <FaceSearch
+                        eventId={event.id}
+                        onResults={(photoIds) => {
+                          const matchedPhotos = photos.filter((p) =>
+                            photoIds.includes(p.id)
+                          );
+                          setFilteredPhotos(matchedPhotos);
+                          setBibNumberFilter("");
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <FaceSearch
+                  eventId={event.id}
+                  onResults={(photoIds) => {
+                    const matchedPhotos = photos.filter((p) =>
+                      photoIds.includes(p.id)
+                    );
+                    setFilteredPhotos(matchedPhotos);
+                    setBibNumberFilter("");
+                  }}
+                />
+              )}
+            </div>
+          )}
 
           {/* Reset Filter Warning - Prominent only when NO photos found */}
           {(bibNumberFilter || dateFilter || timeRangeStart || timeRangeEnd || filteredPhotos.length !== photos.length) && filteredPhotos.length === 0 && (
@@ -865,9 +1096,9 @@ export default function PublicEventPage({
         photoId={lightboxPhoto?.id}
         bibNumber={lightboxPhoto?.bib_number}
         price={lightboxPhoto?.price}
-        takenAt={lightboxPhoto?.taken_at}
-        cameraMake={lightboxPhoto?.camera_make}
-        cameraModel={lightboxPhoto?.camera_model}
+        takenAt={searchConfig?.show_exact_time?.enabled ? lightboxPhoto?.taken_at : null}
+        cameraMake={searchConfig?.show_metadata?.enabled ? lightboxPhoto?.camera_make : null}
+        cameraModel={searchConfig?.show_metadata?.enabled ? lightboxPhoto?.camera_model : null}
         rotation={lightboxPhoto?.rotation || 0}
         isInCart={lightboxPhoto ? selectedPhotos.has(lightboxPhoto.id) : false}
         onAddToCart={(photoId) => {

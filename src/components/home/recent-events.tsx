@@ -42,7 +42,7 @@ export function RecentEvents({ events }: RecentEventsProps) {
           <Link
             key={event.id}
             href={`/event/${event.slug}`}
-            className="group overflow-hidden rounded-lg bg-white shadow transition-shadow hover:shadow-lg dark:bg-zinc-800"
+            className="group block overflow-hidden rounded-lg bg-white shadow transition-all hover:shadow-lg dark:bg-zinc-800"
           >
             {event.cover_image_url ? (
               <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
@@ -52,6 +52,7 @@ export function RecentEvents({ events }: RecentEventsProps) {
                   width={600}
                   height={338}
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  priority={false}
                 />
               </div>
             ) : (
