@@ -281,6 +281,76 @@ export function PurchaseConfirmationEmail({
   );
 }
 
+// Template 5: Event Follow Confirmation
+export function EventFollowConfirmationEmail({
+  userName,
+  eventName,
+  eventSlug,
+  unsubscribeToken,
+  eventId,
+  followerEmail,
+}: {
+  userName: string;
+  eventName: string;
+  eventSlug: string;
+  unsubscribeToken?: string;
+  eventId?: string;
+  followerEmail?: string;
+}) {
+  const unsubscribeUrl = unsubscribeToken && eventId && followerEmail
+    ? `${baseUrl}/api/events/${eventId}/unfollow?token=${unsubscribeToken}&email=${encodeURIComponent(followerEmail)}`
+    : `${baseUrl}/event/${eventSlug}`;
+
+  return (
+    <Html>
+      <Head />
+      <Body style={main}>
+        <Container style={container}>
+          <Heading style={h1}>✅ Du folgst jetzt {eventName}!</Heading>
+          <Text style={text}>
+            Hallo {userName},
+          </Text>
+          <Text style={text}>
+            Vielen Dank, dass du <strong>{eventName}</strong> folgst! 🎉
+          </Text>
+          <Text style={text}>
+            Du erhältst jetzt automatisch eine E-Mail-Benachrichtigung, sobald neue Fotos hochgeladen werden.
+          </Text>
+          <Section style={buttonContainer}>
+            <Button style={button} href={`${baseUrl}/event/${eventSlug}`}>
+              Event ansehen
+            </Button>
+          </Section>
+          <Hr style={hr} />
+          <Text style={text}>
+            <strong>💡 Was passiert jetzt?</strong>
+            <br />
+            • Du erhältst eine E-Mail, sobald neue Fotos hochgeladen werden
+            <br />
+            • Du kannst jederzeit die Fotos auf der Event-Seite ansehen
+            <br />
+            • Du kannst deine Benachrichtigungen jederzeit abbestellen
+          </Text>
+          <Hr style={hr} />
+          <Text style={footer}>
+            Du möchtest keine Benachrichtigungen mehr erhalten?
+            <br />
+            <Link href={unsubscribeUrl} style={link}>
+              Event nicht mehr folgen
+            </Link>
+          </Text>
+          <Hr style={hr} />
+          <Text style={footer}>
+            Viel Spaß beim Entdecken deiner Fotos!
+            <br />
+            Dein SportShots Team
+          </Text>
+        </Container>
+      </Body>
+    </Html>
+  );
+}
+
 // Template 4: Payout Notification
 export function PayoutNotificationEmail({
   photographerName,

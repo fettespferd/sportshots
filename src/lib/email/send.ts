@@ -5,6 +5,7 @@ import {
   NewPhotosEmail,
   PurchaseConfirmationEmail,
   PayoutNotificationEmail,
+  EventFollowConfirmationEmail,
 } from "./templates";
 
 const resend = process.env.RESEND_API_KEY 
@@ -114,6 +115,34 @@ export async function sendPurchaseConfirmationEmail(
   return sendEmail({
     to,
     subject: `✅ Deine Bestellung für ${eventName}`,
+    html,
+  });
+}
+
+// Send event follow confirmation
+export async function sendEventFollowConfirmationEmail(
+  to: string,
+  userName: string,
+  eventName: string,
+  eventSlug: string,
+  unsubscribeToken?: string,
+  eventId?: string,
+  followerEmail?: string
+) {
+  const html = await render(
+    EventFollowConfirmationEmail({
+      userName,
+      eventName,
+      eventSlug,
+      unsubscribeToken,
+      eventId,
+      followerEmail,
+    })
+  );
+
+  return sendEmail({
+    to,
+    subject: `✅ Du folgst jetzt ${eventName}!`,
     html,
   });
 }

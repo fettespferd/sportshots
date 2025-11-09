@@ -76,6 +76,7 @@ export default function PublicEventPage({
   const [isFollowing, setIsFollowing] = useState(false);
   const [followEmail, setFollowEmail] = useState("");
   const [isFollowingLoading, setIsFollowingLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -93,13 +94,14 @@ export default function PublicEventPage({
     const loadEvent = async () => {
       // Check if user is authenticated
       const {
-        data: { user },
+        data: { user: currentUser },
       } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
+      setIsAuthenticated(!!currentUser);
+      setUser(currentUser);
       
       // Set follow email from user if authenticated
-      if (user?.email) {
-        setFollowEmail(user.email);
+      if (currentUser?.email) {
+        setFollowEmail(currentUser.email);
       }
 
       // Get event
@@ -286,7 +288,9 @@ export default function PublicEventPage({
   const handleFollow = async () => {
     if (!event) return;
 
-    const emailToUse = isAuthenticated ? followEmail : followEmail;
+    const emailToUse = isAuthenticated && user?.email ? user.email : followEmail;
+    console.log(`[CLIENT] handleFollow called - email: ${emailToUse}, isAuthenticated: ${isAuthenticated}`);
+    
     if (!emailToUse || !emailToUse.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       setModalState({
         isOpen: true,
@@ -299,13 +303,16 @@ export default function PublicEventPage({
 
     setIsFollowingLoading(true);
     try {
+      console.log(`[CLIENT] Calling /api/events/${event.id}/follow with email: ${emailToUse}`);
       const response = await fetch(`/api/events/${event.id}/follow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailToUse }),
       });
 
+      console.log(`[CLIENT] Response status: ${response.status}`);
       const data = await response.json();
+      console.log(`[CLIENT] Response data:`, data);
 
       if (data.success) {
         setIsFollowing(true);
@@ -323,7 +330,8 @@ export default function PublicEventPage({
           type: "error",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error(`[CLIENT] Error in handleFollow:`, error);
       setModalState({
         isOpen: true,
         title: "Fehler",
