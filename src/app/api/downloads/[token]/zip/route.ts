@@ -96,9 +96,9 @@ export async function GET(
       }
     }
 
-    // Generate ZIP file
+    // Generate ZIP file as ArrayBuffer (compatible with NextResponse)
     const zipBuffer = await zip.generateAsync({
-      type: "nodebuffer",
+      type: "arraybuffer",
       compression: "DEFLATE",
       compressionOptions: { level: 6 },
     });
@@ -108,7 +108,7 @@ export async function GET(
       headers: {
         "Content-Type": "application/zip",
         "Content-Disposition": `attachment; filename="${sanitizedEventTitle}_fotos.zip"`,
-        "Content-Length": zipBuffer.length.toString(),
+        "Content-Length": zipBuffer.byteLength.toString(),
       },
     });
   } catch (error: any) {
