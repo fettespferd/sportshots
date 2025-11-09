@@ -29,6 +29,35 @@ export default function DownloadsPage({
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [error, setError] = useState("");
   const [downloadingZip, setDownloadingZip] = useState(false);
+  const [downloadingPhoto, setDownloadingPhoto] = useState<string | null>(null);
+
+  // Function to download image directly to gallery
+  const downloadImage = async (url: string, filename: string) => {
+    try {
+      setDownloadingPhoto(filename);
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+        document.body.removeChild(a);
+        setDownloadingPhoto(null);
+      }, 100);
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("Fehler beim Herunterladen des Bildes");
+      setDownloadingPhoto(null);
+    }
+  };
 
   useEffect(() => {
     const loadPurchase = async () => {
@@ -249,14 +278,23 @@ export default function DownloadsPage({
                     <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
                       Original
                     </p>
-                    <a
-                      href={photo.original_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    <button
+                      onClick={() => {
+                        const filename = `Foto-${index + 1}-${photo.event_title.replace(/[^a-z0-9]/gi, "-")}-Original.jpg`;
+                        downloadImage(photo.original_url, filename);
+                      }}
+                      disabled={downloadingPhoto !== null}
+                      className="block w-full rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
-                      📥 Original herunterladen
-                    </a>
+                      {downloadingPhoto?.includes(`Foto-${index + 1}`) && downloadingPhoto?.includes("Original") ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                          Wird heruntergeladen...
+                        </span>
+                      ) : (
+                        "📥 Original herunterladen"
+                      )}
+                    </button>
                   </div>
                 </div>
 
@@ -277,20 +315,29 @@ export default function DownloadsPage({
                       <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
                         Bearbeitete Version
                       </p>
-                      <a
-                        href={photo.edited_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-full rounded-md bg-blue-600 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                      <button
+                        onClick={() => {
+                          const filename = `Foto-${index + 1}-${photo.event_title.replace(/[^a-z0-9]/gi, "-")}-Bearbeitet.jpg`;
+                          downloadImage(photo.edited_url!, filename);
+                        }}
+                        disabled={downloadingPhoto !== null}
+                        className="block w-full rounded-md bg-blue-600 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
                       >
-                        ✨ Bearbeitet herunterladen
-                      </a>
+                        {downloadingPhoto?.includes(`Foto-${index + 1}`) && downloadingPhoto?.includes("Bearbeitet") ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                            Wird heruntergeladen...
+                          </span>
+                        ) : (
+                          "✨ Bearbeitet herunterladen"
+                        )}
+                      </button>
                     </div>
                   </div>
                 )}
 
                 <p className="px-4 pb-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                  Tippe lang drücken → In Fotos speichern
+                  💡 Tipp: Auf mobilen Geräten wird das Bild direkt in deine Galerie gespeichert
                 </p>
               </div>
             ))}

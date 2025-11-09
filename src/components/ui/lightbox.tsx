@@ -59,6 +59,35 @@ export function Lightbox({
   const [showSwipeHint, setShowSwipeHint] = useState(true);
   const [showEdited, setShowEdited] = useState(false);
   const [showWatermarkEdited, setShowWatermarkEdited] = useState(true); // Default to edited watermark
+  const [downloading, setDownloading] = useState(false);
+
+  // Download function for purchased photos
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      setDownloading(true);
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+        document.body.removeChild(a);
+        setDownloading(false);
+      }, 100);
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("Fehler beim Herunterladen des Bildes");
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -342,7 +371,37 @@ export function Lightbox({
         </button>
       )}
 
-      {/* Cart status indicator - Top right corner (if no share button), or below version toggle (if share button exists) */}
+      {/* Download button - Only for purchased photos (when editedUrl exists) */}
+      {editedUrl && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            const currentImageUrl = showEdited && editedUrl ? editedUrl : imageUrl;
+            const version = showEdited ? "Original" : "Bearbeitet";
+            const filename = `Foto-${bibNumber || photoId || "photo"}-${version}.jpg`;
+            handleDownload(currentImageUrl, filename);
+          }}
+          disabled={downloading}
+          className="absolute right-3 top-16 z-20 flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-xl transition-all hover:bg-purple-700 active:scale-95 disabled:opacity-50 sm:right-4 sm:top-20"
+          aria-label="Foto herunterladen"
+        >
+          {downloading ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              <span className="hidden sm:inline">Wird heruntergeladen...</span>
+            </>
+          ) : (
+            <>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span className="hidden sm:inline">Herunterladen</span>
+            </>
+          )}
+        </button>
+      )}
+
+      {/* Cart status indicator - Position dynamically based on available buttons */}
       {photoId && isInCart && onViewCart && (
         <button
           onClick={(e) => {
@@ -351,8 +410,12 @@ export function Lightbox({
           }}
           className={`absolute z-30 flex items-center gap-2 rounded-full bg-green-600 px-3 py-2 text-sm font-bold text-white shadow-xl transition-all hover:scale-105 hover:bg-green-700 active:scale-95 sm:px-4 ${
             showShare && shareUrl
-              ? "left-3 top-16 sm:left-4 sm:top-20" // Below version toggle if share button exists
-              : "right-3 top-3 sm:right-4 sm:top-4" // Top right if no share button
+              ? editedUrl
+                ? "left-3 top-28 sm:left-4 sm:top-32" // Below download button if both exist
+                : "left-3 top-16 sm:left-4 sm:top-20" // Below version toggle if share exists
+              : editedUrl
+                ? "right-3 top-16 sm:right-4 sm:top-20" // Below download if no share
+                : "right-3 top-3 sm:right-4 sm:top-4" // Top right if no share and no download
           }`}
           aria-label="Warenkorb ansehen"
         >
