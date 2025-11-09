@@ -294,6 +294,7 @@ export default function UploadPhotosPage({
 
         // Upload edited version if provided
         let editedUrl: string | null = null;
+        let watermarkEditedUrl: string | null = null;
         if (uploadFile.editedFile) {
           console.log("Uploading edited version...");
           const editedFileExt = uploadFile.editedFile.name.split(".").pop();
@@ -317,6 +318,30 @@ export default function UploadPhotosPage({
             } = supabase.storage.from("photos").getPublicUrl(`edited/${editedFileName}`);
             editedUrl = editedUrlData;
             console.log("Edited version uploaded successfully:", editedUrl);
+
+            // Generate watermark for edited version
+            try {
+              const editedWatermarkResponse = await fetch("/api/photos/watermark", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  imageUrl: editedUrl,
+                  eventId: eventId,
+                  eventName: event?.title || "Event",
+                }),
+              });
+
+              if (editedWatermarkResponse.ok) {
+                const editedWatermarkData = await editedWatermarkResponse.json();
+                watermarkEditedUrl = editedWatermarkData.watermarkUrl;
+                console.log("Watermark for edited version generated:", watermarkEditedUrl);
+              } else {
+                console.warn("Failed to generate watermark for edited version");
+              }
+            } catch (watermarkError) {
+              console.warn("Error generating watermark for edited version:", watermarkError);
+              // Don't fail the whole upload if watermark generation fails
+            }
           }
         }
 
@@ -353,6 +378,7 @@ export default function UploadPhotosPage({
           photographer_id: user.id,
           original_url: originalUrl,
           watermark_url: watermarkUrl,
+          watermark_edited_url: watermarkEditedUrl,
           thumbnail_url: thumbnailUrl,
           edited_url: editedUrl,
           price: eventPricing.price_per_photo,
@@ -393,13 +419,27 @@ export default function UploadPhotosPage({
       // Notify followers about new photos
       try {
         const uploadedCount = files.filter((f) => f.status === "success").length;
-        await fetch(`/api/events/${eventId}/notify-followers`, {
+        console.log(`[UPLOAD] Notifying followers for event ${eventId} with ${uploadedCount} photos`);
+        const notifyResponse = await fetch(`/api/events/${eventId}/notify-followers`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ photoCount: uploadedCount }),
         });
-      } catch (error) {
-        console.warn("Failed to notify followers:", error);
+        
+        if (!notifyResponse.ok) {
+          const errorText = await notifyResponse.text();
+          console.error("[UPLOAD] Failed to notify followers:", errorText);
+        } else {
+          const result = await notifyResponse.json();
+          console.log("[UPLOAD] Notify followers result:", result);
+          if (result.notified > 0) {
+            showToast(`${result.notified} Follower wurden benachrichtigt`, "success");
+          } else if (result.notified === 0 && result.message) {
+            console.log("[UPLOAD] No followers to notify:", result.message);
+          }
+        }
+      } catch (error: any) {
+        console.error("[UPLOAD] Failed to notify followers:", error);
         // Don't block navigation if notification fails
       }
       

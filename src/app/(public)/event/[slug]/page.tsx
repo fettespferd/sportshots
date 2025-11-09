@@ -36,6 +36,7 @@ interface Event {
 interface Photo {
   id: string;
   watermark_url: string;
+  watermark_edited_url?: string | null;
   original_url?: string;
   edited_url?: string | null;
   bib_number: string | null;
@@ -193,18 +194,50 @@ export default function PublicEventPage({
 
       const { data: photosData } = await supabase
         .from("photos")
-        .select("id, watermark_url, original_url, edited_url, bib_number, price, taken_at, camera_make, camera_model, rotation")
+        .select("id, watermark_url, watermark_edited_url, original_url, edited_url, bib_number, price, taken_at, camera_make, camera_model, rotation")
         .eq("event_id", eventData.id)
         .order("taken_at", { ascending: false, nullsFirst: false });
 
       if (photosData) {
         // Mark purchased photos and include original_url for purchased photos
-        const photosWithPurchaseStatus = photosData.map((photo: any) => ({
-          ...photo,
-          isPurchased: purchasedPhotoIds.includes(photo.id),
-          // Only include original_url if purchased
-          original_url: purchasedPhotoIds.includes(photo.id) ? photo.original_url : undefined,
-        }));
+        // Also generate watermark_edited_url on-the-fly for photos that have edited_url but no watermark_edited_url
+        const photosWithPurchaseStatus = await Promise.all(
+          photosData.map(async (photo: any) => {
+            const isPurchased = purchasedPhotoIds.includes(photo.id);
+            
+            // If photo has edited_url but no watermark_edited_url, generate it on-the-fly
+            if (photo.edited_url && !photo.watermark_edited_url && eventData.id) {
+              try {
+                const watermarkResponse = await fetch("/api/photos/watermark", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    imageUrl: photo.edited_url,
+                    eventId: eventData.id,
+                    eventName: eventData.title,
+                    photoId: photo.id,
+                  }),
+                });
+
+                if (watermarkResponse.ok) {
+                  const watermarkData = await watermarkResponse.json();
+                  photo.watermark_edited_url = watermarkData.watermarkUrl;
+                }
+              } catch (error) {
+                console.warn("Failed to generate watermark for edited photo:", error);
+                // Continue without watermark_edited_url
+              }
+            }
+
+            return {
+              ...photo,
+              isPurchased,
+              // Only include original_url if purchased
+              original_url: isPurchased ? photo.original_url : undefined,
+            };
+          })
+        );
+        
         setPhotos(photosWithPurchaseStatus);
         setFilteredPhotos(photosWithPurchaseStatus);
       }
@@ -426,74 +459,14 @@ export default function PublicEventPage({
       {/* Event Header */}
       <div className="bg-white shadow-sm dark:bg-zinc-800">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 md:gap-8">
-            <div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-3xl md:text-4xl">
-                  {event.title}
-                </h1>
-                <div className="flex flex-shrink-0 gap-2">
-                  {!isFollowing ? (
-                    <div className="flex gap-2">
-                      {!isAuthenticated && (
-                        <input
-                          type="email"
-                          placeholder="Deine E-Mail"
-                          value={followEmail}
-                          onChange={(e) => setFollowEmail(e.target.value)}
-                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                        />
-                      )}
-                      <button
-                        onClick={handleFollow}
-                        disabled={isFollowingLoading || (!isAuthenticated && !followEmail)}
-                        className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
-                      >
-                        {isFollowingLoading ? (
-                          <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                            <span>Wird geladen...</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                            <span>Event folgen</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={handleUnfollow}
-                      disabled={isFollowingLoading}
-                      className="flex items-center gap-2 rounded-md bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
-                    >
-                      {isFollowingLoading ? (
-                        <>
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-700 border-t-transparent"></div>
-                          <span>Wird geladen...</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span>Gefolgt</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                  <ShareButton
-                    url={typeof window !== "undefined" ? window.location.href : ""}
-                    title={`${event.title} - Fotos ansehen`}
-                    text={`Schau dir die Fotos von ${event.title} an!`}
-                    className="flex-shrink-0 shadow-md"
-                  />
-                </div>
-              </div>
-              <div className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400 sm:mt-4">
+          <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+            {/* Left Column: Event Info */}
+            <div className="lg:col-span-2">
+              <h1 className="mb-4 text-3xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-4xl">
+                {event.title}
+              </h1>
+              
+              <div className="mb-4 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
                 <div className="flex items-center">
                   <svg
                     className="mr-2 h-5 w-5"
@@ -532,66 +505,132 @@ export default function PublicEventPage({
                   })}
                 </div>
               </div>
+              
               {event.description && (
-                <p className="mt-4 text-zinc-700 dark:text-zinc-300">
+                <p className="mb-6 text-zinc-700 dark:text-zinc-300">
                   {event.description}
                 </p>
               )}
+
+              {/* Follow & Share Actions */}
+              <div className="flex flex-wrap items-center gap-3">
+                {!isFollowing ? (
+                  <div className="flex flex-1 flex-wrap items-center gap-2">
+                    {!isAuthenticated && (
+                      <input
+                        type="email"
+                        placeholder="Deine E-Mail"
+                        value={followEmail}
+                        onChange={(e) => setFollowEmail(e.target.value)}
+                        className="min-w-[200px] flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 sm:min-w-[250px]"
+                      />
+                    )}
+                    <button
+                      onClick={handleFollow}
+                      disabled={isFollowingLoading || (!isAuthenticated && !followEmail)}
+                      className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+                    >
+                      {isFollowingLoading ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                          <span>Wird geladen...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                          </svg>
+                          <span>Event folgen</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleUnfollow}
+                    disabled={isFollowingLoading}
+                    className="flex items-center gap-2 rounded-md bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
+                  >
+                    {isFollowingLoading ? (
+                      <>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-700 border-t-transparent"></div>
+                        <span>Wird geladen...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Gefolgt</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                <ShareButton
+                  url={typeof window !== "undefined" ? window.location.href : ""}
+                  title={`${event.title} - Fotos ansehen`}
+                  text={`Schau dir die Fotos von ${event.title} an!`}
+                  className="flex-shrink-0 shadow-md"
+                />
+              </div>
             </div>
 
-            <div className="overflow-hidden rounded-lg bg-gradient-to-br from-zinc-50 to-zinc-100 p-6 shadow-sm dark:from-zinc-800 dark:to-zinc-700">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                <span className="text-xl">💰</span>
-                {t("event.pricing")}
-              </h2>
-              <div className="space-y-3">
-                {/* Single Photo Price */}
-                <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-zinc-900">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                        <span className="text-lg">📸</span>
+            {/* Right Column: Pricing */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-4 overflow-hidden rounded-lg bg-gradient-to-br from-zinc-50 to-zinc-100 p-6 shadow-sm dark:from-zinc-800 dark:to-zinc-700">
+                <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                  <span className="text-xl">💰</span>
+                  {t("event.pricing")}
+                </h2>
+                <div className="space-y-3">
+                  {/* Single Photo Price */}
+                  <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-zinc-900">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                          <span className="text-lg">📸</span>
+                        </div>
+                        <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                          {t("event.singlePhoto")}
+                        </span>
                       </div>
-                      <span className="font-medium text-zinc-900 dark:text-zinc-50">
-                        {t("event.singlePhoto")}
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {event.price_per_photo.toFixed(2)} €
                       </span>
                     </div>
-                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {event.price_per_photo.toFixed(2)} €
-                    </span>
                   </div>
-                </div>
-                
-                {/* Package Price */}
-                {event.package_price && event.package_photo_count && (
-                  <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 p-4 shadow-md">
-                    <div className="absolute right-0 top-0 -mr-4 -mt-4 h-16 w-16 rounded-full bg-white/10" />
-                    <div className="absolute right-4 top-0 -mr-2 -mt-2 h-12 w-12 rounded-full bg-white/10" />
-                    <div className="relative flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                          <span className="text-lg">📦</span>
-                        </div>
-                        <div className="text-white">
-                          <div className="text-xs font-medium uppercase tracking-wide opacity-90">
-                            {t("event.package")}
+                  
+                  {/* Package Price */}
+                  {event.package_price && event.package_photo_count && (
+                    <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 p-4 shadow-md">
+                      <div className="absolute right-0 top-0 -mr-4 -mt-4 h-16 w-16 rounded-full bg-white/10" />
+                      <div className="absolute right-4 top-0 -mr-2 -mt-2 h-12 w-12 rounded-full bg-white/10" />
+                      <div className="relative flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                            <span className="text-lg">📦</span>
                           </div>
-                          <div className="font-semibold">
-                            {t("event.photosInPackage", { count: event.package_photo_count })}
+                          <div className="text-white">
+                            <div className="text-xs font-medium uppercase tracking-wide opacity-90">
+                              {t("event.package")}
+                            </div>
+                            <div className="font-semibold">
+                              {t("event.photosInPackage", { count: event.package_photo_count })}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-white">
-                          {event.package_price.toFixed(2)} €
-                        </div>
-                        <div className="text-xs text-white/80">
-                          {(event.package_price / event.package_photo_count).toFixed(2)} € {t("event.perPhoto")}
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-white">
+                            {event.package_price.toFixed(2)} €
+                          </div>
+                          <div className="text-xs text-white/80">
+                            {(event.package_price / event.package_photo_count).toFixed(2)} € {t("event.perPhoto")}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1176,17 +1215,22 @@ export default function PublicEventPage({
                 <div 
                   className="aspect-square w-full cursor-zoom-in overflow-hidden bg-zinc-100 dark:bg-zinc-700"
                   onClick={() => {
-                    // Use original_url if purchased, otherwise watermark_url
-                    const imageToShow = photo.isPurchased && photo.original_url 
-                      ? photo.original_url 
-                      : photo.watermark_url;
+                    // For non-purchased: use watermark_edited_url if available, otherwise watermark_url
+                    // For purchased: use original_url (can toggle to edited_url in lightbox)
+                    let imageToShow: string;
+                    if (photo.isPurchased && photo.original_url) {
+                      imageToShow = photo.original_url;
+                    } else {
+                      // Default to edited watermark if available, otherwise original watermark
+                      imageToShow = photo.watermark_edited_url || photo.watermark_url;
+                    }
                     setLightboxImage(imageToShow);
                     setLightboxPhoto(photo);
                     setLightboxOpen(true);
                   }}
                 >
                   <img
-                    src={photo.watermark_url}
+                    src={photo.watermark_edited_url || photo.watermark_url}
                     alt=""
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
@@ -1221,8 +1265,8 @@ export default function PublicEventPage({
                     </div>
                   )}
                   
-                  {/* Edited Version Indicator - Only show for purchased photos */}
-                  {photo.isPurchased && photo.edited_url && (
+                  {/* Edited Version Indicator - Show if edited version exists (for all users) */}
+                  {photo.watermark_edited_url && (
                     <div className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm">
                       ✨ Bearbeitet
                     </div>
@@ -1333,6 +1377,8 @@ export default function PublicEventPage({
         shareUrl={typeof window !== "undefined" && lightboxPhoto ? `${window.location.origin}/event/${slug}?photo=${lightboxPhoto.id}` : ""}
         shareTitle={`${event.title}${lightboxPhoto?.bib_number ? ` - #${lightboxPhoto.bib_number}` : ""}`}
         editedUrl={lightboxPhoto?.isPurchased && lightboxPhoto?.edited_url ? lightboxPhoto.edited_url : null}
+        watermarkEditedUrl={lightboxPhoto?.watermark_edited_url || null}
+        watermarkOriginalUrl={lightboxPhoto?.watermark_url || null}
       />
 
       {/* Cart Modal */}

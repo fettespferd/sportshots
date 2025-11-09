@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { addWatermark, createThumbnail } from "@/lib/image/watermark";
 
 export async function POST(request: NextRequest) {
@@ -9,12 +10,8 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await request.json();
-    const { imageUrl, eventId, eventName } = body;
+    const { imageUrl, eventId, eventName, photoId } = body;
 
     if (!imageUrl || !eventId) {
       return NextResponse.json(
@@ -22,6 +19,20 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Allow public access if photoId is provided (for generating watermarks for existing photos)
+    // Otherwise require authentication (for new uploads)
+    if (!photoId && !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Use service role client for storage operations if no user (public access for existing photos)
+    const storageClient = photoId && !user
+      ? createServiceClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+      : supabase;
 
     // Download image from URL
     const imageResponse = await fetch(imageUrl);
@@ -51,7 +62,7 @@ export async function POST(request: NextRequest) {
       .toString(36)
       .substring(7)}.jpg`;
 
-    const { data: watermarkUpload, error: watermarkError } = await supabase.storage
+    const { data: watermarkUpload, error: watermarkError } = await storageClient.storage
       .from("photos")
       .upload(watermarkFileName, watermarkedBuffer, {
         contentType: "image/jpeg",
@@ -73,7 +84,7 @@ export async function POST(request: NextRequest) {
       .toString(36)
       .substring(7)}.jpg`;
 
-    const { data: thumbnailUpload, error: thumbnailError } = await supabase.storage
+    const { data: thumbnailUpload, error: thumbnailError } = await storageClient.storage
       .from("photos")
       .upload(thumbnailFileName, thumbnailBuffer, {
         contentType: "image/jpeg",
@@ -93,13 +104,34 @@ export async function POST(request: NextRequest) {
     // Get public URLs
     const {
       data: { publicUrl: watermarkUrl },
-    } = supabase.storage.from("photos").getPublicUrl(watermarkFileName);
+    } = storageClient.storage.from("photos").getPublicUrl(watermarkFileName);
 
     const {
       data: { publicUrl: thumbnailUrl },
-    } = supabase.storage.from("photos").getPublicUrl(
+    } = storageClient.storage.from("photos").getPublicUrl(
       thumbnailFileName || watermarkFileName
     );
+
+    // If photoId is provided, update the database with watermark_edited_url
+    // Use service role client for database update if no user
+    const dbClient = photoId && !user
+      ? createServiceClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+      : supabase;
+
+    if (photoId) {
+      const { error: updateError } = await dbClient
+        .from("photos")
+        .update({ watermark_edited_url: watermarkUrl })
+        .eq("id", photoId);
+
+      if (updateError) {
+        console.warn("Failed to update photo with watermark_edited_url:", updateError);
+        // Don't fail the request, just log the warning
+      }
+    }
 
     return NextResponse.json({
       watermarkUrl,

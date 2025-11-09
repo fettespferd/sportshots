@@ -8,6 +8,7 @@ export async function POST(
 ) {
   try {
     const { eventId } = await params;
+    console.log(`[NOTIFY-FOLLOWERS] Starting notification for event: ${eventId}`);
     const supabase = await createClient();
 
     // Get event details
@@ -18,11 +19,14 @@ export async function POST(
       .single();
 
     if (eventError || !event) {
+      console.error(`[NOTIFY-FOLLOWERS] Event not found: ${eventId}`, eventError);
       return NextResponse.json(
         { error: "Event nicht gefunden" },
         { status: 404 }
       );
     }
+
+    console.log(`[NOTIFY-FOLLOWERS] Event found: ${event.title} (${event.slug})`);
 
     // Get all followers for this event
     const { data: followers, error: followersError } = await supabase
@@ -31,14 +35,17 @@ export async function POST(
       .eq("event_id", eventId);
 
     if (followersError) {
-      console.error("Error fetching followers:", followersError);
+      console.error("[NOTIFY-FOLLOWERS] Error fetching followers:", followersError);
       return NextResponse.json(
         { error: "Fehler beim Abrufen der Follower" },
         { status: 500 }
       );
     }
 
+    console.log(`[NOTIFY-FOLLOWERS] Found ${followers?.length || 0} followers`);
+
     if (!followers || followers.length === 0) {
+      console.log("[NOTIFY-FOLLOWERS] No followers found, returning early");
       return NextResponse.json({
         success: true,
         message: "Keine Follower gefunden",
@@ -48,6 +55,7 @@ export async function POST(
 
     const body = await request.json();
     const { photoCount = 1 } = body;
+    console.log(`[NOTIFY-FOLLOWERS] Photo count: ${photoCount}`);
 
     // Send email to each follower
     let notified = 0;
@@ -55,6 +63,7 @@ export async function POST(
 
     for (const follower of followers) {
       try {
+        console.log(`[NOTIFY-FOLLOWERS] Processing follower: ${follower.email}`);
         // Get user name if user_id exists
         let userName = follower.email.split("@")[0];
         if (follower.user_id) {
@@ -71,7 +80,8 @@ export async function POST(
         // Generate simple unsubscribe token (email hash for security)
         const unsubscribeToken = Buffer.from(follower.email).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
         
-        await sendNewPhotosEmail(
+        console.log(`[NOTIFY-FOLLOWERS] Sending email to ${follower.email}...`);
+        const emailResult = await sendNewPhotosEmail(
           follower.email,
           userName,
           event.title,
@@ -81,12 +91,21 @@ export async function POST(
           eventId,
           follower.email
         );
-        notified++;
+        
+        if (emailResult.success) {
+          console.log(`[NOTIFY-FOLLOWERS] ✅ Email sent successfully to ${follower.email}`);
+          notified++;
+        } else {
+          console.error(`[NOTIFY-FOLLOWERS] ❌ Failed to send email to ${follower.email}:`, emailResult.error);
+          errors.push(follower.email);
+        }
       } catch (error: any) {
-        console.error(`Error sending email to ${follower.email}:`, error);
+        console.error(`[NOTIFY-FOLLOWERS] ❌ Error sending email to ${follower.email}:`, error);
         errors.push(follower.email);
       }
     }
+
+    console.log(`[NOTIFY-FOLLOWERS] Completed: ${notified} notified, ${errors.length} errors`);
 
     return NextResponse.json({
       success: true,
@@ -95,7 +114,7 @@ export async function POST(
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error: any) {
-    console.error("Notify followers error:", error);
+    console.error("[NOTIFY-FOLLOWERS] Fatal error:", error);
     return NextResponse.json(
       { error: error.message || "Fehler beim Benachrichtigen der Follower" },
       { status: 500 }

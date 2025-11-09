@@ -23,11 +23,12 @@ interface SendEmailParams {
 
 export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams) {
   if (!resend) {
-    console.warn("Resend API key not configured - skipping email send");
+    console.error("[EMAIL] Resend API key not configured - skipping email send");
     return { success: false, error: "Email service not configured" };
   }
 
   try {
+    console.log(`[EMAIL] Sending email to ${to} with subject: ${subject}`);
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [to],
@@ -37,14 +38,15 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailParams)
     });
 
     if (error) {
-      console.error("Email send error:", error);
+      console.error(`[EMAIL] Email send error for ${to}:`, error);
       throw error;
     }
 
+    console.log(`[EMAIL] ✅ Email sent successfully to ${to}`, data);
     return { success: true, data };
-  } catch (error) {
-    console.error("Email send failed:", error);
-    return { success: false, error };
+  } catch (error: any) {
+    console.error(`[EMAIL] ❌ Email send failed for ${to}:`, error);
+    return { success: false, error: error?.message || String(error) };
   }
 }
 

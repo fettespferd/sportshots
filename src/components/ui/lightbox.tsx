@@ -24,6 +24,8 @@ interface LightboxProps {
   shareUrl?: string;
   shareTitle?: string;
   editedUrl?: string | null;
+  watermarkEditedUrl?: string | null;
+  watermarkOriginalUrl?: string | null;
 }
 
 export function Lightbox({ 
@@ -45,7 +47,9 @@ export function Lightbox({
   showShare = false,
   shareUrl = "",
   shareTitle,
-  editedUrl
+  editedUrl,
+  watermarkEditedUrl,
+  watermarkOriginalUrl
 }: LightboxProps) {
   const { t } = useLanguage();
   const [touchStart, setTouchStart] = useState(0);
@@ -54,11 +58,14 @@ export function Lightbox({
   const [dragDistance, setDragDistance] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(true);
   const [showEdited, setShowEdited] = useState(false);
+  const [showWatermarkEdited, setShowWatermarkEdited] = useState(true); // Default to edited watermark
 
   useEffect(() => {
     if (isOpen) {
-      // Reset to original view when opening
+      // Reset to default view when opening
       setShowEdited(false);
+      // Default to edited watermark if available
+      setShowWatermarkEdited(!!watermarkEditedUrl);
       // Show swipe hint and hide after 3 seconds
       setShowSwipeHint(true);
       const hintTimer = setTimeout(() => {
@@ -192,19 +199,30 @@ export function Lightbox({
         </svg>
       </button>
 
-      {/* Version Toggle Button - Only show if edited version exists */}
-      {editedUrl && (
+      {/* Version Toggle Button - Show for purchased photos (original/edited) or non-purchased (watermarked versions) */}
+      {(editedUrl || (watermarkEditedUrl && watermarkOriginalUrl)) && (
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setShowEdited(!showEdited);
+            if (editedUrl) {
+              // Toggle between original and edited (purchased photos)
+              setShowEdited(!showEdited);
+            } else {
+              // Toggle between watermarked original and edited
+              setShowWatermarkEdited(!showWatermarkEdited);
+            }
           }}
           className="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-zinc-900 shadow-xl transition-all hover:bg-white active:scale-95 sm:left-4 sm:top-4"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>{showEdited ? "Original" : "Bearbeitet"}</span>
+          <span>
+            {editedUrl 
+              ? (showEdited ? "Original" : "Bearbeitet")
+              : (showWatermarkEdited ? "Original" : "Bearbeitet")
+            }
+          </span>
         </button>
       )}
 
@@ -241,7 +259,13 @@ export function Lightbox({
       {/* Image - Mobile optimized with pinch-zoom enabled */}
       <div className="relative z-10 flex h-[60vh] w-full max-w-[95vw] touch-auto items-center justify-center overflow-auto sm:h-[85vh] sm:max-w-[90vw]">
         <img
-          src={showEdited && editedUrl ? editedUrl : imageUrl}
+          src={
+            editedUrl
+              ? (showEdited && editedUrl ? editedUrl : imageUrl) // Purchased: toggle original/edited
+              : watermarkEditedUrl && watermarkOriginalUrl
+                ? (showWatermarkEdited ? watermarkEditedUrl : watermarkOriginalUrl) // Non-purchased: toggle watermarked versions
+                : imageUrl // Fallback to imageUrl if no watermark versions available
+          }
           alt={alt}
           className="max-h-full max-w-full touch-auto object-contain transition-opacity duration-300"
           style={{
