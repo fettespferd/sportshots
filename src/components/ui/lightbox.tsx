@@ -68,7 +68,8 @@ export function Lightbox({
       
       // Check if we're on a mobile device and if Web Share API is available
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      const hasShareAPI = navigator.share && navigator.canShare;
+      const hasShareAPI = typeof navigator.share === "function" && 
+        typeof navigator.canShare === "function";
       
       if (isMobile && hasShareAPI) {
         // For mobile devices, use fetch to get the image blob

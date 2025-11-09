@@ -33,7 +33,9 @@ export default function DownloadsPage({
 
   // Check if mobile device
   const isMobile = typeof window !== "undefined" && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const hasShareAPI = typeof navigator !== "undefined" && navigator.share && navigator.canShare;
+  const hasShareAPI = typeof navigator !== "undefined" && 
+    typeof navigator.share === "function" && 
+    typeof navigator.canShare === "function";
 
   // Function to download image directly to gallery
   const downloadImage = async (url: string, filename: string) => {
