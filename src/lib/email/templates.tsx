@@ -157,12 +157,22 @@ export function NewPhotosEmail({
   eventName,
   eventSlug,
   photoCount,
+  unsubscribeToken,
+  eventId,
+  followerEmail,
 }: {
   userName: string;
   eventName: string;
   eventSlug: string;
   photoCount: number;
+  unsubscribeToken?: string;
+  eventId?: string;
+  followerEmail?: string;
 }) {
+  const unsubscribeUrl = unsubscribeToken && eventId && followerEmail
+    ? `${baseUrl}/api/events/${eventId}/unfollow?token=${unsubscribeToken}&email=${encodeURIComponent(followerEmail)}`
+    : `${baseUrl}/event/${eventSlug}`;
+
   return (
     <Html>
       <Head />
@@ -185,8 +195,8 @@ export function NewPhotosEmail({
           <Text style={footer}>
             Du erhältst diese E-Mail, weil du diesem Event folgst.
             <br />
-            <Link href={`${baseUrl}/settings`} style={link}>
-              Benachrichtigungseinstellungen ändern
+            <Link href={unsubscribeUrl} style={link}>
+              Event nicht mehr folgen
             </Link>
           </Text>
         </Container>

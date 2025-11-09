@@ -36,12 +36,15 @@ interface Event {
 interface Photo {
   id: string;
   watermark_url: string;
+  original_url?: string;
+  edited_url?: string | null;
   bib_number: string | null;
   price: number;
   taken_at: string | null;
   camera_make: string | null;
   camera_model: string | null;
   rotation?: number;
+  isPurchased?: boolean;
 }
 
 export default function PublicEventPage({
@@ -69,6 +72,9 @@ export default function PublicEventPage({
   const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
   const [cartModalOpen, setCartModalOpen] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followEmail, setFollowEmail] = useState("");
+  const [isFollowingLoading, setIsFollowingLoading] = useState(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     title: string;
@@ -89,6 +95,11 @@ export default function PublicEventPage({
         data: { user },
       } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
+      
+      // Set follow email from user if authenticated
+      if (user?.email) {
+        setFollowEmail(user.email);
+      }
 
       // Get event
       const { data: eventData, error: eventError } = await supabase
@@ -104,6 +115,20 @@ export default function PublicEventPage({
       }
 
       setEvent(eventData);
+
+      // Check if user is following this event
+      if (eventData.id) {
+        const checkEmail = user?.email || followEmail;
+        if (checkEmail) {
+          const { data: follower } = await supabase
+            .from("event_followers")
+            .select("id")
+            .eq("event_id", eventData.id)
+            .eq("email", checkEmail)
+            .single();
+          setIsFollowing(!!follower);
+        }
+      }
 
       // Load search config or set defaults
       const defaultConfig: SearchConfig = {
@@ -144,16 +169,44 @@ export default function PublicEventPage({
       // Only add to expandedSections when user clicks to expand
       setExpandedSections(new Set<string>());
 
-      // Get photos with metadata
+      // Get photos with metadata (including edited_url for purchased photos)
+      // Check if user has purchased photos from this event
+      let purchasedPhotoIds: string[] = [];
+      if (user) {
+        const { data: purchases } = await supabase
+          .from("purchases")
+          .select(`
+            purchase_photos (
+              photo_id
+            )
+          `)
+          .eq("buyer_id", user.id)
+          .eq("event_id", eventData.id)
+          .eq("status", "completed");
+        
+        if (purchases) {
+          purchasedPhotoIds = purchases.flatMap((p: any) => 
+            p.purchase_photos?.map((pp: any) => pp.photo_id) || []
+          );
+        }
+      }
+
       const { data: photosData } = await supabase
         .from("photos")
-        .select("id, watermark_url, bib_number, price, taken_at, camera_make, camera_model")
+        .select("id, watermark_url, original_url, edited_url, bib_number, price, taken_at, camera_make, camera_model, rotation")
         .eq("event_id", eventData.id)
         .order("taken_at", { ascending: false, nullsFirst: false });
 
       if (photosData) {
-        setPhotos(photosData);
-        setFilteredPhotos(photosData);
+        // Mark purchased photos and include original_url for purchased photos
+        const photosWithPurchaseStatus = photosData.map((photo: any) => ({
+          ...photo,
+          isPurchased: purchasedPhotoIds.includes(photo.id),
+          // Only include original_url if purchased
+          original_url: purchasedPhotoIds.includes(photo.id) ? photo.original_url : undefined,
+        }));
+        setPhotos(photosWithPurchaseStatus);
+        setFilteredPhotos(photosWithPurchaseStatus);
       }
 
       setLoading(false);
@@ -196,6 +249,102 @@ export default function PublicEventPage({
 
     setFilteredPhotos(filtered);
   }, [bibNumberFilter, dateFilter, timeRangeStart, timeRangeEnd, photos]);
+
+  const handleFollow = async () => {
+    if (!event) return;
+
+    const emailToUse = isAuthenticated ? followEmail : followEmail;
+    if (!emailToUse || !emailToUse.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setModalState({
+        isOpen: true,
+        title: "E-Mail erforderlich",
+        message: "Bitte gib eine gültige E-Mail-Adresse ein",
+        type: "warning",
+      });
+      return;
+    }
+
+    setIsFollowingLoading(true);
+    try {
+      const response = await fetch(`/api/events/${event.id}/follow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailToUse }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIsFollowing(true);
+        setModalState({
+          isOpen: true,
+          title: "Erfolg",
+          message: data.message || "Du folgst diesem Event jetzt!",
+          type: "success",
+        });
+      } else {
+        setModalState({
+          isOpen: true,
+          title: "Fehler",
+          message: data.error || "Fehler beim Folgen des Events",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Fehler beim Folgen des Events",
+        type: "error",
+      });
+    } finally {
+      setIsFollowingLoading(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!event) return;
+
+    const emailToUse = isAuthenticated ? followEmail : followEmail;
+    if (!emailToUse) return;
+
+    setIsFollowingLoading(true);
+    try {
+      const response = await fetch(`/api/events/${event.id}/unfollow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailToUse }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIsFollowing(false);
+        setModalState({
+          isOpen: true,
+          title: "Erfolg",
+          message: data.message || "Du folgst diesem Event nicht mehr",
+          type: "success",
+        });
+      } else {
+        setModalState({
+          isOpen: true,
+          title: "Fehler",
+          message: data.error || "Fehler beim Entfolgen",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      setModalState({
+        isOpen: true,
+        title: "Fehler",
+        message: "Fehler beim Entfolgen",
+        type: "error",
+      });
+    } finally {
+      setIsFollowingLoading(false);
+    }
+  };
 
   const handleFaceSearchResults = (photoIds: string[]) => {
     if (photoIds.length > 0) {
@@ -283,12 +432,66 @@ export default function PublicEventPage({
                 <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-3xl md:text-4xl">
                   {event.title}
                 </h1>
-                <ShareButton
-                  url={typeof window !== "undefined" ? window.location.href : ""}
-                  title={`${event.title} - Fotos ansehen`}
-                  text={`Schau dir die Fotos von ${event.title} an!`}
-                  className="flex-shrink-0 shadow-md"
-                />
+                <div className="flex flex-shrink-0 gap-2">
+                  {!isFollowing ? (
+                    <div className="flex gap-2">
+                      {!isAuthenticated && (
+                        <input
+                          type="email"
+                          placeholder="Deine E-Mail"
+                          value={followEmail}
+                          onChange={(e) => setFollowEmail(e.target.value)}
+                          className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                      )}
+                      <button
+                        onClick={handleFollow}
+                        disabled={isFollowingLoading || (!isAuthenticated && !followEmail)}
+                        className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+                      >
+                        {isFollowingLoading ? (
+                          <>
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                            <span>Wird geladen...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <span>Event folgen</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleUnfollow}
+                      disabled={isFollowingLoading}
+                      className="flex items-center gap-2 rounded-md bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
+                    >
+                      {isFollowingLoading ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-700 border-t-transparent"></div>
+                          <span>Wird geladen...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Gefolgt</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  <ShareButton
+                    url={typeof window !== "undefined" ? window.location.href : ""}
+                    title={`${event.title} - Fotos ansehen`}
+                    text={`Schau dir die Fotos von ${event.title} an!`}
+                    className="flex-shrink-0 shadow-md"
+                  />
+                </div>
               </div>
               <div className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400 sm:mt-4">
                 <div className="flex items-center">
@@ -973,7 +1176,11 @@ export default function PublicEventPage({
                 <div 
                   className="aspect-square w-full cursor-zoom-in overflow-hidden bg-zinc-100 dark:bg-zinc-700"
                   onClick={() => {
-                    setLightboxImage(photo.watermark_url);
+                    // Use original_url if purchased, otherwise watermark_url
+                    const imageToShow = photo.isPurchased && photo.original_url 
+                      ? photo.original_url 
+                      : photo.watermark_url;
+                    setLightboxImage(imageToShow);
                     setLightboxPhoto(photo);
                     setLightboxOpen(true);
                   }}
@@ -1011,6 +1218,13 @@ export default function PublicEventPage({
                   {photo.bib_number && (
                     <div className="rounded bg-black/70 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm">
                       #{photo.bib_number}
+                    </div>
+                  )}
+                  
+                  {/* Edited Version Indicator - Only show for purchased photos */}
+                  {photo.isPurchased && photo.edited_url && (
+                    <div className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                      ✨ Bearbeitet
                     </div>
                   )}
                   
@@ -1118,6 +1332,7 @@ export default function PublicEventPage({
         showShare={true}
         shareUrl={typeof window !== "undefined" && lightboxPhoto ? `${window.location.origin}/event/${slug}?photo=${lightboxPhoto.id}` : ""}
         shareTitle={`${event.title}${lightboxPhoto?.bib_number ? ` - #${lightboxPhoto.bib_number}` : ""}`}
+        editedUrl={lightboxPhoto?.isPurchased && lightboxPhoto?.edited_url ? lightboxPhoto.edited_url : null}
       />
 
       {/* Cart Modal */}

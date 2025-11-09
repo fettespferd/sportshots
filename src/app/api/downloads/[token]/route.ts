@@ -23,6 +23,7 @@ export async function GET(
           photos (
             id,
             original_url,
+            edited_url,
             rotation,
             event_id,
             events (
@@ -63,6 +64,7 @@ export async function GET(
         photos: purchase.purchase_photos.map((pp: any) => ({
           id: pp.photos.id,
           original_url: pp.photos.original_url,
+          edited_url: pp.photos.edited_url || null,
           rotation: pp.photos.rotation || 0,
           event_title: pp.photos.events?.title,
         })),

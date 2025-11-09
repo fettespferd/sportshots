@@ -71,7 +71,7 @@ export default function EventDetailsPage({
         return;
       }
 
-      // Get photos for this event
+      // Get photos for this event (including edited_url)
       const { data: photosData } = await supabase
         .from("photos")
         .select("*")
@@ -613,6 +613,13 @@ export default function EventDetailsPage({
                     <div className="pointer-events-none absolute bottom-2 left-2 z-10 rounded bg-black/70 px-2 py-1 text-xs font-medium text-white">
                       {photo.bib_number ? `#${photo.bib_number}` : "Keine Startnummer"}
                     </div>
+
+                    {/* Edited Version Indicator */}
+                    {photo.edited_url && (
+                      <div className="pointer-events-none absolute top-2 left-2 z-10 rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white">
+                        ✨ Bearbeitet
+                      </div>
+                    )}
 
                     {/* Checkbox - Bottom Right */}
                     <label className="absolute bottom-2 right-2 z-20 cursor-pointer" onClick={(e) => e.stopPropagation()}>
@@ -1377,7 +1384,7 @@ export default function EventDetailsPage({
         onClose={() => setToast({ ...toast, show: false })}
       />
 
-      {/* Lightbox for photographer - shows original without watermark */}
+      {/* Lightbox for photographer - shows original without watermark, with edited version toggle */}
       <Lightbox
         isOpen={lightboxOpen}
         onClose={() => {
@@ -1393,6 +1400,7 @@ export default function EventDetailsPage({
         cameraMake={lightboxPhoto?.camera_make}
         cameraModel={lightboxPhoto?.camera_model}
         rotation={lightboxPhoto?.rotation || 0}
+        editedUrl={lightboxPhoto?.edited_url || null}
       />
     </div>
   );

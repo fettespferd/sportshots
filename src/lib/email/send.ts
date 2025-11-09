@@ -68,7 +68,10 @@ export async function sendNewPhotosEmail(
   userName: string,
   eventName: string,
   eventSlug: string,
-  photoCount: number
+  photoCount: number,
+  unsubscribeToken?: string,
+  eventId?: string,
+  followerEmail?: string
 ) {
   const html = await render(
     NewPhotosEmail({
@@ -76,6 +79,9 @@ export async function sendNewPhotosEmail(
       eventName,
       eventSlug,
       photoCount,
+      unsubscribeToken,
+      eventId,
+      followerEmail,
     })
   );
 

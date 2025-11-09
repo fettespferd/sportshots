@@ -190,6 +190,39 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         photoIds.length
       );
     }
+
+    // Automatically add buyer as event follower
+    if (customerEmail && eventId) {
+      try {
+        // Check if already following
+        const { data: existingFollower } = await supabase
+          .from("event_followers")
+          .select("id")
+          .eq("event_id", eventId)
+          .eq("email", customerEmail)
+          .single();
+
+        if (!existingFollower) {
+          // Add as follower
+          const { error: followError } = await supabase
+            .from("event_followers")
+            .insert({
+              event_id: eventId,
+              email: customerEmail,
+              user_id: userId && userId !== "guest" ? userId : null,
+            });
+
+          if (followError) {
+            console.warn("Failed to add buyer as follower:", followError);
+          } else {
+            console.log("✅ Buyer automatically added as event follower");
+          }
+        }
+      } catch (followError) {
+        console.warn("Error adding buyer as follower:", followError);
+        // Don't fail the webhook if follow fails
+      }
+    }
   } catch (emailError) {
     console.error("Failed to send email notifications:", emailError);
     // Don't fail the webhook if email fails

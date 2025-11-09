@@ -6,6 +6,7 @@ import Link from "next/link";
 interface Photo {
   id: string;
   original_url: string;
+  edited_url: string | null;
   event_title: string;
   rotation?: number;
 }
@@ -27,6 +28,7 @@ export default function DownloadsPage({
   const [loading, setLoading] = useState(true);
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [error, setError] = useState("");
+  const [downloadingZip, setDownloadingZip] = useState(false);
 
   useEffect(() => {
     const loadPurchase = async () => {
@@ -156,6 +158,67 @@ export default function DownloadsPage({
           </div>
         </div>
 
+        {/* Bulk Download Button */}
+        {purchase.photos.length > 1 && (
+          <div className="mb-8 rounded-lg bg-white p-6 shadow dark:bg-zinc-800">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                  Alle Fotos als ZIP herunterladen
+                </h3>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                  Lade alle {purchase.photos.length} Fotos auf einmal herunter
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  setDownloadingZip(true);
+                  try {
+                    const response = await fetch(`/api/downloads/${token}/zip`);
+                    if (!response.ok) {
+                      throw new Error("Fehler beim Download");
+                    }
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    const eventTitle = purchase.photos[0]?.event_title || "Event";
+                    const sanitizedTitle = eventTitle
+                      .replace(/[^a-z0-9]/gi, "-")
+                      .toLowerCase()
+                      .substring(0, 50);
+                    a.download = `${sanitizedTitle}_fotos.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                  } catch (error) {
+                    alert("Fehler beim Herunterladen der ZIP-Datei");
+                  } finally {
+                    setDownloadingZip(false);
+                  }
+                }}
+                disabled={downloadingZip}
+                className="flex items-center justify-center gap-2 rounded-md bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+              >
+                {downloadingZip ? (
+                  <>
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    <span>Wird erstellt...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>ZIP herunterladen</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Photos Grid */}
         <div className="rounded-lg bg-white p-6 shadow dark:bg-zinc-800">
           <h2 className="mb-6 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
@@ -165,34 +228,70 @@ export default function DownloadsPage({
             {purchase.photos.map((photo, index) => (
               <div
                 key={photo.id}
-                className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700"
+                className="space-y-4 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700"
               >
-                <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
-                  <img
-                    src={photo.original_url}
-                    alt={`Foto ${index + 1}`}
-                    className="h-full w-full object-cover"
-                    style={{
-                      transform: `rotate(${photo.rotation || 0}deg)`,
-                    }}
-                  />
+                {/* Original Version */}
+                <div>
+                  <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
+                    <img
+                      src={photo.original_url}
+                      alt={`Foto ${index + 1} - Original`}
+                      className="h-full w-full object-cover"
+                      style={{
+                        transform: `rotate(${photo.rotation || 0}deg)`,
+                      }}
+                    />
+                  </div>
+                  <div className="p-4">
+                    <p className="mb-2 text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                      Foto {index + 1} - {photo.event_title}
+                    </p>
+                    <p className="mb-3 text-xs text-zinc-500 dark:text-zinc-400">
+                      Original
+                    </p>
+                    <a
+                      href={photo.original_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                      📥 Original herunterladen
+                    </a>
+                  </div>
                 </div>
-                <div className="p-4">
-                  <p className="mb-3 text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                    Foto {index + 1} - {photo.event_title}
-                  </p>
-                  <a
-                    href={photo.original_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                  >
-                    📥 Herunterladen
-                  </a>
-                  <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                    Tippe lang drücken → In Fotos speichern
-                  </p>
-                </div>
+
+                {/* Edited Version (if available) */}
+                {photo.edited_url && (
+                  <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+                    <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
+                      <img
+                        src={photo.edited_url}
+                        alt={`Foto ${index + 1} - Bearbeitet`}
+                        className="h-full w-full object-cover"
+                        style={{
+                          transform: `rotate(${photo.rotation || 0}deg)`,
+                        }}
+                      />
+                    </div>
+                    <div className="p-4">
+                      <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
+                        Bearbeitete Version
+                      </p>
+                      <a
+                        href={photo.edited_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full rounded-md bg-blue-600 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                      >
+                        ✨ Bearbeitet herunterladen
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <p className="px-4 pb-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                  Tippe lang drücken → In Fotos speichern
+                </p>
               </div>
             ))}
           </div>

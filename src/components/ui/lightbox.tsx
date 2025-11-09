@@ -23,6 +23,7 @@ interface LightboxProps {
   showShare?: boolean;
   shareUrl?: string;
   shareTitle?: string;
+  editedUrl?: string | null;
 }
 
 export function Lightbox({ 
@@ -43,7 +44,8 @@ export function Lightbox({
   onViewCart,
   showShare = false,
   shareUrl = "",
-  shareTitle
+  shareTitle,
+  editedUrl
 }: LightboxProps) {
   const { t } = useLanguage();
   const [touchStart, setTouchStart] = useState(0);
@@ -51,9 +53,12 @@ export function Lightbox({
   const [isDragging, setIsDragging] = useState(false);
   const [dragDistance, setDragDistance] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const [showEdited, setShowEdited] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
+      // Reset to original view when opening
+      setShowEdited(false);
       // Show swipe hint and hide after 3 seconds
       setShowSwipeHint(true);
       const hintTimer = setTimeout(() => {
@@ -187,6 +192,22 @@ export function Lightbox({
         </svg>
       </button>
 
+      {/* Version Toggle Button - Only show if edited version exists */}
+      {editedUrl && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowEdited(!showEdited);
+          }}
+          className="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-zinc-900 shadow-xl transition-all hover:bg-white active:scale-95 sm:left-4 sm:top-4"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>{showEdited ? "Original" : "Bearbeitet"}</span>
+        </button>
+      )}
+
       {/* Action buttons - Share Button (Top Right) */}
       {showShare && shareUrl && (
         <button
@@ -220,9 +241,9 @@ export function Lightbox({
       {/* Image - Mobile optimized with pinch-zoom enabled */}
       <div className="relative z-10 flex h-[60vh] w-full max-w-[95vw] touch-auto items-center justify-center overflow-auto sm:h-[85vh] sm:max-w-[90vw]">
         <img
-          src={imageUrl}
+          src={showEdited && editedUrl ? editedUrl : imageUrl}
           alt={alt}
-          className="max-h-full max-w-full touch-auto object-contain transition-transform duration-300"
+          className="max-h-full max-w-full touch-auto object-contain transition-opacity duration-300"
           style={{
             transform: `rotate(${rotation}deg)`,
             touchAction: 'pinch-zoom',

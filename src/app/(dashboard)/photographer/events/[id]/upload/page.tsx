@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Toast } from "@/components/ui/toast";
 import { extractExifData, formatMetadataForDB } from "@/lib/utils/exif";
 import { supportsStations, supportsHeats, supportsCategories } from "@/lib/utils/event-config";
+import { compressImage, formatFileSize, needsCompression } from "@/lib/utils/image-compression";
 
 interface UploadFile {
   file: File;
@@ -17,8 +18,13 @@ interface UploadFile {
   category?: string;
   isFinishLine?: boolean;
   teamPartnerBib?: string;
-  status: "pending" | "uploading" | "success" | "error";
+  editedFile?: File;
+  editedPreview?: string;
+  status: "pending" | "compressing" | "uploading" | "success" | "error";
   error?: string;
+  uploadProgress?: number;
+  originalSize?: number;
+  compressedSize?: number;
 }
 
 interface EventData {
@@ -81,6 +87,7 @@ export default function UploadPhotosPage({
       preview: URL.createObjectURL(file),
       bibNumber: "",
       status: "pending" as const,
+      originalSize: file.size,
     }));
 
     setFiles((prev) => [...prev, ...newFiles]);
@@ -102,7 +109,39 @@ export default function UploadPhotosPage({
     setFiles((prev) => {
       const file = prev[index];
       URL.revokeObjectURL(file.preview);
+      if (file.editedPreview) {
+        URL.revokeObjectURL(file.editedPreview);
+      }
       return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleEditedFileSelect = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    
+    const editedFile = e.target.files[0];
+    const editedPreview = URL.createObjectURL(editedFile);
+    
+    setFiles((prev) =>
+      prev.map((f, i) => 
+        i === index 
+          ? { ...f, editedFile, editedPreview } 
+          : f
+      )
+    );
+  };
+
+  const removeEditedFile = (index: number) => {
+    setFiles((prev) => {
+      const file = prev[index];
+      if (file.editedPreview) {
+        URL.revokeObjectURL(file.editedPreview);
+      }
+      return prev.map((f, i) => 
+        i === index 
+          ? { ...f, editedFile: undefined, editedPreview: undefined } 
+          : f
+      );
     });
   };
 
@@ -144,16 +183,57 @@ export default function UploadPhotosPage({
       );
 
       try {
+        // Compress image if needed (for files > 10MB)
+        let fileToUpload = uploadFile.file;
+        let compressedSize = uploadFile.file.size;
+
+        if (needsCompression(uploadFile.file, 10)) {
+          setFiles((prev) =>
+            prev.map((f, idx) =>
+              idx === i ? { ...f, status: "compressing" } : f
+            )
+          );
+
+          try {
+            console.log(`Compressing ${uploadFile.file.name} (${formatFileSize(uploadFile.file.size)})...`);
+            fileToUpload = await compressImage(uploadFile.file, {
+              maxWidth: 4000,
+              maxHeight: 4000,
+              quality: 0.92,
+              maxSizeMB: 15, // Target max 15MB after compression
+            });
+            compressedSize = fileToUpload.size;
+            console.log(`Compressed to ${formatFileSize(compressedSize)}`);
+            
+            setFiles((prev) =>
+              prev.map((f, idx) =>
+                idx === i ? { ...f, compressedSize, status: "uploading" } : f
+              )
+            );
+          } catch (compressionError) {
+            console.warn("Compression failed, uploading original:", compressionError);
+            // Continue with original file if compression fails
+          }
+        } else {
+          setFiles((prev) =>
+            prev.map((f, idx) =>
+              idx === i ? { ...f, status: "uploading" } : f
+            )
+          );
+        }
+
         // Upload to Supabase Storage
-        const fileExt = uploadFile.file.name.split(".").pop();
+        const fileExt = fileToUpload.name.split(".").pop();
         const fileName = `${eventId}/${Date.now()}-${Math.random()
           .toString(36)
           .substring(7)}.${fileExt}`;
 
         // Upload original
+        // Note: Supabase Storage doesn't support onUploadProgress callback
+        // Progress tracking would require custom implementation with fetch API
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("photos")
-          .upload(`originals/${fileName}`, uploadFile.file, {
+          .upload(`originals/${fileName}`, fileToUpload, {
             cacheControl: "3600",
             upsert: false,
           });
@@ -212,6 +292,34 @@ export default function UploadPhotosPage({
         const thumbnailUrl = watermarkData.thumbnailUrl;
         console.log("Watermark generated successfully:", { watermarkUrl, thumbnailUrl });
 
+        // Upload edited version if provided
+        let editedUrl: string | null = null;
+        if (uploadFile.editedFile) {
+          console.log("Uploading edited version...");
+          const editedFileExt = uploadFile.editedFile.name.split(".").pop();
+          const editedFileName = `${eventId}/${Date.now()}-${Math.random()
+            .toString(36)
+            .substring(7)}-edited.${editedFileExt}`;
+
+          const { error: editedUploadError } = await supabase.storage
+            .from("photos")
+            .upload(`edited/${editedFileName}`, uploadFile.editedFile, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          if (editedUploadError) {
+            console.warn("Edited file upload failed:", editedUploadError);
+            // Don't fail the whole upload if edited version fails
+          } else {
+            const {
+              data: { publicUrl: editedUrlData },
+            } = supabase.storage.from("photos").getPublicUrl(`edited/${editedFileName}`);
+            editedUrl = editedUrlData;
+            console.log("Edited version uploaded successfully:", editedUrl);
+          }
+        }
+
         // Extract EXIF metadata
         console.log("Extracting EXIF metadata...");
         const metadata = await extractExifData(uploadFile.file);
@@ -246,6 +354,7 @@ export default function UploadPhotosPage({
           original_url: originalUrl,
           watermark_url: watermarkUrl,
           thumbnail_url: thumbnailUrl,
+          edited_url: editedUrl,
           price: eventPricing.price_per_photo,
           bib_number: detectedBibNumber || null,
           ...formattedMetadata,
@@ -281,6 +390,19 @@ export default function UploadPhotosPage({
     // Check if all uploads successful
     const allSuccess = files.every((f) => f.status === "success");
     if (allSuccess) {
+      // Notify followers about new photos
+      try {
+        const uploadedCount = files.filter((f) => f.status === "success").length;
+        await fetch(`/api/events/${eventId}/notify-followers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photoCount: uploadedCount }),
+        });
+      } catch (error) {
+        console.warn("Failed to notify followers:", error);
+        // Don't block navigation if notification fails
+      }
+      
       router.push(`/photographer/events/${eventId}`);
     }
   };
@@ -522,13 +644,13 @@ export default function UploadPhotosPage({
               Klicke zum Auswählen oder ziehe Dateien hierher
             </span>
             <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              PNG, JPG, JPEG bis zu 10MB pro Datei
+              PNG, JPG, JPEG, RAW (CR2, NEF, ARW, ORF, RAF, RW2, DNG) bis zu 50MB pro Datei (automatische Komprimierung bei großen Dateien)
             </span>
             <input
               id="file-upload"
               type="file"
               multiple
-              accept="image/*"
+              accept="image/*,.cr2,.nef,.arw,.orf,.raf,.rw2,.dng,.cr3,.srw,.3fr,.mef,.mos,.pef,.x3f"
               onChange={handleFileSelect}
               className="hidden"
               disabled={uploading}
@@ -553,9 +675,21 @@ export default function UploadPhotosPage({
                     />
                   </div>
 
+                  {uploadFile.status === "compressing" && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent mb-2"></div>
+                      <span className="text-xs text-white">Komprimiere...</span>
+                    </div>
+                  )}
+
                   {uploadFile.status === "uploading" && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"></div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent mb-2"></div>
+                      {uploadFile.uploadProgress !== undefined && (
+                        <span className="text-xs text-white">
+                          {uploadFile.uploadProgress}%
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -596,6 +730,20 @@ export default function UploadPhotosPage({
                   )}
 
                   <div className="p-2 space-y-2">
+                    {/* File Info */}
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {uploadFile.originalSize && (
+                        <div>
+                          Original: {formatFileSize(uploadFile.originalSize)}
+                          {uploadFile.compressedSize && uploadFile.compressedSize < uploadFile.originalSize && (
+                            <span className="text-green-600 dark:text-green-400">
+                              {" "}→ {formatFileSize(uploadFile.compressedSize)} (komprimiert)
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                     {/* Startnummer */}
                     <input
                       type="text"
@@ -605,6 +753,65 @@ export default function UploadPhotosPage({
                       disabled={uploading || uploadFile.status === "success"}
                       className="w-full rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-zinc-500 focus:outline-none disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                     />
+
+                    {/* Bearbeitete Version */}
+                    {!uploadFile.editedFile ? (
+                      <label className="flex cursor-pointer items-center justify-center gap-1 rounded border border-zinc-300 bg-white px-2 py-1.5 text-xs text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600">
+                        <svg
+                          className="h-3 w-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                          />
+                        </svg>
+                        <span>Bearbeitete Version</span>
+                        <input
+                          type="file"
+                          accept="image/*,.cr2,.nef,.arw,.orf,.raf,.rw2,.dng,.cr3,.srw,.3fr,.mef,.mos,.pef,.x3f"
+                          onChange={(e) => handleEditedFileSelect(index, e)}
+                          disabled={uploading || uploadFile.status === "success"}
+                          className="hidden"
+                        />
+                      </label>
+                    ) : (
+                      <div className="space-y-1">
+                        <div className="relative aspect-video w-full overflow-hidden rounded border border-zinc-300 dark:border-zinc-600">
+                          <img
+                            src={uploadFile.editedPreview}
+                            alt="Bearbeitete Version"
+                            className="h-full w-full object-cover"
+                          />
+                          <button
+                            onClick={() => removeEditedFile(index)}
+                            disabled={uploading || uploadFile.status === "success"}
+                            className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600 disabled:opacity-50"
+                          >
+                            <svg
+                              className="h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          ✓ Bearbeitete Version hinzugefügt
+                        </p>
+                      </div>
+                    )}
 
                     {/* Hyrox/CrossFit Fields - nur wenn Event das unterstützt */}
                     {event && supportsStations(event.event_type) && event.stations && (
