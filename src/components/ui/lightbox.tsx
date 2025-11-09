@@ -315,14 +315,45 @@ export function Lightbox({
         )}
       </div>
 
-      {/* Cart status indicator - Top left corner, clickable */}
+      {/* Version Toggle Button - Show for purchased photos (original/edited) or non-purchased (watermarked versions) */}
+      {(editedUrl || (watermarkEditedUrl && watermarkOriginalUrl)) && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (editedUrl) {
+              // Toggle between original and edited (purchased photos)
+              setShowEdited(!showEdited);
+            } else {
+              // Toggle between watermarked original and edited
+              setShowWatermarkEdited(!showWatermarkEdited);
+            }
+          }}
+          className="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-zinc-900 shadow-xl transition-all hover:bg-white active:scale-95 sm:left-4 sm:top-4"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>
+            {editedUrl 
+              ? (showEdited ? "Original" : "Bearbeitet")
+              : (showWatermarkEdited ? "Original" : "Bearbeitet")
+            }
+          </span>
+        </button>
+      )}
+
+      {/* Cart status indicator - Top right corner (if no share button), or below version toggle (if share button exists) */}
       {photoId && isInCart && onViewCart && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             onViewCart();
           }}
-          className="absolute left-3 top-3 z-30 flex items-center gap-2 rounded-full bg-green-600 px-3 py-2 text-sm font-bold text-white shadow-xl transition-all hover:scale-105 hover:bg-green-700 active:scale-95 sm:left-4 sm:top-4 sm:px-4"
+          className={`absolute z-30 flex items-center gap-2 rounded-full bg-green-600 px-3 py-2 text-sm font-bold text-white shadow-xl transition-all hover:scale-105 hover:bg-green-700 active:scale-95 sm:px-4 ${
+            showShare && shareUrl
+              ? "left-3 top-16 sm:left-4 sm:top-20" // Below version toggle if share button exists
+              : "right-3 top-3 sm:right-4 sm:top-4" // Top right if no share button
+          }`}
           aria-label="Warenkorb ansehen"
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
