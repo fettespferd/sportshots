@@ -31,10 +31,43 @@ export default function DownloadsPage({
   const [downloadingZip, setDownloadingZip] = useState(false);
   const [downloadingPhoto, setDownloadingPhoto] = useState<string | null>(null);
 
+  // Check if mobile device
+  const isMobile = typeof window !== "undefined" && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const hasShareAPI = typeof navigator !== "undefined" && navigator.share && navigator.canShare;
+
   // Function to download image directly to gallery
   const downloadImage = async (url: string, filename: string) => {
     try {
       setDownloadingPhoto(filename);
+      
+      // For mobile devices, use Web Share API if available
+      if (isMobile && hasShareAPI) {
+        try {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          const file = new File([blob], filename, { type: blob.type || "image/jpeg" });
+          
+          // Try to use Web Share API with file
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: filename,
+            });
+            setDownloadingPhoto(null);
+            return;
+          }
+        } catch (shareError: any) {
+          // If share is cancelled, don't show error
+          if (shareError.name === 'AbortError') {
+            setDownloadingPhoto(null);
+            return;
+          }
+          // If share fails, fall through to regular download
+          console.log("Share API failed, falling back to download:", shareError);
+        }
+      }
+      
+      // Fallback: Regular download for desktop or if Share API fails
       const response = await fetch(url);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
@@ -336,9 +369,15 @@ export default function DownloadsPage({
                   </div>
                 )}
 
-                <p className="px-4 pb-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                  💡 Tipp: Auf mobilen Geräten wird das Bild direkt in deine Galerie gespeichert
-                </p>
+                {isMobile && hasShareAPI ? (
+                  <p className="px-4 pb-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                    💡 Tipp: Beim Download kannst du "In Fotos speichern" wählen
+                  </p>
+                ) : (
+                  <p className="px-4 pb-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                    💡 Tipp: Tippe lang auf das Bild → "Bild speichern" oder "In Fotos speichern"
+                  </p>
+                )}
               </div>
             ))}
           </div>

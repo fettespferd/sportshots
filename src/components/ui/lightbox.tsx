@@ -65,6 +65,39 @@ export function Lightbox({
   const handleDownload = async (url: string, filename: string) => {
     try {
       setDownloading(true);
+      
+      // Check if we're on a mobile device and if Web Share API is available
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const hasShareAPI = navigator.share && navigator.canShare;
+      
+      if (isMobile && hasShareAPI) {
+        // For mobile devices, use fetch to get the image blob
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const file = new File([blob], filename, { type: blob.type });
+        
+        // Try to use Web Share API with file
+        if (navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: filename,
+            });
+            setDownloading(false);
+            return;
+          } catch (shareError: any) {
+            // If share is cancelled or fails, fall through to regular download
+            if (shareError.name !== 'AbortError') {
+              console.log("Share API failed, falling back to download:", shareError);
+            } else {
+              setDownloading(false);
+              return; // User cancelled
+            }
+          }
+        }
+      }
+      
+      // Fallback: Regular download for desktop or if Share API fails
       const response = await fetch(url);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
