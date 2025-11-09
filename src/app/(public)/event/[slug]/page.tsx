@@ -1265,43 +1265,37 @@ export default function PublicEventPage({
                   </div>
                 </div>
 
-                {/* Top left badges */}
-                <div className="absolute left-2 top-2 flex flex-col gap-1">
+                {/* Top left badges - Bib number and Edited indicator (stacked vertically) */}
+                <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
                   {photo.bib_number && (
                     <div className="rounded bg-black/70 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm">
                       #{photo.bib_number}
                     </div>
                   )}
                   
-                  {/* Edited Version Indicator - Show if edited version exists (for all users) */}
+                  {/* Edited Version Indicator */}
                   {photo.watermark_edited_url && (
                     <div className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm">
                       ✨ Bearbeitet
                     </div>
                   )}
-                  
-                  {/* Cart indicator badge */}
-                  {selectedPhotos.has(photo.id) && (
-                    <div className="flex items-center gap-1 rounded-full bg-green-600 px-2 py-1 text-xs font-bold text-white shadow-lg">
-                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>{Array.from(selectedPhotos).indexOf(photo.id) + 1}</span>
-                    </div>
-                  )}
                 </div>
 
-                {/* Selection checkbox */}
+                {/* Top right - Selection checkbox */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     togglePhotoSelection(photo.id);
                   }}
-                  className="absolute right-2 top-2 rounded-full bg-white/90 p-2 transition-colors hover:bg-white dark:bg-zinc-800/90 dark:hover:bg-zinc-800"
+                  className={`absolute right-2 top-2 z-10 flex items-center justify-center rounded-full p-2 transition-all ${
+                    selectedPhotos.has(photo.id)
+                      ? "bg-green-600 text-white shadow-lg"
+                      : "bg-white/90 text-zinc-400 hover:bg-white dark:bg-zinc-800/90 dark:hover:bg-zinc-800"
+                  }`}
                 >
                   {selectedPhotos.has(photo.id) ? (
                     <svg
-                      className="h-5 w-5 text-zinc-900 dark:text-zinc-50"
+                      className="h-5 w-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1315,7 +1309,7 @@ export default function PublicEventPage({
                     </svg>
                   ) : (
                     <svg
-                      className="h-5 w-5 text-zinc-400"
+                      className="h-5 w-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1330,6 +1324,14 @@ export default function PublicEventPage({
                   )}
                 </button>
 
+                {/* Bottom right - Selection number badge (only if selected) */}
+                {selectedPhotos.has(photo.id) && (
+                  <div className="absolute bottom-2 right-2 z-10 flex items-center justify-center rounded-full bg-green-600 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
+                    {Array.from(selectedPhotos).indexOf(photo.id) + 1}
+                  </div>
+                )}
+
+                {/* Bottom left - Price */}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                   <span className="text-xs font-medium text-white">
                     {photo.price.toFixed(2)} €
