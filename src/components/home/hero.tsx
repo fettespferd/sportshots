@@ -55,79 +55,72 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Image Gallery Showcase - Default Images linking to Events */}
+      {/* Image Gallery Showcase - Modern Visual Effects */}
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-          <Link
-            href="/search"
-            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
-          >
-            <Image
-              src="/images/jack-delulio-oro0KHgeQ_g-unsplash.jpg"
-              alt="Sport Action"
-              fill
-              className="object-cover"
-            />
-          </Link>
-          <Link
-            href="/search"
-            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
-          >
-            <Image
-              src="/images/jeremy-bishop-_CFv3bntQlQ-unsplash.jpg"
-              alt="Sport Action"
-              fill
-              className="object-cover"
-            />
-          </Link>
-          <Link
-            href="/search"
-            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
-          >
-            <Image
-              src="/images/jeremy-bishop-pikyGuAmwpM-unsplash.jpg"
-              alt="Sport Action"
-              fill
-              className="object-cover"
-            />
-          </Link>
-          <Link
-            href="/search"
-            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
-          >
-            <Image
-              src="/images/oleg-kukharuk-cVeJlVvQ3JI-unsplash.jpg"
-              alt="Sport Action"
-              fill
-              className="object-cover"
-            />
-          </Link>
-          <Link
-            href="/search"
-            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg transition-transform hover:scale-110"
-          >
-            <Image
-              src="/images/coen-van-de-broek-OFyh9TpMyM8-unsplash.jpg"
-              alt="Sport Action"
-              fill
-              className="object-cover"
-            />
-          </Link>
-          <Link
-            href="/search"
-            className="relative aspect-square overflow-hidden rounded-2xl shadow-lg md:col-span-1"
-          >
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-8 text-center transition-transform hover:scale-110">
-              <div>
-                <p className="text-4xl font-bold text-white">10.000+</p>
-                <p className="mt-2 text-sm font-medium text-white/90">
-                  {t("home.gallery.photosAvailable")}
-                </p>
+        <div className="mb-8 text-center">
+          <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50 sm:text-4xl">
+            Entdecke die Vielfalt
+          </h2>
+          <p className="mt-2 text-lg text-zinc-600 dark:text-zinc-400">
+            Von Surfen bis CrossFit – finde deine Sportfotos
+          </p>
+        </div>
+        
+        {/* Modern Grid Layout - Uniform Heights */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {[
+            { src: "/images/jack-delulio-oro0KHgeQ_g-unsplash.jpg", alt: "Paddleboarding" },
+            { src: "/images/jeremy-bishop-_CFv3bntQlQ-unsplash.jpg", alt: "Surfing Barrel" },
+            { src: "/images/jeremy-bishop-pikyGuAmwpM-unsplash.jpg", alt: "Surfing Action" },
+            { src: "/images/oleg-kukharuk-cVeJlVvQ3JI-unsplash.jpg", alt: "Cycling" },
+            { src: "/images/coen-van-de-broek-OFyh9TpMyM8-unsplash.jpg", alt: "Mountain Biking" },
+            { src: "/images/knut-robinson-DTHtjyRuozs-unsplashold.jpg", alt: "Surfing Wave" },
+            { src: "/images/alexandre-ricart-tbjIlLVmamQ-unsplash.jpg", alt: "CrossFit Training" },
+            { src: "/images/florian-kurrasch-HyivyCRdz14-unsplash.jpg", alt: "Parkour" },
+            { src: "/images/patrick-malleret-L5o5ainVP_I-unsplash.jpg", alt: "Yoga on Paddleboard" },
+            { src: "/images/quan-you-zhang-nWnRRmbyK_0-unsplash.jpg", alt: "Running Race" },
+            { src: "/images/tower-paddle-boards-sozkrZTVRjA-unsplash.jpg", alt: "Paddleboarding at Moon" },
+            { src: "/images/knut-robinson-DTHtjyRuozs-unsplash.png", alt: "Surfing" },
+          ].map((image, index) => (
+            <Link
+              key={image.src}
+              href="/search"
+              className="group relative aspect-square overflow-hidden rounded-2xl shadow-xl transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20"
+              style={{
+                animation: `fadeInUp 0.6s ease-out ${index * 50}ms forwards`,
+                opacity: 0,
+              }}
+            >
+              {/* Image Container */}
+              <div className="relative h-full w-full">
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                />
+                
+                {/* Shine Effect */}
+                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-all duration-1000 group-hover:translate-x-full group-hover:opacity-100" />
               </div>
-            </div>
-          </Link>
+            </Link>
+          ))}
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
 
       {/* Photographer CTA Section */}
       <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 py-20">
