@@ -649,60 +649,203 @@ export default function PublicEventPage({
       <div className={`mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 ${selectedPhotos.size > 0 ? 'pb-32 sm:pb-8' : ''}`}>
         {/* Search Bar */}
         <div className="mb-6 space-y-4">
-          {/* Filter Section */}
+          {/* Always visible filter options (outside filter card) */}
           {searchConfig && (
-            <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
-              <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                Filter
-              </h3>
-              <div className="space-y-4 overflow-hidden">
-                {/* Startnummer & Datum - Responsive Layout */}
-                <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Bib Number Filter - Always visible if enabled and visible_by_default */}
+              {searchConfig.bib_number?.enabled && searchConfig.bib_number?.visible_by_default && (
+                <div className="min-w-0">
+                  <label
+                    htmlFor="bibNumber"
+                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    {t("event.filterByBibNumber")}
+                  </label>
+                  <input
+                    id="bibNumber"
+                    type="text"
+                    value={bibNumberFilter}
+                    onChange={(e) => setBibNumberFilter(e.target.value)}
+                    placeholder={t("event.bibPlaceholder")}
+                    className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                    style={{ fontSize: '16px', maxWidth: '100%' }}
+                  />
+                </div>
+              )}
+
+              {/* Date Filter - Always visible if enabled and visible_by_default */}
+              {searchConfig.date_filter?.enabled && searchConfig.date_filter?.visible_by_default && (
+                <div className="min-w-0">
+                  <label
+                    htmlFor="dateFilter"
+                    className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    📅 {t("event.filterByDate")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="dateFilter"
+                      type="date"
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 pr-10 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                      style={{ fontSize: '16px', maxWidth: '100%' }}
+                    />
+                    {dateFilter && (
+                      <button
+                        onClick={() => setDateFilter("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-zinc-50"
+                        aria-label="Datum zurücksetzen"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Time Filter - Always visible if enabled and visible_by_default */}
+              {searchConfig.time_filter?.enabled && searchConfig.time_filter?.visible_by_default && (
+                <div className="min-w-0 sm:col-span-2">
+                  <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    ⏰ Uhrzeit-Filter
+                  </label>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {/* Bib Number Filter */}
-                    {searchConfig.bib_number?.enabled && (
-                      <div className={`min-w-0 ${searchConfig.bib_number?.visible_by_default ? '' : 'hidden'}`}>
-                        <label
-                          htmlFor="bibNumber"
-                          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                        >
-                          {t("event.filterByBibNumber")}
-                        </label>
+                    <div>
+                      <label className="mb-1 block text-xs text-zinc-600 dark:text-zinc-400">
+                        Von Uhrzeit
+                      </label>
+                      <input
+                        type="time"
+                        value={timeRangeStart}
+                        onChange={(e) => setTimeRangeStart(e.target.value)}
+                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs text-zinc-600 dark:text-zinc-400">
+                        Bis Uhrzeit
+                      </label>
+                      <input
+                        type="time"
+                        value={timeRangeEnd}
+                        onChange={(e) => setTimeRangeEnd(e.target.value)}
+                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Filter Section - Only show if a filter is active */}
+          {searchConfig && (bibNumberFilter || dateFilter || timeRangeStart || timeRangeEnd) && (
+            <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                  Filter
+                </h3>
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {filteredPhotos.length} von {photos.length} Fotos
+                </span>
+              </div>
+              <div className="space-y-4 overflow-hidden">
+                {/* Show active filters */}
+                <div className="space-y-4">
+                  {/* Active Bib Number Filter (if not visible_by_default) */}
+                  {bibNumberFilter && searchConfig.bib_number?.enabled && !searchConfig.bib_number?.visible_by_default && (
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {t("event.filterByBibNumber")}
+                      </label>
+                      <div className="flex items-center gap-2">
                         <input
-                          id="bibNumber"
                           type="text"
                           value={bibNumberFilter}
                           onChange={(e) => setBibNumberFilter(e.target.value)}
                           placeholder={t("event.bibPlaceholder")}
-                          className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-                          style={{ fontSize: '16px', maxWidth: '100%' }}
+                          className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
                         />
-                      </div>
-                    )}
-
-                    {/* Date Filter */}
-                    {searchConfig.date_filter?.enabled && (
-                      <div className={`min-w-0 ${searchConfig.date_filter?.visible_by_default ? '' : 'hidden'}`}>
-                        <label
-                          htmlFor="dateFilter"
-                          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        <button
+                          onClick={() => setBibNumberFilter("")}
+                          className="rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-zinc-50"
+                          aria-label="Startnummer zurücksetzen"
                         >
-                          📅 {t("event.filterByDate")}
-                        </label>
-                        <div className="relative">
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Active Date Filter (if not visible_by_default) */}
+                  {dateFilter && searchConfig.date_filter?.enabled && !searchConfig.date_filter?.visible_by_default && (
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        📅 {t("event.filterByDate")}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="date"
+                          value={dateFilter}
+                          onChange={(e) => setDateFilter(e.target.value)}
+                          className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
+                        <button
+                          onClick={() => setDateFilter("")}
+                          className="rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-zinc-50"
+                          aria-label="Datum zurücksetzen"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Active Time Range Filter */}
+                  {(timeRangeStart || timeRangeEnd) && searchConfig.time_filter?.enabled && (
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        ⏰ Uhrzeit-Filter
+                      </label>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="flex items-center gap-2">
                           <input
-                            id="dateFilter"
-                            type="date"
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value)}
-                            className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 pr-10 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-                            style={{ fontSize: '16px', maxWidth: '100%' }}
+                            type="time"
+                            value={timeRangeStart}
+                            onChange={(e) => setTimeRangeStart(e.target.value)}
+                            className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                           />
-                          {dateFilter && (
+                          {timeRangeStart && (
                             <button
-                              onClick={() => setDateFilter("")}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-zinc-50"
-                              aria-label="Datum zurücksetzen"
+                              onClick={() => setTimeRangeStart("")}
+                              className="rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-zinc-50"
+                              aria-label="Von Uhrzeit zurücksetzen"
+                            >
+                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="time"
+                            value={timeRangeEnd}
+                            onChange={(e) => setTimeRangeEnd(e.target.value)}
+                            className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                          />
+                          {timeRangeEnd && (
+                            <button
+                              onClick={() => setTimeRangeEnd("")}
+                              className="rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-600 dark:hover:text-zinc-50"
+                              aria-label="Bis Uhrzeit zurücksetzen"
                             >
                               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -711,176 +854,147 @@ export default function PublicEventPage({
                           )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="text-sm text-zinc-600 dark:text-zinc-400 sm:text-right">
-                    {t("event.resultsCount", { filtered: filteredPhotos.length, total: photos.length })}
-                  </div>
+                    </div>
+                  )}
                 </div>
+              </div>
+            </div>
+          )}
 
-                {/* Collapsible Sections for Hidden Options */}
-                {/* Bib Number Toggle */}
-                {searchConfig.bib_number?.enabled && !searchConfig.bib_number?.visible_by_default && (
-                  <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
-                    <button
-                      onClick={() => {
-                        const newExpanded = new Set(expandedSections);
-                        if (newExpanded.has("bib_number")) {
-                          newExpanded.delete("bib_number");
-                        } else {
-                          newExpanded.add("bib_number");
-                        }
-                        setExpandedSections(newExpanded);
-                      }}
-                      className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          {/* Collapsible Filter Options (outside filter card) - Only show if not visible_by_default */}
+          {searchConfig && (
+            <>
+              {/* Bib Number Toggle */}
+              {searchConfig.bib_number?.enabled && !searchConfig.bib_number?.visible_by_default && (
+                <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
+                  <button
+                    onClick={() => {
+                      const newExpanded = new Set(expandedSections);
+                      if (newExpanded.has("bib_number")) {
+                        newExpanded.delete("bib_number");
+                      } else {
+                        newExpanded.add("bib_number");
+                      }
+                      setExpandedSections(newExpanded);
+                    }}
+                    className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    <span>{t("event.filterByBibNumber")}</span>
+                    <svg
+                      className={`h-5 w-5 transition-transform ${expandedSections.has("bib_number") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <span>{t("event.filterByBibNumber")}</span>
-                      <svg
-                        className={`h-5 w-5 transition-transform ${expandedSections.has("bib_number") ? "rotate-180" : ""}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {expandedSections.has("bib_number") && (
-                      <div className="mt-3">
-                        <input
-                          type="text"
-                          value={bibNumberFilter}
-                          onChange={(e) => setBibNumberFilter(e.target.value)}
-                          placeholder={t("event.bibPlaceholder")}
-                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedSections.has("bib_number") && (
+                    <div className="mt-3">
+                      <input
+                        type="text"
+                        value={bibNumberFilter}
+                        onChange={(e) => setBibNumberFilter(e.target.value)}
+                        placeholder={t("event.bibPlaceholder")}
+                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {/* Date Filter Toggle */}
-                {searchConfig.date_filter?.enabled && !searchConfig.date_filter?.visible_by_default && (
-                  <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
-                    <button
-                      onClick={() => {
-                        const newExpanded = new Set(expandedSections);
-                        if (newExpanded.has("date_filter")) {
-                          newExpanded.delete("date_filter");
-                        } else {
-                          newExpanded.add("date_filter");
-                        }
-                        setExpandedSections(newExpanded);
-                      }}
-                      className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              {/* Date Filter Toggle */}
+              {searchConfig.date_filter?.enabled && !searchConfig.date_filter?.visible_by_default && (
+                <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
+                  <button
+                    onClick={() => {
+                      const newExpanded = new Set(expandedSections);
+                      if (newExpanded.has("date_filter")) {
+                        newExpanded.delete("date_filter");
+                      } else {
+                        newExpanded.add("date_filter");
+                      }
+                      setExpandedSections(newExpanded);
+                    }}
+                    className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    <span>📅 {t("event.filterByDate")}</span>
+                    <svg
+                      className={`h-5 w-5 transition-transform ${expandedSections.has("date_filter") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <span>📅 {t("event.filterByDate")}</span>
-                      <svg
-                        className={`h-5 w-5 transition-transform ${expandedSections.has("date_filter") ? "rotate-180" : ""}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {expandedSections.has("date_filter") && (
-                      <div className="mt-3">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedSections.has("date_filter") && (
+                    <div className="mt-3">
+                      <input
+                        type="date"
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Time Filter Toggle */}
+              {searchConfig.time_filter?.enabled && !searchConfig.time_filter?.visible_by_default && (
+                <div className="rounded-lg bg-white p-4 shadow dark:bg-zinc-800">
+                  <button
+                    onClick={() => {
+                      const newExpanded = new Set(expandedSections);
+                      if (newExpanded.has("time_filter")) {
+                        newExpanded.delete("time_filter");
+                      } else {
+                        newExpanded.add("time_filter");
+                      }
+                      setExpandedSections(newExpanded);
+                    }}
+                    className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    <span>⏰ Uhrzeit-Filter</span>
+                    <svg
+                      className={`h-5 w-5 transition-transform ${expandedSections.has("time_filter") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedSections.has("time_filter") && (
+                    <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                          Von Uhrzeit
+                        </label>
                         <input
-                          type="date"
-                          value={dateFilter}
-                          onChange={(e) => setDateFilter(e.target.value)}
+                          type="time"
+                          value={timeRangeStart}
+                          onChange={(e) => setTimeRangeStart(e.target.value)}
                           className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                         />
                       </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Time Filter Toggle */}
-                {searchConfig.time_filter?.enabled && (
-                  <div className={`border-t border-zinc-200 pt-4 dark:border-zinc-700 ${searchConfig.time_filter?.visible_by_default ? '' : ''}`}>
-                    {!searchConfig.time_filter?.visible_by_default ? (
-                      <>
-                        <button
-                          onClick={() => {
-                            const newExpanded = new Set(expandedSections);
-                            if (newExpanded.has("time_filter")) {
-                              newExpanded.delete("time_filter");
-                            } else {
-                              newExpanded.add("time_filter");
-                            }
-                            setExpandedSections(newExpanded);
-                          }}
-                          className="flex w-full items-center justify-between text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                        >
-                          <span>⏰ Uhrzeit-Filter</span>
-                          <svg
-                            className={`h-5 w-5 transition-transform ${expandedSections.has("time_filter") ? "rotate-180" : ""}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        {expandedSections.has("time_filter") && (
-                          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                              <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                Von Uhrzeit
-                              </label>
-                              <input
-                                type="time"
-                                value={timeRangeStart}
-                                onChange={(e) => setTimeRangeStart(e.target.value)}
-                                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                              />
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                Bis Uhrzeit
-                              </label>
-                              <input
-                                type="time"
-                                value={timeRangeEnd}
-                                onChange={(e) => setTimeRangeEnd(e.target.value)}
-                                className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            ⏰ Von Uhrzeit
-                          </label>
-                          <input
-                            type="time"
-                            value={timeRangeStart}
-                            onChange={(e) => setTimeRangeStart(e.target.value)}
-                            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            ⏰ Bis Uhrzeit
-                          </label>
-                          <input
-                            type="time"
-                            value={timeRangeEnd}
-                            onChange={(e) => setTimeRangeEnd(e.target.value)}
-                            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
-                          />
-                        </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                          Bis Uhrzeit
+                        </label>
+                        <input
+                          type="time"
+                          value={timeRangeEnd}
+                          onChange={(e) => setTimeRangeEnd(e.target.value)}
+                          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+                        />
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           {/* Face Search */}
