@@ -87,13 +87,6 @@ export function Header() {
               </Link>
 
               <nav className="hidden items-center space-x-4 md:flex">
-              <Link
-                href="/search"
-                className="text-sm font-medium text-zinc-700 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-50"
-              >
-                {t("nav.events")}
-              </Link>
-
               {((profile?.role === "photographer" &&
                 profile?.photographer_status === "approved") ||
                 profile?.role === "admin") && (
@@ -134,29 +127,31 @@ export function Header() {
               </div>
             )}
 
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-md p-2 text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 md:hidden"
-              aria-label="Menu"
-            >
-              {mobileMenuOpen ? (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
+            {/* Mobile menu button - only show for logged in users */}
+            {!loading && user && (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="rounded-md p-2 text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 md:hidden"
+                aria-label="Menu"
+              >
+                {mobileMenuOpen ? (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
     </header>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
+      {/* Mobile Menu - only show for logged in users */}
+      {!loading && user && mobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           {/* Overlay */}
           <div
@@ -179,15 +174,6 @@ export function Header() {
             </div>
 
             <nav className="flex flex-col space-y-1 p-4">
-              {/* Events suchen */}
-              <Link
-                href="/search"
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-md px-4 py-3 text-base font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              >
-                {t("nav.events")}
-              </Link>
-
               {/* Photographer Navigation */}
               {((profile?.role === "photographer" && profile?.photographer_status === "approved") || profile?.role === "admin") && (
                 <>
