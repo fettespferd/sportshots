@@ -268,13 +268,13 @@ export default function FindPhotosPage() {
 
           {cameraActive && (
             <div className="space-y-6">
-              <div className="relative aspect-video overflow-hidden rounded-xl bg-zinc-900">
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-zinc-900 sm:aspect-video">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain sm:object-cover"
                   style={{ transform: "scaleX(-1)" }}
                 />
                 {/* Oval Guide */}
@@ -282,8 +282,8 @@ export default function FindPhotosPage() {
                   <div
                     className="border-4 border-white/50 shadow-2xl"
                     style={{
-                      width: "280px",
-                      height: "360px",
+                      width: "min(280px, 70%)",
+                      height: "min(360px, 85%)",
                       borderRadius: "50%",
                     }}
                   />

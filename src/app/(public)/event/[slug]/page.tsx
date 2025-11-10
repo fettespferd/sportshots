@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { FaceSearch } from "@/components/search/face-search";
 import { Modal } from "@/components/ui/modal";
 import { Lightbox } from "@/components/ui/lightbox";
@@ -55,6 +56,8 @@ export default function PublicEventPage({
 }) {
   const { slug } = use(params);
   const { t } = useLanguage();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]);
@@ -249,6 +252,24 @@ export default function PublicEventPage({
 
     loadEvent();
   }, [slug]);
+
+  // Open lightbox if photo query parameter is present
+  useEffect(() => {
+    const photoId = searchParams.get("photo");
+    if (photoId && photos.length > 0 && !lightboxOpen) {
+      const photo = photos.find((p) => p.id === photoId);
+      if (photo) {
+        // Determine which image URL to use
+        const imageUrl = photo.isPurchased && photo.original_url
+          ? photo.original_url
+          : photo.watermark_edited_url || photo.watermark_url;
+        
+        setLightboxImage(imageUrl);
+        setLightboxPhoto(photo);
+        setLightboxOpen(true);
+      }
+    }
+  }, [photos, searchParams, lightboxOpen]);
 
   useEffect(() => {
     let filtered = photos;
@@ -1472,6 +1493,13 @@ export default function PublicEventPage({
         onClose={() => {
           setLightboxOpen(false);
           setLightboxPhoto(null);
+          // Remove photo query parameter from URL
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete("photo");
+          const newUrl = params.toString() 
+            ? `${window.location.pathname}?${params.toString()}`
+            : window.location.pathname;
+          router.replace(newUrl);
         }}
         imageUrl={lightboxImage}
         alt="Foto"
