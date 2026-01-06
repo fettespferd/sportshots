@@ -19,6 +19,8 @@ export function Hero() {
             fill
             className="object-cover opacity-70"
             priority
+            quality={90}
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/40 via-zinc-900/50 to-zinc-900/80"></div>
         </div>
@@ -99,6 +101,8 @@ export function Hero() {
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  loading={index < 4 ? "eager" : "lazy"}
+                  quality={85}
                 />
                 
                 {/* Shine Effect */}

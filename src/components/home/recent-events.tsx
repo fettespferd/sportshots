@@ -53,6 +53,9 @@ export function RecentEvents({ events }: RecentEventsProps) {
                   height={338}
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   priority={false}
+                  loading="lazy"
+                  quality={85}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
             ) : (

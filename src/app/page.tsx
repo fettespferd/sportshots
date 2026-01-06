@@ -1,7 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { Hero } from "@/components/home/hero";
-import { Features } from "@/components/home/features";
-import { RecentEvents } from "@/components/home/recent-events";
+import dynamic from "next/dynamic";
+
+// Lazy load components that are below the fold
+const Features = dynamic(() => import("@/components/home/features").then(mod => ({ default: mod.Features })), {
+  loading: () => <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8" />,
+});
+
+const RecentEvents = dynamic(() => import("@/components/home/recent-events").then(mod => ({ default: mod.RecentEvents })), {
+  loading: () => <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8" />,
+});
 
 export default async function Home() {
   const supabase = await createClient();
