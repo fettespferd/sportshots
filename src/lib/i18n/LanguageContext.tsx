@@ -11,15 +11,23 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("de");
-
-  // Load locale from localStorage on mount
-  useEffect(() => {
+// Initialize locale from localStorage synchronously to avoid hydration mismatch
+const getInitialLocale = (): Locale => {
+  if (typeof window !== 'undefined') {
     const saved = localStorage.getItem("sportshots-locale") as Locale;
     if (saved && translations[saved]) {
-      setLocaleState(saved);
+      return saved;
     }
+  }
+  return "de";
+};
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   const setLocale = (newLocale: Locale) => {

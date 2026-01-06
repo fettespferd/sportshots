@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import dynamic from "next/dynamic";
+
+// Lazy load footer as it's below the fold
+const Footer = dynamic(() => import("@/components/layout/footer").then(mod => ({ default: mod.Footer })), {
+  ssr: true,
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,10 +24,34 @@ const geistMono = Geist_Mono({
   preload: false,
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
+};
+
 export const metadata: Metadata = {
   title: "SportShots - Deine Sportfotos finden & kaufen",
   description:
     "Finde und kaufe deine Sportfotos über Startnummer, Event-Suche oder Selfie-Abgleich. Fotografen können Events erstellen und Fotos verkaufen.",
+  keywords: ["Sportfotos", "Lauffotos", "Event-Fotografie", "Gesichtserkennung", "Startnummern-Suche"],
+  authors: [{ name: "SportShots" }],
+  creator: "SportShots",
+  publisher: "SportShots",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/icon.png', sizes: '512x512', type: 'image/png' },
