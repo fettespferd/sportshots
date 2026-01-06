@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Toast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/toast";
 import { extractExifData, formatMetadataForDB } from "@/lib/utils/exif";
 import { supportsStations, supportsHeats, supportsCategories } from "@/lib/utils/event-config";
 import { compressImage, formatFileSize, needsCompression } from "@/lib/utils/image-compression";
@@ -48,19 +48,8 @@ export default function UploadPhotosPage({
   const [event, setEvent] = useState<EventData | null>(null);
   const [runningOCR, setRunningOCR] = useState(false);
   const [ocrProgress, setOcrProgress] = useState({ current: 0, total: 0 });
-  const [toast, setToast] = useState<{
-    show: boolean;
-    message: string;
-    type: "success" | "error" | "info" | "warning";
-  }>({
-    show: false,
-    message: "",
-    type: "info",
-  });
-
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "info") => {
-    setToast({ show: true, message, type });
-  };
+  
+  const toast = useToast();
   const router = useRouter();
   const supabase = createClient();
 
@@ -153,7 +142,7 @@ export default function UploadPhotosPage({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      showToast("Nicht angemeldet", "error");
+      toast.error("Nicht angemeldet");
       setUploading(false);
       return;
     }
@@ -166,7 +155,7 @@ export default function UploadPhotosPage({
       .single();
 
     if (!eventPricing) {
-      showToast("Event nicht gefunden", "error");
+      toast.error("Event nicht gefunden");
       setUploading(false);
       return;
     }
@@ -433,7 +422,7 @@ export default function UploadPhotosPage({
           const result = await notifyResponse.json();
           console.log("[UPLOAD] Notify followers result:", result);
           if (result.notified > 0) {
-            showToast(`${result.notified} Follower wurden benachrichtigt`, "success");
+            toast.success(`${result.notified} Follower wurden benachrichtigt`);
           } else if (result.notified === 0 && result.message) {
             console.log("[UPLOAD] No followers to notify:", result.message);
           }
@@ -455,7 +444,7 @@ export default function UploadPhotosPage({
       const pendingFiles = files.filter(f => f.status === "pending");
       
       if (pendingFiles.length === 0) {
-        showToast("Bitte wähle zuerst Fotos aus", "warning");
+        toast.warning("Bitte wähle zuerst Fotos aus");
         setRunningOCR(false);
         return;
       }
@@ -543,11 +532,11 @@ export default function UploadPhotosPage({
         }
       }
 
-      showToast(`${recognizedCount} von ${pendingFiles.length} Startnummern erkannt. Bitte überprüfe die Nummern.`, "success");
+      toast.success(`${recognizedCount} von ${pendingFiles.length} Startnummern erkannt. Bitte überprüfe die Nummern.`);
       
     } catch (error: any) {
       console.error("Batch OCR error:", error);
-      showToast("Fehler bei der Startnummererkennung: " + error.message, "error");
+      toast.error("Fehler bei der Startnummererkennung: " + error.message);
     } finally {
       setRunningOCR(false);
       setOcrProgress({ current: 0, total: 0 });
@@ -988,13 +977,6 @@ export default function UploadPhotosPage({
         )}
       </div>
 
-      {/* Toast Notification */}
-      <Toast
-        show={toast.show}
-        type={toast.type}
-        message={toast.message}
-        onClose={() => setToast({ ...toast, show: false })}
-      />
     </div>
   );
 }

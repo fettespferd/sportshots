@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, use } from "react";
-import { Toast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/toast";
 import { EventQRCode } from "@/components/event/event-qr-code";
 import { Lightbox } from "@/components/ui/lightbox";
 
@@ -31,21 +31,10 @@ export default function EventDetailsPage({
   const [lightboxPhoto, setLightboxPhoto] = useState<any>(null);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [batchDeleting, setBatchDeleting] = useState(false);
-  const [toast, setToast] = useState<{
-    show: boolean;
-    message: string;
-    type: "success" | "error" | "info" | "warning";
-  }>({
-    show: false,
-    message: "",
-    type: "info",
-  });
   const [searchConfig, setSearchConfig] = useState<any>(null);
   const [savingSearchConfig, setSavingSearchConfig] = useState(false);
 
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "info") => {
-    setToast({ show: true, message, type });
-  };
+  const toast = useToast();
 
   useEffect(() => {
     const loadData = async () => {
@@ -115,7 +104,7 @@ export default function EventDetailsPage({
 
       if (error) {
         console.error("Publish error:", error);
-        showToast("Fehler beim Veröffentlichen: " + error.message, "error");
+        toast.error("Fehler beim Veröffentlichen: " + error.message);
         return;
       }
 
@@ -124,10 +113,10 @@ export default function EventDetailsPage({
       setEvent({ ...event, is_published: !event.is_published });
       
       // Show success message
-      showToast(wasPublished ? "Event wurde verborgen" : "Event wurde veröffentlicht!", "success");
+      toast.success(wasPublished ? "Event wurde verborgen" : "Event wurde veröffentlicht!");
     } catch (error) {
       console.error("Publish error:", error);
-      showToast("Ein Fehler ist aufgetreten. Bitte versuche es erneut.", "error");
+      toast.error("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
     }
   };
 
@@ -175,10 +164,10 @@ export default function EventDetailsPage({
       setEvent({ ...event, cover_image_url: publicUrl });
       setCoverImage(null);
 
-      showToast("Cover-Bild wurde erfolgreich aktualisiert!", "success");
+      toast.success("Cover-Bild wurde erfolgreich aktualisiert!");
     } catch (error: any) {
       console.error("Cover upload error:", error);
-      showToast(error.message || "Fehler beim Hochladen des Cover-Bildes", "error");
+      toast.error(error.message || "Fehler beim Hochladen des Cover-Bildes");
     } finally {
       setUploadingCover(false);
     }
@@ -206,9 +195,9 @@ export default function EventDetailsPage({
       setEditingPhoto(null);
       setEditBibNumber("");
 
-      showToast("Startnummer wurde aktualisiert!", "success");
+      toast.success("Startnummer wurde aktualisiert!");
     } catch (error: any) {
-      showToast(error.message || "Fehler beim Aktualisieren der Startnummer", "error");
+      toast.error(error.message || "Fehler beim Aktualisieren der Startnummer");
     }
   };
 
@@ -229,9 +218,9 @@ export default function EventDetailsPage({
         )
       );
 
-      showToast("Startnummer wurde gelöscht!", "success");
+      toast.success("Startnummer wurde gelöscht!");
     } catch (error: any) {
-      showToast(error.message || "Fehler beim Löschen der Startnummer", "error");
+      toast.error(error.message || "Fehler beim Löschen der Startnummer");
     }
   };
 
@@ -260,9 +249,9 @@ export default function EventDetailsPage({
       // Update local state
       setPhotos(photos.filter((p) => p.id !== photoId));
 
-      showToast("Das Foto wurde erfolgreich gelöscht.", "success");
+      toast.success("Das Foto wurde erfolgreich gelöscht.");
     } catch (error: any) {
-      showToast(error.message || "Fehler beim Löschen des Fotos", "error");
+      toast.error(error.message || "Fehler beim Löschen des Fotos");
     } finally {
       setDeletingPhoto(null);
     }
@@ -304,7 +293,7 @@ export default function EventDetailsPage({
       setPhotos(photos.filter(p => !selectedPhotos.has(p.id)));
       setSelectedPhotos(new Set());
 
-      showToast(`${photoIds.length} Foto(s) erfolgreich gelöscht.`, "success");
+      toast.success(`${photoIds.length} Foto(s) erfolgreich gelöscht.`);
     } catch (error: any) {
       console.error("Batch delete error:", error);
       // Reload on error to restore correct state
@@ -316,7 +305,7 @@ export default function EventDetailsPage({
       
       if (photosData) setPhotos(photosData);
       
-      showToast(error.message || "Fehler beim Löschen der Fotos", "error");
+      toast.error(error.message || "Fehler beim Löschen der Fotos");
     } finally {
       setBatchDeleting(false);
     }
@@ -373,7 +362,7 @@ export default function EventDetailsPage({
         )
       );
     } catch (error: any) {
-      showToast(error.message || "Fehler beim Drehen des Fotos", "error");
+      toast.error(error.message || "Fehler beim Drehen des Fotos");
     } finally {
       setRotatingPhoto(null);
     }
@@ -1255,9 +1244,9 @@ export default function EventDetailsPage({
                       .eq("id", id);
 
                     if (error) throw error;
-                    showToast("Suchkonfiguration erfolgreich gespeichert!", "success");
+                    toast.success("Suchkonfiguration erfolgreich gespeichert!");
                   } catch (error: any) {
-                    showToast("Fehler beim Speichern: " + error.message, "error");
+                    toast.error("Fehler beim Speichern: " + error.message);
                   } finally {
                     setSavingSearchConfig(false);
                   }
