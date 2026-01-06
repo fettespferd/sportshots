@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Toast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/toast";
 import { slugify, generateUniqueSlug } from "@/lib/utils/slugify";
 
 const eventTypes = [
@@ -36,19 +36,8 @@ export default function EditEventPage({
   const [pricePerPhoto, setPricePerPhoto] = useState("8.00");
   const [packagePrice, setPackagePrice] = useState("");
   const [packagePhotoCount, setPackagePhotoCount] = useState("");
-  const [toast, setToast] = useState<{
-    show: boolean;
-    message: string;
-    type: "success" | "error" | "info" | "warning";
-  }>({
-    show: false,
-    message: "",
-    type: "info",
-  });
-
-  const showToast = (message: string, type: "success" | "error" | "info" | "warning" = "info") => {
-    setToast({ show: true, message, type });
-  };
+  
+  const toast = useToast();
 
   useEffect(() => {
     const loadEvent = async () => {
@@ -70,7 +59,7 @@ export default function EditEventPage({
         .single();
 
       if (error || !eventData) {
-        showToast("Event konnte nicht geladen werden", "error");
+        toast.error("Event konnte nicht geladen werden");
         router.push("/photographer/events");
         return;
       }
@@ -130,14 +119,14 @@ export default function EditEventPage({
 
       if (error) throw error;
 
-      showToast("Event wurde erfolgreich aktualisiert!", "success");
+      toast.success("Event wurde erfolgreich aktualisiert!");
 
       // Redirect after short delay
       setTimeout(() => {
         router.push(`/photographer/events/${id}`);
       }, 1500);
     } catch (err: any) {
-      showToast(err.message || "Event konnte nicht aktualisiert werden", "error");
+      toast.error(err.message || "Event konnte nicht aktualisiert werden");
       setSaving(false);
     }
   };
@@ -355,13 +344,6 @@ export default function EditEventPage({
         </form>
       </div>
 
-      {/* Toast Notification */}
-      <Toast
-        show={toast.show}
-        type={toast.type}
-        message={toast.message}
-        onClose={() => setToast({ ...toast, show: false })}
-      />
     </div>
   );
 }
