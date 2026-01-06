@@ -10,6 +10,7 @@ import { Lightbox } from "@/components/ui/lightbox";
 import { ShareButton } from "@/components/ui/share-button";
 import { CartModal } from "@/components/ui/cart-modal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 interface SearchConfig {
   bib_number?: { enabled: boolean; visible_by_default: boolean };

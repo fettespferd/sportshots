@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import Image from "next/image";
+import { EventCardSkeleton, PhotographerCardSkeleton } from "@/components/ui/skeleton";
+import { NoEventsFound, NoPhotographersFound } from "@/components/ui/empty-state";
 
 interface Event {
   id: string;
@@ -300,28 +302,14 @@ export default function SearchPage() {
 
         {/* Results */}
         {activeTab === "events" ? (
-          filteredEvents.length === 0 ? (
-            <div className="rounded-lg bg-white p-12 text-center shadow dark:bg-zinc-800">
-              <svg
-                className="mx-auto h-12 w-12 text-zinc-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-                />
-              </svg>
-              <h3 className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-50">
-                {t("search.noEvents")}
-              </h3>
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                {t("search.tryDifferentEventType")}
-              </p>
+          loading ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <EventCardSkeleton key={i} />
+              ))}
             </div>
+          ) : filteredEvents.length === 0 ? (
+            <NoEventsFound />
           ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredEvents.map((event) => (
@@ -331,11 +319,13 @@ export default function SearchPage() {
                 className="group overflow-hidden rounded-lg bg-white shadow transition-shadow hover:shadow-lg dark:bg-zinc-800"
               >
                 {event.cover_image_url ? (
-                  <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
-                    <img
+                  <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
+                    <Image
                       src={event.cover_image_url}
                       alt={event.title}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform group-hover:scale-105"
                     />
                   </div>
                 ) : (
@@ -421,28 +411,14 @@ export default function SearchPage() {
           </div>
           )
         ) : (
-          filteredPhotographers.length === 0 ? (
-            <div className="rounded-lg bg-white p-12 text-center shadow dark:bg-zinc-800">
-              <svg
-                className="mx-auto h-12 w-12 text-zinc-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              <h3 className="mt-4 text-lg font-medium text-zinc-900 dark:text-zinc-50">
-                {t("search.noPhotographers")}
-              </h3>
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                {t("search.tryDifferentAccountType")}
-              </p>
+          loading ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <PhotographerCardSkeleton key={i} />
+              ))}
             </div>
+          ) : filteredPhotographers.length === 0 ? (
+            <NoPhotographersFound />
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredPhotographers.map((photographer) => (

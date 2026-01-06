@@ -131,8 +131,10 @@ export function Header() {
             {!loading && user && (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="rounded-md p-2 text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 md:hidden"
-                aria-label="Menu"
+                className="min-h-[44px] min-w-[44px] rounded-md p-2 text-zinc-700 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-zinc-300 dark:hover:bg-zinc-800 md:hidden"
+                aria-label={mobileMenuOpen ? "Menü schließen" : "Menü öffnen"}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-menu"
               >
                 {mobileMenuOpen ? (
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,7 +154,7 @@ export function Header() {
 
       {/* Mobile Menu - only show for logged in users */}
       {!loading && user && mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div id="mobile-menu" className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Mobiles Menü">
           {/* Overlay */}
           <div
             className="fixed inset-0 bg-black/50"

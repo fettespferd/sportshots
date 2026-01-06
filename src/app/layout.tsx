@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { ToastContainer } from "@/components/ui/toast";
 import dynamic from "next/dynamic";
 
 // Lazy load footer as it's below the fold
@@ -95,11 +97,21 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <LanguageProvider>
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-        </LanguageProvider>
+        {/* Skip Navigation für Accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-zinc-900 focus:px-4 focus:py-2 focus:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Zum Hauptinhalt springen
+        </a>
+        <ErrorBoundary>
+          <LanguageProvider>
+            <Header />
+            <main id="main-content" className="min-h-screen">{children}</main>
+            <Footer />
+            <ToastContainer />
+          </LanguageProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

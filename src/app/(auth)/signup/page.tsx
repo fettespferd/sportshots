@@ -8,6 +8,7 @@ import { getAuthErrorKey } from "@/lib/i18n/error-messages";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { AGB_VERSION } from "@/app/(public)/agb/page";
 import { DATENSCHUTZ_VERSION } from "@/app/(public)/datenschutz/page";
+import { PasswordStrengthMeter } from "@/components/ui/password-strength";
 
 export default function SignUpPage() {
   const { t } = useLanguage();
@@ -386,13 +387,15 @@ export default function SignUpPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 pr-10 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+                  autoComplete="new-password"
+                  name="password"
+                  className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 pr-10 text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:ring-offset-zinc-900"
                   placeholder="Mindestens 6 Zeichen"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md dark:text-zinc-400 dark:hover:text-zinc-200"
                   aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
                 >
                   {showPassword ? (
@@ -436,6 +439,7 @@ export default function SignUpPage() {
                   )}
                 </button>
               </div>
+              <PasswordStrengthMeter password={password} />
             </div>
 
             {/* Legal Consent Checkboxes */}
