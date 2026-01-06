@@ -28,8 +28,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Reduce build output
   cleanDistDir: true,
-  // Enable SWC minification
-  swcMinify: true,
 };
 
 export default nextConfig;
