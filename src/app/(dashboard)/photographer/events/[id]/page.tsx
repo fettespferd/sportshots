@@ -1365,13 +1365,6 @@ export default function EventDetailsPage({
         </div>
       )}
 
-      {/* Toast Notification */}
-      <Toast
-        show={toast.show}
-        type={toast.type}
-        message={toast.message}
-        onClose={() => setToast({ ...toast, show: false })}
-      />
 
       {/* Lightbox for photographer - shows original without watermark, with edited version toggle */}
       <Lightbox
