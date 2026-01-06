@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import Image from "next/image";
 import { EventCardSkeleton, PhotographerCardSkeleton } from "@/components/ui/skeleton";
 import { NoEventsFound, NoPhotographersFound } from "@/components/ui/empty-state";
+import { FadeIn } from "@/components/ui/page-transition";
 
 interface Event {
   id: string;
@@ -312,12 +313,12 @@ export default function SearchPage() {
             <NoEventsFound />
           ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredEvents.map((event) => (
-              <Link
-                key={event.id}
-                href={`/event/${event.slug}`}
-                className="group overflow-hidden rounded-lg bg-white shadow transition-shadow hover:shadow-lg dark:bg-zinc-800"
-              >
+            {filteredEvents.map((event, index) => (
+              <FadeIn key={event.id} delay={index * 50}>
+                <Link
+                  href={`/event/${event.slug}`}
+                  className="group overflow-hidden rounded-lg bg-white shadow transition-all hover:shadow-lg hover:scale-[1.02] dark:bg-zinc-800"
+                >
                 {event.cover_image_url ? (
                   <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
                     <Image
@@ -406,7 +407,8 @@ export default function SearchPage() {
                     </div>
                   </div>
                 </div>
-              </Link>
+                </Link>
+              </FadeIn>
             ))}
           </div>
           )
@@ -421,12 +423,12 @@ export default function SearchPage() {
             <NoPhotographersFound />
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredPhotographers.map((photographer) => (
-                <Link
-                  key={photographer.id}
-                  href={`/${photographer.username}`}
-                  className="group overflow-hidden rounded-lg bg-white shadow transition-shadow hover:shadow-lg dark:bg-zinc-800"
-                >
+              {filteredPhotographers.map((photographer, index) => (
+                <FadeIn key={photographer.id} delay={index * 50}>
+                  <Link
+                    href={`/${photographer.username}`}
+                    className="group overflow-hidden rounded-lg bg-white shadow transition-all hover:shadow-lg hover:scale-[1.02] dark:bg-zinc-800"
+                  >
                   <div className="p-6">
                     <div className="flex items-center gap-4">
                       {/* Avatar/Logo */}
@@ -503,7 +505,8 @@ export default function SearchPage() {
                       </div>
                     )}
                   </div>
-                </Link>
+                  </Link>
+                </FadeIn>
               ))}
             </div>
           )

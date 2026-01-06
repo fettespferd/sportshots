@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { LanguageSelector } from "./language-selector";
 import { UserMenu } from "./user-menu";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface Profile {
   role: string;

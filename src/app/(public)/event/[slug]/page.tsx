@@ -486,6 +486,17 @@ export default function PublicEventPage({
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-zinc-50 dark:bg-zinc-900">
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { label: "Startseite", href: "/" },
+            { label: "Events durchsuchen", href: "/search" },
+            { label: event.title, href: `/event/${slug}`, current: true },
+          ]}
+        />
+      </div>
+      
       {/* Event Header */}
       <div className="bg-white shadow-sm dark:bg-zinc-800">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">

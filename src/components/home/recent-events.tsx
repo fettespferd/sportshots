@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { FadeIn } from "@/components/ui/page-transition";
 
 interface Event {
   id: string;
@@ -38,12 +39,12 @@ export function RecentEvents({ events }: RecentEventsProps) {
         </Link>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {events.map((event) => (
-          <Link
-            key={event.id}
-            href={`/event/${event.slug}`}
-            className="group block overflow-hidden rounded-lg bg-white shadow transition-all hover:shadow-lg dark:bg-zinc-800"
-          >
+        {events.map((event, index) => (
+          <FadeIn key={event.id} delay={index * 100}>
+            <Link
+              href={`/event/${event.slug}`}
+              className="group block overflow-hidden rounded-lg bg-white shadow transition-all hover:shadow-lg hover:scale-[1.02] dark:bg-zinc-800"
+            >
             {event.cover_image_url ? (
               <div className="aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-700">
                 <Image
@@ -114,7 +115,8 @@ export function RecentEvents({ events }: RecentEventsProps) {
                 </div>
               </div>
             </div>
-          </Link>
+            </Link>
+          </FadeIn>
         ))}
       </div>
     </div>

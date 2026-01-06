@@ -6,6 +6,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { getAuthErrorKey } from "@/lib/i18n/error-messages";
+import { Tooltip } from "@/components/ui/tooltip";
+import { FadeIn } from "@/components/ui/page-transition";
 
 function SignInForm() {
   const { t } = useLanguage();
@@ -127,12 +129,13 @@ function SignInForm() {
                   className="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 pr-10 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:ring-offset-zinc-900"
                   placeholder={t("common.password")}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-                  aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
-                >
+                <Tooltip content={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md dark:text-zinc-400 dark:hover:text-zinc-200"
+                    aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+                  >
                   {showPassword ? (
                     // Eye-off icon (geschlossen)
                     <svg
@@ -172,7 +175,8 @@ function SignInForm() {
                       />
                     </svg>
                   )}
-                </button>
+                  </button>
+                </Tooltip>
               </div>
             </div>
 
