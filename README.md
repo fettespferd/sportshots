@@ -184,7 +184,9 @@ Eine moderne, Multi-Rollen-Plattform für Sportfotografen, Event-Veranstalter un
 - **Framework**: Next.js 16 (App Router) mit React 19
 - **Styling**: Tailwind CSS 4
 - **TypeScript**: Vollständig typsicher
-- **Komponenten**: Custom UI Components + Radix UI
+- **Komponenten**: Custom UI Components (kein UI-Framework)
+- **Animationen**: Framer Motion
+- **i18n**: Eigene Implementierung (LanguageContext, DE/EN) — `next-intl` ist installiert, wird aber nicht genutzt
 - **Drag & Drop**: @dnd-kit
 - **Charts**: Recharts
 
@@ -392,12 +394,27 @@ Portfolio-Bilder für Fotografen-Profile (max. 10 pro Fotograf)
 #### `team_invitations`
 Einladungen für Team-Mitglieder mit Status-Tracking
 
+#### `leads`
+Lead-Erfassung (inkl. Instagram) für Admin-Outreach
+
+#### `dynamic_qr_codes`
+Dynamische QR-Codes mit änderbarem Ziel-Link
+
+#### `event_followers`
+Follower-System für Events (Benachrichtigung bei neuen Fotos)
+
+#### `photographer_requests`
+Freischaltungs-Anfragen von Fotografen
+
+#### `legal_document_versions` / `user_legal_consents`
+Versionierung von AGB/Datenschutz und Zustimmungs-Tracking (siehe [LEGAL-CONSENT-GUIDE.md](./LEGAL-CONSENT-GUIDE.md))
+
+> ⚠️ **Hinweis:** Die Tabellen `gallery_images`, `team_invitations`, `leads`, `legal_document_versions` und `user_legal_consents` wurden direkt im Supabase-Dashboard angelegt und sind **nicht** in `src/supabase/migrations/` enthalten. Für ein Neu-Setup oder einen Datenbank-Umzug muss das Schema aus der Live-Datenbank exportiert werden (`pg_dump` bzw. `supabase db dump`), die Migrations allein reichen nicht aus.
+
 ### Storage Buckets
 
-- **photos**: Event-Fotos (Original + Wasserzeichen)
-- **event-covers**: Event-Cover-Bilder
-- **avatars**: Profilbilder
-- **team-logos**: Team-Logos
+- **photos** (public): Event-Fotos mit Unterordnern `originals/`, `watermarks/`, `thumbnails/`, `covers/`, `edited/`
+- **selfies** (public): Temporäre Selfie-Uploads für die Gesichtserkennung
 
 ---
 
@@ -549,11 +566,14 @@ npm run build
 # Production Server starten
 npm start
 
-# Type Checking
-npm run type-check
+# Type Checking (kein eigenes Script definiert)
+npx tsc --noEmit
 
 # Linting
 npm run lint
+
+# Migration-Helper (gibt SQL zum manuellen Ausführen aus)
+npm run migrate
 ```
 
 ### Empfohlene Tools
@@ -567,7 +587,9 @@ npm run lint
 
 - **[SETUP-GUIDE.md](./SETUP-GUIDE.md)**: Detaillierte Setup-Anleitung
 - **[AWS_SETUP.md](./AWS_SETUP.md)**: AWS Rekognition Konfiguration
-- **Supabase Migrations**: `src/supabase/migrations/`
+- **[SELF-HOSTING-PLAN.md](./SELF-HOSTING-PLAN.md)**: Hosting-Plan — App via Coolify auf Hetzner, neues Supabase-Cloud-Projekt, eigene Domain (nach dem Brainmotion-Modell)
+- **[LEGAL-CONSENT-GUIDE.md](./LEGAL-CONSENT-GUIDE.md)**: AGB/Datenschutz-Versionierung & Consent-Tracking
+- **Supabase Migrations**: `src/supabase/migrations/` (⚠️ unvollständig, siehe Hinweis im Datenbank-Schema-Abschnitt)
 
 ---
 
@@ -610,4 +632,4 @@ Dieses Projekt ist privat und proprietär. Alle Rechte vorbehalten.
 ---
 
 **Version**: 1.0.0  
-**Letztes Update**: Januar 2025
+**Letztes Update**: Juli 2026

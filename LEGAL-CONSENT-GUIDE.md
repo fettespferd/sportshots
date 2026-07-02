@@ -4,6 +4,8 @@
 
 Dieses System stellt sicher, dass alle Fotografen und Teams bei der Registrierung den AGB und der Datenschutzerklärung aktiv zustimmen müssen. Die exakte Version zum Zeitpunkt der Zustimmung wird gespeichert, um rechtlich auf der sicheren Seite zu sein.
 
+> ⚠️ **Wichtig:** Die Tabellen `legal_document_versions` und `user_legal_consents` sind in **keiner** Datei unter `src/supabase/migrations/` enthalten — sie wurden direkt in der Live-Datenbank angelegt. Die weiter unten erwähnte Migrations-Datei `20250126000008_add_legal_consent.sql` existiert im Repository nicht. Bei einem Neu-Setup oder Datenbank-Umzug muss das Schema aus der Live-DB exportiert werden (siehe [SELF-HOSTING-PLAN.md](./SELF-HOSTING-PLAN.md)).
+
 ## Architektur
 
 ### 1. Datenbank-Schema

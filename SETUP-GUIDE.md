@@ -30,11 +30,12 @@ Alle geplanten Features wurden erfolgreich implementiert!
   - Recharts für interaktive Visualisierung
 
 ### ✅ Phase 11: Mehrsprachigkeit (i18n)
-- next-intl Integration
+- Eigene i18n-Implementierung (`src/lib/i18n/LanguageContext.tsx` + `translations.ts`)
 - Deutsch & Englisch Translations
 - Language Switcher im Header
 - Locale-aware Datums-Formatierung
 - Bereit für weitere Sprachen
+- Hinweis: `next-intl` ist als Dependency installiert, wird aber **nicht** verwendet (kann entfernt werden)
 
 ## 🔧 Vollständiges Setup
 
@@ -231,15 +232,15 @@ Supabase Dashboard → Authentication → URL Configuration:
 
 ## 📦 Dependencies
 
-Neu installiert:
+Relevante Pakete (aktuelle Versionen siehe `package.json`):
 ```json
 {
-  "sharp": "^0.33.0",
-  "recharts": "^2.10.0",
-  "date-fns": "^3.0.0",
-  "next-intl": "^3.0.0",
-  "resend": "^3.0.0",
-  "@react-email/components": "^0.0.12"
+  "sharp": "^0.34.4",
+  "recharts": "^3.3.0",
+  "date-fns": "^4.1.0",
+  "resend": "^6.2.2",
+  "@react-email/components": "^0.5.7",
+  "framer-motion": "^12.23.24"
 }
 ```
 

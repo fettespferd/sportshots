@@ -1,11 +1,19 @@
 import type { NextConfig } from "next";
 
+// Supabase-Host aus der Env ableiten, damit ein DB-/Projektwechsel keine
+// Code-Änderung braucht (Fallback: altes Cloud-Projekt)
+const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : 'rypvcqzzcmgevdgeqtbr.supabase.co';
+
 const nextConfig: NextConfig = {
+  // Standalone-Output für Docker/Coolify-Deployment (siehe SELF-HOSTING-PLAN.md)
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'rypvcqzzcmgevdgeqtbr.supabase.co',
+        hostname: supabaseHostname,
         port: '',
         pathname: '/storage/v1/object/public/**',
       },

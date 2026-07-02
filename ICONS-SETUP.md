@@ -1,5 +1,16 @@
 # 🎨 Icons & Branding Setup
 
+## 📌 Aktueller Status (Juli 2026)
+
+| Datei | Status |
+|---|---|
+| `src/app/favicon.ico` | ✅ vorhanden |
+| `public/og_image.png` | ✅ vorhanden (Achtung: Unterstrich statt Bindestrich — `layout.tsx` referenziert korrekt `/og_image.png`) |
+| `public/icon.png` (512×512) | ❌ **fehlt** — wird aber in `src/app/layout.tsx:59` referenziert (broken Link) |
+| `public/apple-icon.png` (180×180) | ❌ **fehlt** — wird aber in `src/app/layout.tsx:62` referenziert (broken Link) |
+
+**TODO:** Die beiden fehlenden PNGs erstellen und in `public/` ablegen, oder die Referenzen aus `layout.tsx` entfernen.
+
 ## Benötigte Icon-Dateien
 
 Erstelle die folgenden Dateien in deinem Design-Tool (Figma, Photoshop, etc.):
